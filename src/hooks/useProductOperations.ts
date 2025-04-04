@@ -18,7 +18,14 @@ export const useProductOperations = () => {
 
   const handleAdicionarProduto = async (dadosFormulario: CriarProdutoInput) => {
     try {
-      const novoProduto = await adicionarProduto(dadosFormulario);
+      // Transformar o statusCartaoManual para custom_manual_status para compatibilidade com o backend
+      const produtoData = {
+        ...dadosFormulario,
+        custom_manual_status: dadosFormulario.statusCartaoManual,
+        override_global_status: dadosFormulario.usarProcessamentoPersonalizado
+      };
+      
+      const novoProduto = await adicionarProduto(produtoData);
       exibirNotificacao({
         title: "Sucesso",
         description: "Produto adicionado com sucesso",
@@ -37,7 +44,14 @@ export const useProductOperations = () => {
 
   const handleAtualizarProduto = async (id: string, dadosFormulario: CriarProdutoInput) => {
     try {
-      await atualizarProduto(id, dadosFormulario);
+      // Transformar o statusCartaoManual para custom_manual_status para compatibilidade com o backend
+      const produtoData = {
+        ...dadosFormulario,
+        custom_manual_status: dadosFormulario.statusCartaoManual,
+        override_global_status: dadosFormulario.usarProcessamentoPersonalizado
+      };
+      
+      await atualizarProduto(id, produtoData);
       exibirNotificacao({
         title: "Sucesso",
         description: "Produto atualizado com sucesso",

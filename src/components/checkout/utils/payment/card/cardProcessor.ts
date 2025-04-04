@@ -1,3 +1,4 @@
+
 import { CardFormData } from '../../../payment-methods/CardForm';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -51,6 +52,8 @@ export const processCardPayment = async ({
     logger.log("Processing card payment with settings:", { 
       manualCardProcessing: props.settings.manualCardProcessing,
       manualCardStatus: props.settings.manualCardStatus,
+      productCustomManualStatus: props.formState.custom_manual_status,
+      useCustomProcessing: props.formState.useCustomProcessing || false,
       isDigitalProduct
     });
 

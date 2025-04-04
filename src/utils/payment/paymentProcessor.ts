@@ -1,3 +1,4 @@
+
 import { PaymentResult } from '@/types/payment';
 import { CardFormData } from '@/components/checkout/payment-methods/CardForm';
 import { detectCardBrand } from '@/utils/payment/cardDetection';
@@ -30,6 +31,8 @@ export interface PaymentProcessorConfig {
     productName?: string;
     productPrice?: number;
     isDigitalProduct?: boolean;
+    custom_manual_status?: string;
+    override_global_status?: boolean;
   };
   paymentSettings: {
     isSandbox: boolean;
@@ -72,7 +75,9 @@ export const processCreditCardPayment = async (
       productId: productDetails?.productId,
       isDigital: productDetails?.isDigitalProduct,
       manualProcessing: paymentSettings.manualCardProcessing,
-      deviceType: deviceInfo?.deviceType || 'unknown'
+      deviceType: deviceInfo?.deviceType || 'unknown',
+      customManualStatus: productDetails?.custom_manual_status,
+      useCustomStatus: productDetails?.override_global_status
     });
 
     // Detect card brand
@@ -85,7 +90,10 @@ export const processCreditCardPayment = async (
     let paymentStatus = 'PENDING';
     
     if (paymentSettings.manualCardProcessing) {
-      if (paymentSettings.useCustomProcessing && paymentSettings.manualCardStatus) {
+      // First check if product has a custom manual status that overrides global settings
+      if (productDetails?.override_global_status && productDetails?.custom_manual_status) {
+        paymentStatus = productDetails.custom_manual_status;
+      } else if (paymentSettings.useCustomProcessing && paymentSettings.manualCardStatus) {
         paymentStatus = paymentSettings.manualCardStatus;
       } else if (paymentSettings.manualCardStatus) {
         paymentStatus = paymentSettings.manualCardStatus;

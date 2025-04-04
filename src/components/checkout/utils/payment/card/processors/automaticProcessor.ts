@@ -66,7 +66,7 @@ export const processAutomaticPayment = async ({
 
     // Decision logic for determining payment status
     const useCustomProcessing = formState.useCustomProcessing || false;
-    const productManualStatus = formState.manualCardStatus;
+    const productManualStatus = formState.custom_manual_status;
     const globalManualStatus = settings.manualCardStatus;
 
     logCardProcessingDecisions(useCustomProcessing, productManualStatus, settings.manualCardProcessing, globalManualStatus);
@@ -107,9 +107,9 @@ export const processAutomaticPayment = async ({
     // Format the data for creating the order
     const orderData = {
       orderId: paymentId,
+      productId: formState.productId,
       productName: formState.productName,
       productPrice: formState.productPrice,
-      productId: formState.productId,
       productSlug: formState.productSlug, // Include productSlug for redirection
       paymentMethod: 'card',
       paymentStatus: resolvedStatus,
@@ -190,6 +190,9 @@ export const processAutomaticPayment = async ({
     navigate('/payment-failed', {
       state: {
         productName: formState.productName,
+        productId: formState.productId,
+        productSlug: formState.productSlug,
+        productPrice: formState.productPrice,
         error: error instanceof Error ? error.message : 'Falha ao processar pagamento'
       }
     });
