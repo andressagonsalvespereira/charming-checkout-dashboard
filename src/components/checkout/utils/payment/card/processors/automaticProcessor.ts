@@ -8,7 +8,7 @@ import { simulatePayment } from '../../paymentSimulator';
 import { DeviceType } from '@/types/order';
 import { logger } from '@/utils/logger';
 import { logCardProcessingDecisions } from '../cardProcessorLogs';
-import { resolveManualStatus } from '@/contexts/order/utils';
+import { resolveManualStatus, isRejectedStatus } from '@/contexts/order/utils';
 
 interface ProcessAutomaticPaymentParams {
   cardData: CardFormData;
@@ -56,7 +56,7 @@ export const processAutomaticPayment = async ({
       manualCardStatus: settings.manualCardStatus,
       isDigitalProduct: formState.isDigitalProduct,
       useCustomProcessing: formState.useCustomProcessing || false,
-      productManualStatus: formState.manualCardStatus,
+      productManualStatus: formState.custom_manual_status,
       globalManualStatus: settings.manualCardStatus
     });
 

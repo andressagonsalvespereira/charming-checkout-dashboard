@@ -14,6 +14,11 @@ const PaymentFailed = () => {
   const { state } = location;
   const { trackPurchase } = usePixel();
 
+  // Log mount and state for debugging
+  React.useEffect(() => {
+    logger.log("PaymentFailed component mounted with state:", state);
+  }, [state]);
+
   // Added dummy purchase event data for when state is missing
   const defaultPurchaseData = {
     value: 0,
