@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import CheckoutContainer from '@/components/checkout/CheckoutContainer';
 import { usePixel } from '@/contexts/PixelContext';
+import { logger } from '@/utils/logger';
 
 const PaymentFailed = () => {
   const location = useLocation();
@@ -23,6 +24,23 @@ const PaymentFailed = () => {
       price: 0,
       quantity: 1
     }]
+  };
+
+  // Determina o slug do produto para redirecionamento
+  const getProductCheckoutUrl = () => {
+    // Tenta obter o slug do produto do state
+    const productSlug = state?.orderData?.productSlug;
+    const productId = state?.orderData?.productId;
+    
+    logger.log("Determining product redirect path", { productSlug, productId });
+    
+    if (productSlug) {
+      return `/checkout/${productSlug}`;
+    } else if (productId) {
+      return `/checkout/product/${productId}`;
+    } else {
+      return "/"; // Redireciona para a home se não tiver slug nem ID
+    }
   };
 
   // Track failed purchase attempt
@@ -72,7 +90,7 @@ const PaymentFailed = () => {
             
             <div className="space-y-3 w-full">
               <Button 
-                onClick={() => navigate('/checkout/test-product')}
+                onClick={() => navigate(getProductCheckoutUrl())}
                 className="w-full bg-blue-600 hover:bg-blue-700"
               >
                 Tentar novamente

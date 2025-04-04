@@ -6,3 +6,4 @@ export * from './loaders';
 export * from './creators';
 export * from './updaters';
 export * from './deleters';
+export * from './resolveManualStatus';

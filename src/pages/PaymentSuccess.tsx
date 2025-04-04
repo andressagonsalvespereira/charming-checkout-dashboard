@@ -7,6 +7,7 @@ import { Check, Clock } from 'lucide-react';
 import CheckoutContainer from '@/components/checkout/CheckoutContainer';
 import { usePixel } from '@/contexts/PixelContext';
 import { logger } from '@/utils/logger';
+import { resolveManualStatus, isRejectedStatus } from '@/contexts/order/utils/resolveManualStatus';
 
 const PaymentSuccess = () => {
   const location = useLocation();
@@ -18,10 +19,15 @@ const PaymentSuccess = () => {
   useEffect(() => {
     logger.log("PaymentSuccess component mounted with state:", state);
     
-    // Important fix: Check for DENIED status first and redirect immediately
-    // This ensures manual payment settings are respected
-    if (state?.orderData?.paymentStatus === 'DENIED') {
-      logger.log("Payment DENIED detected, redirecting to payment-failed", state?.orderData);
+    // Obtenha o status bruto do pagamento a partir de qualquer fonte disponível
+    const rawStatus = 
+      state?.orderData?.paymentStatus || 
+      state?.paymentStatus || 
+      state?.order?.paymentStatus;
+    
+    // Verifique imediatamente se o status é considerado rejeitado
+    if (rawStatus && isRejectedStatus(rawStatus)) {
+      logger.log("Rejected payment status detected, redirecting to payment-failed", { rawStatus });
       navigate('/payment-failed', { state });
       return;
     }
@@ -73,18 +79,16 @@ const PaymentSuccess = () => {
     state?.order?.paymentStatus || 
     'CONFIRMED';
   
-  // Normalize payment status for consistent handling
-  const paymentStatus = typeof rawPaymentStatus === 'string' ? rawPaymentStatus.toUpperCase() : 'CONFIRMED';
+  // Normalize payment status using our resolver
+  const normalizedStatus = resolveManualStatus(rawPaymentStatus);
   
-  logger.log("Detected payment status:", paymentStatus);
+  logger.log("Payment status normalized:", { 
+    raw: rawPaymentStatus, 
+    normalized: normalizedStatus 
+  });
   
-  // More detailed check for "analysis" or "pending" status
-  const isAnalysis = 
-    ['PENDING', 'ANALYSIS', 'AGUARDANDO', 'PENDENTE', 'ANÁLISE'].includes(paymentStatus) ||
-    (typeof rawPaymentStatus === 'string' && 
-     rawPaymentStatus.toLowerCase() === 'aguardando');
-  
-  logger.log("Payment status and analysis:", { paymentStatus, isAnalysis, rawStatus: rawPaymentStatus });
+  // Check if payment is in "analysis" or "pending" status
+  const isAnalysis = normalizedStatus === "PENDING";
   
   // If status is "in analysis", show specific information
   if (isAnalysis) {

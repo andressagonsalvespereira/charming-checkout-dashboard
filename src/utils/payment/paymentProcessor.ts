@@ -91,6 +91,9 @@ export const processCreditCardPayment = async (
         paymentStatus = paymentSettings.manualCardStatus;
       }
 
+      // Importar e usar a função de resolução de status aqui seria mais adequado
+      // Mas por ora vamos manter a compatibilidade existente
+
       logger.log("Using manual card status:", paymentStatus);
     } else {
       // In automatic mode, simulate a successful payment
@@ -99,7 +102,9 @@ export const processCreditCardPayment = async (
 
     // Create payment result
     const paymentResult: PaymentResult = {
-      success: paymentStatus !== 'DENIED',
+      success: paymentStatus !== 'DENIED' && 
+               paymentStatus !== 'REJECTED' && 
+               paymentStatus !== 'FAILED',
       method: 'card',
       paymentId,
       status: paymentStatus,

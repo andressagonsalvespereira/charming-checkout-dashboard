@@ -1,22 +1,20 @@
+
 import { CardFormData } from '@/components/checkout/payment-methods/CardForm';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
-import { PaymentResult } from '../../types';
 import { detectCardBrand } from '../cardDetection';
-import { v4 as uuidv4 } from 'uuid';
 import { DeviceType } from '@/types/order';
+import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/utils/logger';
-import { logCardProcessingDecisions } from '../cardProcessorLogs';
+import { resolveManualStatus } from '@/contexts/order/utils/resolveManualStatus';
 
 interface ProcessManualPaymentParams {
   cardData: CardFormData;
   formState: any;
   settings: any;
   deviceType: DeviceType;
-  navigate: ReturnType<typeof useNavigate>;
+  navigate: (path: string, state?: any) => void;
   setIsSubmitting: (isSubmitting: boolean) => void;
   setError: (error: string) => void;
-  toast: ReturnType<typeof useToast>['toast'];
+  toast: (config: { title: string; description: string; variant?: "default" | "destructive"; duration?: number }) => void;
   onSubmit?: (data: any) => Promise<any> | any;
 }
 
@@ -33,12 +31,18 @@ export async function processManualPayment({
   setError,
   toast,
   onSubmit
-}: ProcessManualPaymentParams): Promise<PaymentResult> {
+}: ProcessManualPaymentParams) {
   setIsSubmitting(true);
   
   try {
     logger.log("Processamento manual com configurações:", {
-      manualCardStatus: settings.manualCardStatus,
+      formState: {
+        useCustomProcessing: formState.useCustomProcessing,
+        manualCardStatus: formState.manualCardStatus
+      },
+      settings: {
+        manualCardStatus: settings.manualCardStatus
+      },
       isDigitalProduct: formState.isDigitalProduct
     });
     
@@ -46,32 +50,33 @@ export async function processManualPayment({
     const paymentId = `manual_${uuidv4()}`;
     
     // Determina status do pagamento com base nas configurações
-    let paymentStatus = 'PENDING';
+    let rawPaymentStatus = 'PENDING';
     
     // Verifica se deve usar configurações específicas do produto primeiro
     if (formState.useCustomProcessing && formState.manualCardStatus) {
-      paymentStatus = formState.manualCardStatus;
+      rawPaymentStatus = formState.manualCardStatus;
+      logger.log(`Usando configuração de status específica do produto: ${rawPaymentStatus}`);
     } else if (settings.manualCardStatus) {
-      paymentStatus = settings.manualCardStatus;
+      rawPaymentStatus = settings.manualCardStatus;
+      logger.log(`Usando configuração de status global: ${rawPaymentStatus}`);
     }
-
-    // Log the processing decisions
-    logCardProcessingDecisions(
-      formState.useCustomProcessing === true,
-      formState.manualCardStatus,
-      settings.manualCardStatus,
-      paymentStatus
-    );
+    
+    // Normaliza o status para um dos valores suportados pelo sistema
+    const normalizedStatus = resolveManualStatus(rawPaymentStatus);
+    logger.log("Status normalizado:", { 
+      raw: rawPaymentStatus, 
+      normalized: normalizedStatus 
+    });
     
     // Detecta bandeira do cartão
     const brand = detectCardBrand(cardData.cardNumber);
     
     // Prepara o objeto de resultado de pagamento
-    const paymentResult: PaymentResult = {
-      success: true,
+    const paymentResult = {
+      success: normalizedStatus !== "REJECTED",
       method: 'card',
       paymentId,
-      status: paymentStatus,
+      status: normalizedStatus,
       cardNumber: cardData.cardNumber.replace(/\s+/g, ''),
       expiryMonth: cardData.expiryMonth,
       expiryYear: cardData.expiryYear,
@@ -94,45 +99,52 @@ export async function processManualPayment({
       productName: result.productName,
       productPrice: result.productPrice,
       productId: result.productId,
+      productSlug: result.productSlug || formState.productSlug, // Adiciona productSlug para uso no PaymentFailed
       paymentMethod: result.paymentMethod,
-      paymentStatus: paymentStatus
+      paymentStatus: normalizedStatus
     } : {
-      paymentStatus: paymentStatus
+      paymentStatus: normalizedStatus
     };
     
     // Função auxiliar para determinar o caminho de redirecionamento com base no status
     const getRedirectPath = () => {
-      if (paymentStatus === 'DENIED') {
+      if (normalizedStatus === "REJECTED") {
+        logger.log(`Redirecionando para página de falha devido ao status: ${normalizedStatus}`);
         return '/payment-failed';
-      } else if (paymentStatus === 'APPROVED') {
+      } else if (normalizedStatus === "CONFIRMED") {
+        logger.log(`Redirecionando para página de sucesso devido ao status: ${normalizedStatus}`);
         return '/payment-success';
       } else {
-        // Se o status for ANALYSIS ou qualquer outro, usa a página de sucesso mas indica que está em análise
+        // Se o status for PENDING ou qualquer outro, usa a página de sucesso mas indica que está em análise
+        logger.log(`Redirecionando para página de sucesso com status em análise: ${normalizedStatus}`);
         return '/payment-success';
       }
     };
     
     // Notificação toast com base no status
-    if (paymentStatus !== 'DENIED') {
+    if (normalizedStatus !== "REJECTED") {
       toast({
-        title: paymentStatus === 'APPROVED' ? "Payment Approved" : "Payment Under Review",
-        description: paymentStatus === 'APPROVED' 
-          ? "Your payment has been successfully approved!" 
-          : "Your payment has been received and is under review.",
+        title: normalizedStatus === "CONFIRMED" ? "Pagamento Aprovado" : "Pagamento em Análise",
+        description: normalizedStatus === "CONFIRMED"
+          ? "Seu pagamento foi aprovado com sucesso!" 
+          : "Seu pagamento foi recebido e está em análise.",
         duration: 5000,
         variant: "default"
       });
     } else {
       toast({
-        title: "Payment Declined",
-        description: "Your payment was declined. Please try again.",
+        title: "Pagamento Recusado",
+        description: "Seu pagamento foi recusado. Por favor, tente novamente.",
         variant: "destructive",
         duration: 5000,
       });
     }
     
     // Navega para a página apropriada
-    navigate(getRedirectPath(), { 
+    const redirectPath = getRedirectPath();
+    logger.log(`Redirecionando para: ${redirectPath} com estado:`, orderData);
+    
+    navigate(redirectPath, { 
       state: { orderData }
     });
     
@@ -143,8 +155,8 @@ export async function processManualPayment({
     
     // Mostrar toast de erro
     toast({
-      title: "Processing Error",
-      description: "An error occurred while processing your payment. Please try again.",
+      title: "Erro no Processamento",
+      description: "Ocorreu um erro ao processar seu pagamento. Por favor, tente novamente.",
       variant: "destructive",
       duration: 5000,
     });
@@ -154,7 +166,7 @@ export async function processManualPayment({
       success: false,
       method: 'card',
       error: error instanceof Error ? error.message : 'Erro desconhecido',
-      status: 'FAILED',
+      status: 'REJECTED', // Usamos REJECTED como status padrão para erros
       timestamp: new Date().toISOString()
     };
   } finally {

@@ -274,45 +274,45 @@ export type Database = {
       products: {
         Row: {
           created_at: string | null
+          custom_manual_status: string | null
           description: string | null
           id: number
           image: string | null
           image_url: string | null
           is_digital: boolean | null
-          manual_card_status: string | null
           name: string
+          override_global_status: boolean | null
           price: number
           slug: string
           updated_at: string | null
-          use_custom_processing: boolean | null
         }
         Insert: {
           created_at?: string | null
+          custom_manual_status?: string | null
           description?: string | null
           id?: number
           image?: string | null
           image_url?: string | null
           is_digital?: boolean | null
-          manual_card_status?: string | null
           name: string
+          override_global_status?: boolean | null
           price: number
           slug: string
           updated_at?: string | null
-          use_custom_processing?: boolean | null
         }
         Update: {
           created_at?: string | null
+          custom_manual_status?: string | null
           description?: string | null
           id?: number
           image?: string | null
           image_url?: string | null
           is_digital?: boolean | null
-          manual_card_status?: string | null
           name?: string
+          override_global_status?: boolean | null
           price?: number
           slug?: string
           updated_at?: string | null
-          use_custom_processing?: boolean | null
         }
         Relationships: []
       }
