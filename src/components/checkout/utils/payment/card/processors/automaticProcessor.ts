@@ -95,9 +95,11 @@ export const processAutomaticPayment = async ({
       throw new Error('Pagamento recusado pela operadora');
     }
 
-    // Simulate payment
+    // Simulate payment - Fix: passing a timeout number instead of boolean
     const paymentId = `card_${Date.now()}`;
-    await simulatePayment(isSandbox);
+    // The error was here - passing isSandbox (boolean) to simulatePayment which expects a number (timeout)
+    // Changing to pass a numeric timeout value based on sandbox mode
+    await simulatePayment(isSandbox ? 1500 : 1000);
 
     setPaymentStatus(resolvedStatus);
 
