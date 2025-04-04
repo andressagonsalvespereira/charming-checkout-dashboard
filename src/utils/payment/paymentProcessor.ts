@@ -1,10 +1,10 @@
-
 import { PaymentResult } from '@/types/payment';
 import { CardFormData } from '@/components/checkout/payment-methods/CardForm';
 import { detectCardBrand } from '@/utils/payment/cardDetection';
 import { v4 as uuidv4 } from 'uuid';
 import { DeviceType } from '@/types/order';
 import { logger } from '@/utils/logger';
+import { resolveManualStatus } from '@/contexts/order/utils';
 
 /**
  * Base interface for all payment processors
@@ -91,21 +91,19 @@ export const processCreditCardPayment = async (
         paymentStatus = paymentSettings.manualCardStatus;
       }
 
-      // Importar e usar a função de resolução de status aqui seria mais adequado
-      // Mas por ora vamos manter a compatibilidade existente
+      // Use resolveManualStatus to normalize status
+      paymentStatus = resolveManualStatus(paymentStatus);
 
       logger.log("Using manual card status:", paymentStatus);
     } else {
       // In automatic mode, simulate a successful payment
-      paymentStatus = 'APPROVED';
+      paymentStatus = 'CONFIRMED';
     }
 
     // Create payment result
     const paymentResult: PaymentResult = {
-      success: paymentStatus !== 'DENIED' && 
-               paymentStatus !== 'REJECTED' && 
-               paymentStatus !== 'FAILED',
-      method: 'card',
+      success: paymentStatus !== 'REJECTED',
+      method: 'card', // Fixed literal string type instead of string
       paymentId,
       status: paymentStatus,
       timestamp: new Date().toISOString(),
@@ -145,7 +143,7 @@ export const processCreditCardPayment = async (
     
     return {
       success: false,
-      method: 'card',
+      method: 'card', // Fixed literal string type
       status: 'FAILED',
       timestamp: new Date().toISOString(),
       error: errorMessage
@@ -193,7 +191,7 @@ export const processPixPayment = async (
     // Create payment result
     const paymentResult: PaymentResult = {
       success: true,
-      method: 'pix',
+      method: 'pix', // Fixed literal string type
       paymentId,
       status: 'PENDING',
       timestamp: currentTime,
@@ -227,7 +225,7 @@ export const processPixPayment = async (
     
     return {
       success: false,
-      method: 'pix',
+      method: 'pix', // Fixed literal string type
       status: 'FAILED',
       timestamp: new Date().toISOString(),
       error: errorMessage

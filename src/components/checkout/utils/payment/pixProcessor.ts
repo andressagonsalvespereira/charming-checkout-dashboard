@@ -36,7 +36,7 @@ export const processPixPayment = async (
     // Preparar dados de pagamento para o callback
     const paymentData: PaymentResult = {
       success: true,
-      method: 'pix',
+      method: 'pix', // Fixed: using literal 'pix' instead of string
       paymentId: pixData.paymentId,
       status: 'PENDING',
       timestamp: new Date().toISOString(),

@@ -1,4 +1,3 @@
-
 import { CardFormData } from '../../../payment-methods/CardForm';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -99,7 +98,7 @@ export const processCardPayment = async ({
     // Return a valid PaymentResult object in case of error
     return {
       success: false,
-      method: 'card',
+      method: 'card', // Fixed: using literal 'card' instead of string
       error: error instanceof Error ? error.message : 'Unknown error',
       status: 'FAILED',
       timestamp: new Date().toISOString()
