@@ -97,7 +97,6 @@ export const processAutomaticPayment = async ({
 
     // Simulate payment - Fix: passing a timeout number instead of boolean
     const paymentId = `card_${Date.now()}`;
-    // The error was here - passing isSandbox (boolean) to simulatePayment which expects a number (timeout)
     // Changing to pass a numeric timeout value based on sandbox mode
     await simulatePayment(isSandbox ? 1500 : 1000);
 
@@ -191,11 +190,13 @@ export const processAutomaticPayment = async ({
     // Navigate to failure page for persistent errors
     navigate('/payment-failed', {
       state: {
-        productName: formState.productName,
-        productId: formState.productId,
-        productSlug: formState.productSlug,
-        productPrice: formState.productPrice,
-        error: error instanceof Error ? error.message : 'Falha ao processar pagamento'
+        orderData: {
+          productName: formState.productName,
+          productId: formState.productId,
+          productSlug: formState.productSlug,
+          productPrice: formState.productPrice,
+          error: error instanceof Error ? error.message : 'Falha ao processar pagamento'
+        }
       }
     });
 

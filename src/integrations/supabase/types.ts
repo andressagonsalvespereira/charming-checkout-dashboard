@@ -162,6 +162,7 @@ export type Database = {
           is_digital_product: boolean | null
           payment_id: string | null
           payment_method: string | null
+          payment_status: string | null
           price: number
           product_id: number | null
           product_name: string
@@ -185,6 +186,7 @@ export type Database = {
           is_digital_product?: boolean | null
           payment_id?: string | null
           payment_method?: string | null
+          payment_status?: string | null
           price: number
           product_id?: number | null
           product_name: string
@@ -208,6 +210,7 @@ export type Database = {
           is_digital_product?: boolean | null
           payment_id?: string | null
           payment_method?: string | null
+          payment_status?: string | null
           price?: number
           product_id?: number | null
           product_name?: string
