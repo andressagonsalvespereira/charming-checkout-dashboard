@@ -46,7 +46,13 @@ export const resolveManualStatus = (status: string | undefined | null): "PENDING
  * @returns true se o status for rejeitado
  */
 export const isRejectedStatus = (status: string | undefined | null): boolean => {
-  return resolveManualStatus(status) === "REJECTED";
+  if (!status) return false;
+  
+  // First normalize the status using our utility
+  const normalizedStatus = resolveManualStatus(status);
+  
+  // Then check if it's rejected
+  return normalizedStatus === "REJECTED";
 };
 
 /**

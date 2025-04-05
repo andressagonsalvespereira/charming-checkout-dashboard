@@ -19,13 +19,16 @@ const PaymentSuccess = () => {
   useEffect(() => {
     logger.log("PaymentSuccess component mounted with state:", state);
     
-    // Obtenha o status bruto do pagamento a partir de qualquer fonte disponível
+    // Check all possible locations for payment status
     const rawStatus = 
       state?.orderData?.paymentStatus || 
       state?.paymentStatus || 
-      state?.order?.paymentStatus;
+      state?.order?.paymentStatus ||
+      state?.orderData?.status;
     
-    // Verifique imediatamente se o status é considerado rejeitado
+    logger.log("PaymentSuccess checking status:", { rawStatus });
+    
+    // Immediately redirect to failure page if status is rejected
     if (rawStatus && isRejectedStatus(rawStatus)) {
       logger.log("Rejected payment status detected, redirecting to payment-failed", { rawStatus });
       navigate('/payment-failed', { state });
@@ -52,7 +55,7 @@ const PaymentSuccess = () => {
         price: state.orderData.productPrice,
         productId: state.orderData.productId || "unknown",
         productName: state.orderData.productName || "Unknown product",
-        status: state.orderData.paymentStatus
+        status: state.orderData.paymentStatus || state.orderData.status
       });
       
       trackPurchase({
@@ -72,11 +75,11 @@ const PaymentSuccess = () => {
   }, [state, trackPurchase]);
   
   // Determine payment status checking multiple possible locations
-  // Fix: Handle any uppercase/lowercase variations in status
   const rawPaymentStatus = 
     state?.orderData?.paymentStatus || 
     state?.paymentStatus || 
-    state?.order?.paymentStatus || 
+    state?.order?.paymentStatus ||
+    state?.orderData?.status || 
     'CONFIRMED';
   
   // Normalize payment status using our resolver

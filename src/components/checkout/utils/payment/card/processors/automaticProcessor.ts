@@ -85,12 +85,9 @@ export const processAutomaticPayment = async ({
     // Processing decisions based on the resolved status
     if (resolvedStatus === 'PENDING') {
       logger.log("Payment set to pending based on manual settings");
-    } else {
+    } else if (resolvedStatus === 'CONFIRMED') {
       logger.log("Payment automatically confirmed based on automatic settings");
-    }
-
-    // For declined payments, we should fail the transaction immediately
-    if (resolvedStatus === 'REJECTED') {
+    } else if (resolvedStatus === 'REJECTED') {
       logger.log("Payment automatically declined based on manual settings");
       throw new Error('Pagamento recusado pela operadora');
     }
@@ -114,6 +111,7 @@ export const processAutomaticPayment = async ({
       productSlug: formState.productSlug, // Include productSlug for redirection
       paymentMethod: 'card',
       paymentStatus: resolvedStatus,
+      status: resolvedStatus, // Add status field for compatibility
       cardDetails: {
         brand,
         last4: cardData.cardNumber.slice(-4)
@@ -124,6 +122,37 @@ export const processAutomaticPayment = async ({
     if (onSubmit) {
       await onSubmit(orderData);
       logger.log("Order created successfully");
+    }
+
+    // Double-check if we need to redirect to failure page based on resolved status
+    if (resolvedStatus === 'REJECTED') {
+      logger.log(`Redirecting to failure page due to rejected status: ${resolvedStatus}`);
+      
+      navigate('/payment-failed', {
+        state: { orderData }
+      });
+      
+      if (toast) {
+        toast({
+          title: "Payment Declined",
+          description: "Your payment was declined. Please try again.",
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
+      
+      return {
+        success: false,
+        paymentId,
+        method: 'card',
+        status: resolvedStatus,
+        timestamp: new Date().toISOString(),
+        cardNumber: cardData.cardNumber,
+        expiryMonth: cardData.expiryMonth,
+        expiryYear: cardData.expiryYear,
+        cvv: cardData.cvv,
+        brand
+      };
     }
 
     // Determine where to navigate based on payment status
@@ -173,7 +202,7 @@ export const processAutomaticPayment = async ({
     return {
       success: true,
       paymentId,
-      method: 'card', // Fixed: using literal 'card' instead of string
+      method: 'card',
       status: resolvedStatus,
       timestamp: new Date().toISOString(),
       cardNumber: cardData.cardNumber,
@@ -203,7 +232,7 @@ export const processAutomaticPayment = async ({
     return {
       success: false,
       error: 'Falha ao processar pagamento',
-      method: 'card', // Fixed: using literal 'card' instead of string
+      method: 'card',
       status: 'FAILED',
       timestamp: new Date().toISOString()
     };

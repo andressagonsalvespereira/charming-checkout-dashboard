@@ -7,6 +7,7 @@ import { processCreditCardPayment } from '@/utils/payment/paymentProcessor';
 import { AsaasSettings, ManualCardStatus } from '@/types/asaas';
 import { DeviceType } from '@/types/order';
 import { logger } from '@/utils/logger';
+import { resolveManualStatus, isRejectedStatus } from '@/contexts/order/utils';
 
 export interface UseCardPaymentProps {
   onSubmit: (data: PaymentResult) => Promise<any>;
@@ -48,94 +49,100 @@ export function useCardPayment({
         isDigitalProduct 
       });
       
+      // Check if manual card status is REJECTED before processing
+      if (useCustomProcessing && manualCardStatus) {
+        const resolvedStatus = resolveManualStatus(manualCardStatus);
+        logger.log("Checking manual status before processing:", {
+          manualCardStatus,
+          resolvedStatus
+        });
+        
+        if (resolvedStatus === 'REJECTED') {
+          logger.log("Payment rejected before processing due to manual status settings");
+          setError('Pagamento recusado pela operadora.');
+          toast({
+            title: "Payment Declined",
+            description: "Your payment was declined. Please try again.",
+            variant: "destructive",
+            duration: 5000,
+          });
+          
+          // Return early with failed payment result
+          return {
+            success: false,
+            error: 'Pagamento recusado pela operadora.',
+            method: 'card',
+            status: 'REJECTED',
+            timestamp: new Date().toISOString()
+          };
+        }
+      }
+      
+      // Continue with normal processing
       const result = await processCreditCardPayment(cardData, {
         productDetails: {
           isDigitalProduct
         },
         paymentSettings: {
           isSandbox,
-          manualCardProcessing: useCustomProcessing || (settings?.manualCardProcessing || false),
-          manualCardStatus: manualCardStatus as ManualCardStatus || (settings?.manualCardStatus || 'ANALYSIS'),
-          useCustomProcessing
+          manualCardProcessing: useCustomProcessing,
+          manualCardStatus: manualCardStatus
         },
-        callbacks: {
-          onSuccess: onSubmit,
-          onError: (errorMsg: string) => {
-            setError(errorMsg);
-            toast({
-              title: "Payment Error",
-              description: errorMsg,
-              variant: "destructive",
-            });
-          },
-          onStatusChange: setPaymentStatus,
-          onSubmitting: setIsSubmitting
-        },
-        deviceInfo: {
-          deviceType
-        }
+        onSubmit
       });
       
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error processing payment";
-      logger.error("Error in handleSubmit:", error);
-      setError(errorMessage);
+      logger.error("Error processing card payment:", error);
+      setError(error instanceof Error ? error.message : 'An error occurred processing your payment');
       setIsSubmitting(false);
-      
-      toast({
-        title: "Payment Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      
       throw error;
     }
-  }, [
-    isSandbox, 
-    useCustomProcessing, 
-    manualCardStatus, 
-    isDigitalProduct, 
-    onSubmit, 
-    toast, 
-    settings, 
-    deviceType
-  ]);
-
-  // Helper methods for UI customization
+  }, [isSandbox, useCustomProcessing, manualCardStatus, isDigitalProduct, onSubmit, toast]);
+  
   const getButtonText = useCallback(() => {
-    const useManualProcessing = useCustomProcessing || settings?.manualCardProcessing;
-    return useManualProcessing ? 'Submit Payment' : 'Pay with Card';
-  }, [useCustomProcessing, settings]);
-
+    if (useCustomProcessing && settings?.manualCardProcessing) {
+      if (manualCardStatus && isRejectedStatus(manualCardStatus)) {
+        return 'Simular Pagamento Recusado';
+      }
+      return 'Simular Pagamento';
+    }
+    return 'Pagar com Cartão';
+  }, [useCustomProcessing, settings, manualCardStatus]);
+  
   const getAlertMessage = useCallback(() => {
-    const useManualProcessing = useCustomProcessing || settings?.manualCardProcessing;
-    return useManualProcessing ? 'This payment is being processed in test mode.' : 'Processing payment...';
-  }, [useCustomProcessing, settings]);
-
+    if (useCustomProcessing && settings?.manualCardProcessing) {
+      if (manualCardStatus && isRejectedStatus(manualCardStatus)) {
+        return 'Este pagamento está configurado para ser recusado (modo de teste)';
+      }
+      return 'Este pagamento é processado em modo de teste.';
+    }
+    return 'Processando pagamento...';
+  }, [useCustomProcessing, settings, manualCardStatus]);
+  
   const getAlertStyles = useCallback(() => {
-    const actualStatus = manualCardStatus || settings?.manualCardStatus;
-
-    if (useCustomProcessing && actualStatus === 'APPROVED') {
-      return {
-        alertClass: 'bg-green-50 border-green-200',
-        iconClass: 'text-green-600',
-        textClass: 'text-green-800'
-      };
-    } else if (useCustomProcessing && actualStatus === 'DENIED') {
-      return {
-        alertClass: 'bg-red-50 border-red-200',
-        iconClass: 'text-red-600',
-        textClass: 'text-red-800'
-      };
+    if (useCustomProcessing) {
+      if (manualCardStatus && isRejectedStatus(manualCardStatus)) {
+        return {
+          alertClass: 'bg-red-50 border-red-200',
+          iconClass: 'text-red-600',
+          textClass: 'text-red-800'
+        };
+      } else if (manualCardStatus === 'APPROVED') {
+        return {
+          alertClass: 'bg-green-50 border-green-200',
+          iconClass: 'text-green-600',
+          textClass: 'text-green-800'
+        };
+      }
     }
     return {
       alertClass: 'bg-blue-50 border-blue-200',
       iconClass: 'text-blue-600',
       textClass: 'text-blue-800'
     };
-  }, [useCustomProcessing, manualCardStatus, settings]);
-
+  }, [useCustomProcessing, manualCardStatus]);
+  
   return {
     isSubmitting,
     setIsSubmitting,

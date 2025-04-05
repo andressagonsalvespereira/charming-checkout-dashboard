@@ -10,6 +10,7 @@ import { useCardPayment } from '@/hooks/payment/useCardPayment';
 import { PaymentResult } from '@/types/payment';
 import { logger } from '@/utils/logger';
 import { AsaasSettings, ManualCardStatus } from '@/types/asaas';
+import { isRejectedStatus } from '@/contexts/order/utils/resolveManualStatus';
 
 interface CheckoutFormProps {
   onSubmit: (data: PaymentResult) => Promise<any>;
@@ -50,6 +51,14 @@ const CheckoutForm = ({
     logger.log("Processing card payment form submission");
     
     try {
+      // Log important debug information
+      logger.log("Payment configuration:", {
+        isSandbox,
+        useCustomProcessing,
+        manualCardStatus,
+        isStatusRejected: manualCardStatus ? isRejectedStatus(manualCardStatus) : false
+      });
+      
       return await handleSubmit(cardData);
     } catch (error) {
       logger.error("Error in handleCardFormSubmit:", error);
