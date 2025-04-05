@@ -40,9 +40,10 @@ export interface PaymentProcessorConfig {
     manualCardStatus?: 'APPROVED' | 'DENIED' | 'ANALYSIS';
     useCustomProcessing?: boolean;
   };
-  callbacks: {
-    onSuccess: (result: PaymentResult) => Promise<any> | any;
-    onError: (errorMessage: string) => void;
+  onSubmit: (result: PaymentResult) => Promise<any> | any;
+  callbacks?: {
+    onSuccess?: (result: PaymentResult) => Promise<any> | any;
+    onError?: (errorMessage: string) => void;
     onStatusChange?: (status: string) => void;
     onSubmitting?: (isSubmitting: boolean) => void;
     onNavigation?: (path: string, state?: any) => void;
@@ -63,12 +64,18 @@ export const processCreditCardPayment = async (
     paymentSettings, 
     callbacks,
     deviceInfo,
-    productDetails
+    productDetails,
+    onSubmit
   } = config;
 
-  if (callbacks.onSubmitting) {
-    callbacks.onSubmitting(true);
-  }
+  // Create default callbacks if not provided
+  const safeCallbacks = callbacks || {};
+  const setSubmitting = safeCallbacks.onSubmitting || (() => {});
+  const handleError = safeCallbacks.onError || (() => {});
+  const handleStatusChange = safeCallbacks.onStatusChange || (() => {});
+
+  // Set form to submitting state
+  setSubmitting(true);
 
   try {
     logger.log("Processing credit card payment", {
@@ -123,17 +130,17 @@ export const processCreditCardPayment = async (
       deviceType: deviceInfo?.deviceType
     };
 
-    // If success, send to onSuccess callback
+    // If success, send to onSubmit callback
     if (paymentResult.success) {
       logger.log("Card payment processed successfully", {
         paymentId,
         status: paymentStatus
       });
 
-      await callbacks.onSuccess(paymentResult);
+      await onSubmit(paymentResult);
       
-      if (callbacks.onStatusChange) {
-        callbacks.onStatusChange(paymentStatus);
+      if (handleStatusChange) {
+        handleStatusChange(paymentStatus);
       }
     } else {
       throw new Error('Payment declined by the processor');
@@ -147,7 +154,7 @@ export const processCreditCardPayment = async (
       ? error.message 
       : 'Unexpected error during payment processing';
     
-    callbacks.onError(errorMessage);
+    handleError(errorMessage);
     
     return {
       success: false,
@@ -157,9 +164,8 @@ export const processCreditCardPayment = async (
       error: errorMessage
     };
   } finally {
-    if (callbacks.onSubmitting) {
-      callbacks.onSubmitting(false);
-    }
+    // Set form back to non-submitting state
+    setSubmitting(false);
   }
 };
 
@@ -173,12 +179,18 @@ export const processPixPayment = async (
     paymentSettings, 
     callbacks,
     deviceInfo,
-    productDetails
+    productDetails,
+    onSubmit
   } = config;
 
-  if (callbacks.onSubmitting) {
-    callbacks.onSubmitting(true);
-  }
+  // Create default callbacks if not provided
+  const safeCallbacks = callbacks || {};
+  const setSubmitting = safeCallbacks.onSubmitting || (() => {});
+  const handleError = safeCallbacks.onError || (() => {});
+  const handleStatusChange = safeCallbacks.onStatusChange || (() => {});
+
+  // Set form to submitting state
+  setSubmitting(true);
 
   try {
     logger.log("Processing PIX payment", {
@@ -215,10 +227,10 @@ export const processPixPayment = async (
       expirationDate
     });
 
-    await callbacks.onSuccess(paymentResult);
+    await onSubmit(paymentResult);
       
-    if (callbacks.onStatusChange) {
-      callbacks.onStatusChange('PENDING');
+    if (handleStatusChange) {
+      handleStatusChange('PENDING');
     }
 
     return paymentResult;
@@ -229,7 +241,7 @@ export const processPixPayment = async (
       ? error.message 
       : 'Unexpected error during PIX processing';
     
-    callbacks.onError(errorMessage);
+    handleError(errorMessage);
     
     return {
       success: false,
@@ -239,8 +251,7 @@ export const processPixPayment = async (
       error: errorMessage
     };
   } finally {
-    if (callbacks.onSubmitting) {
-      callbacks.onSubmitting(false);
-    }
+    // Set form back to non-submitting state
+    setSubmitting(false);
   }
 };

@@ -88,7 +88,15 @@ export function useCardPayment({
           manualCardProcessing: useCustomProcessing,
           manualCardStatus: manualCardStatus
         },
-        onSubmit
+        onSubmit,
+        callbacks: {
+          onSubmitting: setIsSubmitting,
+          onError: setError,
+          onStatusChange: setPaymentStatus
+        },
+        deviceInfo: {
+          deviceType
+        }
       });
       
       return result;
@@ -98,7 +106,7 @@ export function useCardPayment({
       setIsSubmitting(false);
       throw error;
     }
-  }, [isSandbox, useCustomProcessing, manualCardStatus, isDigitalProduct, onSubmit, toast]);
+  }, [isSandbox, useCustomProcessing, manualCardStatus, isDigitalProduct, onSubmit, toast, deviceType]);
   
   const getButtonText = useCallback(() => {
     if (useCustomProcessing && settings?.manualCardProcessing) {
