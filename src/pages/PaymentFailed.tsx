@@ -65,15 +65,11 @@ const PaymentFailed = () => {
           name: state.orderData.productName || "Unknown product",
           price: state.orderData.productPrice,
           quantity: 1
-        }],
-        status: 'failed'
+        }]
       });
     } else {
       logger.log("No product data for failed purchase tracking, using default");
-      trackPurchase({
-        ...defaultPurchaseData,
-        status: 'failed'
-      });
+      trackPurchase(defaultPurchaseData);
     }
   }, [state, trackPurchase]);
 
