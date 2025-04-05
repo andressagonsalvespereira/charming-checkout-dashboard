@@ -49,15 +49,18 @@ export function useCardPayment({
         isDigitalProduct 
       });
       
+      // Normalize status immediately for consistent evaluation
+      let effectiveManualStatus = manualCardStatus;
+      const resolvedStatus = resolveManualStatus(effectiveManualStatus);
+      
       // Check if manual card status is REJECTED before processing
-      if (useCustomProcessing && manualCardStatus) {
-        const resolvedStatus = resolveManualStatus(manualCardStatus);
+      if (useCustomProcessing && effectiveManualStatus) {
         logger.log("Checking manual status before processing:", {
-          manualCardStatus,
+          manualCardStatus: effectiveManualStatus,
           resolvedStatus
         });
         
-        if (resolvedStatus === 'REJECTED') {
+        if (isRejectedStatus(effectiveManualStatus)) {
           logger.log("Payment rejected before processing due to manual status settings");
           setError('Pagamento recusado pela operadora.');
           toast({
@@ -68,25 +71,33 @@ export function useCardPayment({
           });
           
           // Return early with failed payment result
-          return {
+          const rejectedResult: PaymentResult = {
             success: false,
             error: 'Pagamento recusado pela operadora.',
             method: 'card',
             status: 'REJECTED',
             timestamp: new Date().toISOString()
           };
+          
+          // Still call onSubmit to record the rejected payment
+          await onSubmit(rejectedResult);
+          
+          return rejectedResult;
         }
       }
       
       // Continue with normal processing
       const result = await processCreditCardPayment(cardData, {
         productDetails: {
-          isDigitalProduct
+          isDigitalProduct,
+          custom_manual_status: effectiveManualStatus,
+          override_global_status: useCustomProcessing
         },
         paymentSettings: {
           isSandbox,
           manualCardProcessing: useCustomProcessing,
-          manualCardStatus: manualCardStatus
+          manualCardStatus: effectiveManualStatus,
+          useCustomProcessing
         },
         onSubmit,
         callbacks: {

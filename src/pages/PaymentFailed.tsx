@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ const PaymentFailed = () => {
   const { trackPurchase } = usePixel();
 
   // Log mount and state for debugging
-  React.useEffect(() => {
+  useEffect(() => {
     logger.log("PaymentFailed component mounted with state:", state);
   }, [state]);
 
@@ -49,8 +49,14 @@ const PaymentFailed = () => {
   };
 
   // Track failed purchase attempt
-  React.useEffect(() => {
+  useEffect(() => {
     if (state?.orderData?.productPrice) {
+      logger.log("Tracking failed purchase attempt", {
+        productId: state.orderData.productId,
+        productName: state.orderData.productName,
+        price: state.orderData.productPrice
+      });
+      
       trackPurchase({
         value: state.orderData.productPrice,
         transactionId: `failed-${Date.now()}`,
@@ -59,10 +65,15 @@ const PaymentFailed = () => {
           name: state.orderData.productName || "Unknown product",
           price: state.orderData.productPrice,
           quantity: 1
-        }]
+        }],
+        status: 'failed'
       });
     } else {
-      trackPurchase(defaultPurchaseData);
+      logger.log("No product data for failed purchase tracking, using default");
+      trackPurchase({
+        ...defaultPurchaseData,
+        status: 'failed'
+      });
     }
   }, [state, trackPurchase]);
 
@@ -90,8 +101,24 @@ const PaymentFailed = () => {
                 <li>Cartão bloqueado ou com restrições</li>
                 <li>Dados do cartão inseridos incorretamente</li>
                 <li>Transação não autorizada pelo banco emissor</li>
+                {state?.orderData?.error && (
+                  <li>Erro específico: {state.orderData.error}</li>
+                )}
               </ul>
             </div>
+            
+            {state?.orderData && (
+              <div className="w-full max-w-md bg-white rounded-lg p-4 mb-4 shadow-sm">
+                <h3 className="font-medium mb-2">Detalhes do pedido:</h3>
+                <div className="text-sm text-gray-600 text-left space-y-1">
+                  <p><strong>Produto:</strong> {state.orderData.productName || 'Produto'}</p>
+                  {state.orderData.productPrice && (
+                    <p><strong>Valor:</strong> R$ {state.orderData.productPrice.toFixed(2)}</p>
+                  )}
+                  <p><strong>Status:</strong> Pagamento recusado</p>
+                </div>
+              </div>
+            )}
             
             <div className="space-y-3 w-full">
               <Button 

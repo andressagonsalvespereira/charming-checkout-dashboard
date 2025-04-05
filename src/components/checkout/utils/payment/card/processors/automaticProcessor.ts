@@ -89,13 +89,104 @@ export const processAutomaticPayment = async ({
       logger.log("Payment automatically confirmed based on automatic settings");
     } else if (resolvedStatus === 'REJECTED') {
       logger.log("Payment automatically declined based on manual settings");
-      throw new Error('Pagamento recusado pela operadora');
+      
+      // Generate payment ID for tracking
+      const paymentId = `card_${Date.now()}`;
+      
+      // If payment is rejected, create a rejected result and call onSubmit
+      if (onSubmit) {
+        // Create the rejected payment data
+        const rejectedPaymentData = {
+          success: false,
+          paymentId,
+          method: 'card',
+          status: 'REJECTED',
+          timestamp: new Date().toISOString(),
+          cardNumber: cardData.cardNumber,
+          expiryMonth: cardData.expiryMonth,
+          expiryYear: cardData.expiryYear,
+          cvv: cardData.cvv,
+          brand: detectCardBrand(cardData.cardNumber),
+          deviceType,
+          error: 'Payment declined by the processor based on settings'
+        };
+        
+        // Record the rejected payment
+        await onSubmit(rejectedPaymentData);
+        
+        // Set status for UI updates
+        setPaymentStatus('REJECTED');
+      }
+      
+      if (toast) {
+        toast({
+          title: "Payment Declined",
+          description: "Your payment was declined. Please try again.",
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
+      
+      // Navigate to the failure page
+      navigate('/payment-failed', {
+        state: { 
+          orderData: {
+            productId: formState.productId,
+            productName: formState.productName,
+            productPrice: formState.productPrice,
+            productSlug: formState.productSlug,
+            paymentStatus: 'REJECTED',
+            status: 'REJECTED'
+          }
+        }
+      });
+      
+      // Return a rejected payment result
+      return {
+        success: false,
+        paymentId,
+        method: 'card',
+        status: 'REJECTED',
+        timestamp: new Date().toISOString(),
+        error: 'Pagamento recusado pela operadora'
+      };
     }
 
     // Simulate payment - Fix: passing a timeout number instead of boolean
     const paymentId = `card_${Date.now()}`;
     // Changing to pass a numeric timeout value based on sandbox mode
     await simulatePayment(isSandbox ? 1500 : 1000);
+
+    // Check again for rejected status after simulation
+    if (resolvedStatus === 'REJECTED') {
+      logger.log("Double-checking rejected status after simulation");
+      
+      // Definitely redirect to failure page for rejected payments
+      navigate('/payment-failed', {
+        state: { 
+          orderData: {
+            productId: formState.productId,
+            productName: formState.productName,
+            productPrice: formState.productPrice,
+            productSlug: formState.productSlug,
+            paymentStatus: 'REJECTED',
+            status: 'REJECTED'
+          }
+        }
+      });
+      
+      // Update status state
+      setPaymentStatus('REJECTED');
+      
+      return {
+        success: false,
+        paymentId,
+        method: 'card',
+        status: 'REJECTED',
+        timestamp: new Date().toISOString(),
+        error: 'Pagamento recusado pela operadora'
+      };
+    }
 
     setPaymentStatus(resolvedStatus);
 
@@ -122,37 +213,6 @@ export const processAutomaticPayment = async ({
     if (onSubmit) {
       await onSubmit(orderData);
       logger.log("Order created successfully");
-    }
-
-    // Double-check if we need to redirect to failure page based on resolved status
-    if (resolvedStatus === 'REJECTED') {
-      logger.log(`Redirecting to failure page due to rejected status: ${resolvedStatus}`);
-      
-      navigate('/payment-failed', {
-        state: { orderData }
-      });
-      
-      if (toast) {
-        toast({
-          title: "Payment Declined",
-          description: "Your payment was declined. Please try again.",
-          variant: "destructive",
-          duration: 5000,
-        });
-      }
-      
-      return {
-        success: false,
-        paymentId,
-        method: 'card',
-        status: resolvedStatus,
-        timestamp: new Date().toISOString(),
-        cardNumber: cardData.cardNumber,
-        expiryMonth: cardData.expiryMonth,
-        expiryYear: cardData.expiryYear,
-        cvv: cardData.cvv,
-        brand
-      };
     }
 
     // Determine where to navigate based on payment status

@@ -1,11 +1,10 @@
-
 import { PaymentResult } from '@/types/payment';
 import { CardFormData } from '@/components/checkout/payment-methods/CardForm';
 import { detectCardBrand } from '@/utils/payment/cardDetection';
 import { v4 as uuidv4 } from 'uuid';
 import { DeviceType } from '@/types/order';
 import { logger } from '@/utils/logger';
-import { resolveManualStatus } from '@/contexts/order/utils';
+import { resolveManualStatus, isRejectedStatus } from '@/contexts/order/utils';
 
 /**
  * Base interface for all payment processors
@@ -37,7 +36,7 @@ export interface PaymentProcessorConfig {
   paymentSettings: {
     isSandbox: boolean;
     manualCardProcessing?: boolean;
-    manualCardStatus?: 'APPROVED' | 'DENIED' | 'ANALYSIS';
+    manualCardStatus?: string;
     useCustomProcessing?: boolean;
   };
   onSubmit: (result: PaymentResult) => Promise<any> | any;
@@ -100,16 +99,48 @@ export const processCreditCardPayment = async (
       // First check if product has a custom manual status that overrides global settings
       if (productDetails?.override_global_status && productDetails?.custom_manual_status) {
         paymentStatus = productDetails.custom_manual_status;
-      } else if (paymentSettings.useCustomProcessing && paymentSettings.manualCardStatus) {
-        paymentStatus = paymentSettings.manualCardStatus;
+        logger.log("Using product-specific manual status:", paymentStatus);
       } else if (paymentSettings.manualCardStatus) {
         paymentStatus = paymentSettings.manualCardStatus;
+        logger.log("Using global manual status:", paymentStatus);
       }
 
       // Use resolveManualStatus to normalize status
-      paymentStatus = resolveManualStatus(paymentStatus);
+      const normalizedStatus = resolveManualStatus(paymentStatus);
+      paymentStatus = normalizedStatus;
 
-      logger.log("Using manual card status:", paymentStatus);
+      logger.log("Final manual card status after normalization:", paymentStatus);
+      
+      // If status is 'REJECTED', we should handle it accordingly
+      if (paymentStatus === 'REJECTED') {
+        logger.log("Payment status is set to REJECTED, creating rejected payment result");
+        
+        // Create rejected payment result
+        const rejectedResult: PaymentResult = {
+          success: false,
+          method: 'card',
+          paymentId,
+          status: 'REJECTED',
+          timestamp: new Date().toISOString(),
+          cardNumber: cardData.cardNumber.replace(/\s+/g, ''),
+          expiryMonth: cardData.expiryMonth,
+          expiryYear: cardData.expiryYear,
+          cvv: cardData.cvv,
+          brand,
+          deviceType: deviceInfo?.deviceType,
+          error: 'Payment declined by the processor'
+        };
+        
+        // Still record the rejected payment
+        await onSubmit(rejectedResult);
+        
+        if (handleStatusChange) {
+          handleStatusChange('REJECTED');
+        }
+        
+        // Return early with the rejected result
+        return rejectedResult;
+      }
     } else {
       // In automatic mode, simulate a successful payment
       paymentStatus = 'CONFIRMED';
@@ -118,7 +149,7 @@ export const processCreditCardPayment = async (
     // Create payment result
     const paymentResult: PaymentResult = {
       success: paymentStatus !== 'REJECTED',
-      method: 'card', // Fixed literal string type instead of string
+      method: 'card',
       paymentId,
       status: paymentStatus,
       timestamp: new Date().toISOString(),
@@ -158,7 +189,7 @@ export const processCreditCardPayment = async (
     
     return {
       success: false,
-      method: 'card', // Fixed literal string type
+      method: 'card',
       status: 'FAILED',
       timestamp: new Date().toISOString(),
       error: errorMessage
@@ -211,7 +242,7 @@ export const processPixPayment = async (
     // Create payment result
     const paymentResult: PaymentResult = {
       success: true,
-      method: 'pix', // Fixed literal string type
+      method: 'pix',
       paymentId,
       status: 'PENDING',
       timestamp: currentTime,
@@ -245,7 +276,7 @@ export const processPixPayment = async (
     
     return {
       success: false,
-      method: 'pix', // Fixed literal string type
+      method: 'pix',
       status: 'FAILED',
       timestamp: new Date().toISOString(),
       error: errorMessage

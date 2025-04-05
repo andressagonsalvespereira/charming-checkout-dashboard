@@ -59,7 +59,23 @@ const CheckoutForm = ({
         isStatusRejected: manualCardStatus ? isRejectedStatus(manualCardStatus) : false
       });
       
-      return await handleSubmit(cardData);
+      const result = await handleSubmit(cardData);
+      
+      // Check if payment was rejected
+      if (result.status === 'REJECTED' || isRejectedStatus(result.status)) {
+        logger.log("Payment was rejected:", result);
+        toast({
+          title: "Payment Declined",
+          description: "Your payment was declined by the payment processor.",
+          variant: "destructive",
+          duration: 5000,
+        });
+        
+        // Still return the result for further processing
+        return result;
+      }
+      
+      return result;
     } catch (error) {
       logger.error("Error in handleCardFormSubmit:", error);
       
