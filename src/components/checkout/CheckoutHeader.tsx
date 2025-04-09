@@ -10,6 +10,7 @@ interface CheckoutCustomization {
   button_color: string;
   button_text_color: string;
   heading_color: string;
+  button_text?: string;
 }
 
 const CheckoutHeader = () => {
@@ -23,7 +24,8 @@ const CheckoutHeader = () => {
     show_banner: true,
     button_color: '#3b82f6',
     button_text_color: '#ffffff',
-    heading_color: '#000000'
+    heading_color: '#000000',
+    button_text: 'Finalizar Pagamento'
   });
 
   useEffect(() => {
@@ -31,7 +33,7 @@ const CheckoutHeader = () => {
       try {
         const { data, error } = await (supabase as any)
           .from('checkout_customization')
-          .select('header_message, banner_image_url, show_banner, button_color, button_text_color, heading_color')
+          .select('*')
           .order('id', { ascending: false })
           .limit(1)
           .single();
@@ -42,7 +44,16 @@ const CheckoutHeader = () => {
         }
 
         if (data) {
-          setCustomization(data as CheckoutCustomization);
+          // Ensure we handle missing properties gracefully
+          setCustomization({
+            header_message: data.header_message || 'Oferta por tempo limitado!',
+            banner_image_url: data.banner_image_url || '',
+            show_banner: data.show_banner ?? true,
+            button_color: data.button_color || '#3b82f6',
+            button_text_color: data.button_text_color || '#ffffff',
+            heading_color: data.heading_color || '#000000',
+            button_text: data.button_text || 'Finalizar Pagamento'
+          });
         }
       } catch (err) {
         console.error('Failed to fetch checkout customization', err);

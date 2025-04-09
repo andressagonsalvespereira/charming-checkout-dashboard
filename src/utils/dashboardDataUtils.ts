@@ -34,7 +34,7 @@ export const fetchDashboardStats = async (): Promise<DashboardStats> => {
     const { data: revenueData, error: revenueError } = await supabase
       .from('orders')
       .select('price')
-      .eq('status', 'Pago');
+      .eq('payment_status', 'Pago');
     
     if (revenueError) throw revenueError;
     
@@ -61,7 +61,7 @@ export const fetchDashboardStats = async (): Promise<DashboardStats> => {
       .from('orders')
       .select('*', { count: 'exact', head: true })
       .eq('payment_method', 'PIX')
-      .eq('status', 'Pago');
+      .eq('payment_status', 'Pago');
     
     if (pixCompletedError) throw pixCompletedError;
     
@@ -75,7 +75,7 @@ export const fetchDashboardStats = async (): Promise<DashboardStats> => {
     if (recentOrdersError) throw recentOrdersError;
     
     // Calculate payment methods distribution
-    const paymentMethodsDistribution = [
+    let paymentMethodsDistribution = [
       { name: 'Cartão de Crédito', value: cardOrders || 0 },
       { name: 'PIX', value: pixOrders || 0 }
     ];
@@ -83,8 +83,10 @@ export const fetchDashboardStats = async (): Promise<DashboardStats> => {
     // Format as percentage if there are orders
     const total = (cardOrders || 0) + (pixOrders || 0);
     if (total > 0) {
-      paymentMethodsDistribution[0].value = Math.round((cardOrders || 0) / total * 100);
-      paymentMethodsDistribution[1].value = Math.round((pixOrders || 0) / total * 100);
+      paymentMethodsDistribution = [
+        { name: 'Cartão de Crédito', value: Math.round((cardOrders || 0) / total * 100) },
+        { name: 'PIX', value: Math.round((pixOrders || 0) / total * 100) }
+      ];
     }
     
     // Generate visitor data for the last 7 days (still using random data as we don't track visitors)

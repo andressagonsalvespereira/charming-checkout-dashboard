@@ -10,18 +10,22 @@ interface CheckoutContainerProps {
 }
 
 interface CheckoutCustomization {
+  id: number;
   button_color?: string;
-  button_text_color?: string;
+  button_text_color?: string; // Optional since it might not exist in DB yet
   button_text?: string;
   header_message?: string;
   banner_image_url?: string;
   show_banner?: boolean;
-  heading_color?: string;
+  heading_color?: string; // Optional since it might not exist in DB yet
+  created_at?: string;
+  updated_at?: string;
 }
 
 const CheckoutContainer: React.FC<CheckoutContainerProps> = ({ children }) => {
   const { toast } = useToast();
   const [customization, setCustomization] = useState<CheckoutCustomization>({
+    id: 0,
     button_color: '#3b82f6',
     button_text_color: '#ffffff',
     button_text: 'Finalizar Pagamento',
@@ -61,13 +65,14 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({ children }) => {
           console.log("Checkout customization loaded:", data);
           // Ensure all required fields have values, falling back to defaults if needed
           const safeData: CheckoutCustomization = {
+            ...data,
             button_color: data.button_color || '#3b82f6',
-            button_text_color: data.button_text_color || '#ffffff',
+            button_text_color: data.button_text_color || '#ffffff', // Use default if missing
             button_text: data.button_text || 'Finalizar Pagamento',
             header_message: data.header_message || 'Oferta por tempo limitado!',
             banner_image_url: data.banner_image_url || '',
             show_banner: data.show_banner ?? true,
-            heading_color: data.heading_color || '#000000'
+            heading_color: data.heading_color || '#000000' // Use default if missing
           };
           
           setCustomization(safeData);
