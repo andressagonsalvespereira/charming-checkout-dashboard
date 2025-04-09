@@ -34,20 +34,7 @@ export const usePaymentSettingsForm = () => {
 
   const form = useForm<PaymentSettingsFormValues>({
     resolver: zodResolver(PaymentSettingsSchema),
-    defaultValues: {
-      isEnabled: false,
-      manualCardProcessing: false,
-      manualCardStatus: 'ANALYSIS',
-      manualCreditCard: false,
-      allowPix: true,
-      allowCreditCard: true,
-      sandboxMode: true,
-      sandboxApiKey: '',
-      productionApiKey: '',
-      manualPixPage: false,
-      manualPaymentConfig: false,
-      apiKey: '',
-    },
+    defaultValues: asaasSettingsToFormValues(formState),
   });
 
   // Load settings on mount
@@ -78,6 +65,7 @@ export const usePaymentSettingsForm = () => {
   // Update formState when the form values change
   useEffect(() => {
     const subscription = form.watch((value) => {
+      logger.log('Form values changed:', value);
       setFormState(formValuesToAsaasSettings(value as PaymentSettingsFormValues));
     });
     

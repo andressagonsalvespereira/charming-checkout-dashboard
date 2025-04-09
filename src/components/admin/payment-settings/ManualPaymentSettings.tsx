@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Check, AlertTriangle, Clock } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
+import { logger } from '@/utils/logger';
 
 // Use string literals instead of enum
 const MANUAL_CARD_STATUS = {
@@ -21,6 +22,18 @@ interface ManualPaymentSettingsProps {
 
 const ManualPaymentSettings: React.FC<ManualPaymentSettingsProps> = ({ form }) => {
   const showManualSettings = form.watch('manualCardProcessing');
+
+  // Log form values for debugging
+  React.useEffect(() => {
+    const subscription = form.watch((value) => {
+      logger.log('Manual payment settings changed:', {
+        manualCardProcessing: value.manualCardProcessing,
+        manualCardStatus: value.manualCardStatus
+      });
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form]);
   
   if (!showManualSettings) {
     return null;
@@ -51,8 +64,10 @@ const ManualPaymentSettings: React.FC<ManualPaymentSettingsProps> = ({ form }) =
               <FormLabel>Status de pagamento manual</FormLabel>
               <FormControl>
                 <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  onValueChange={(value) => {
+                    logger.log('Selected manual card status:', value);
+                    field.onChange(value);
+                  }}
                   value={field.value}
                   className="space-y-4"
                 >
