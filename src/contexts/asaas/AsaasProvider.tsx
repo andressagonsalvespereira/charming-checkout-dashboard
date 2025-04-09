@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { AsaasSettings, ManualCardStatus } from '@/types/asaas';
 import { AsaasContext } from './AsaasContext';
 import { defaultAsaasSettings } from './types';
+import { logger } from '@/utils/logger';
 
 export const AsaasProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<AsaasSettings>(defaultAsaasSettings);
@@ -45,6 +46,8 @@ export const AsaasProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       // If we got data, update settings
       if (asaasConfigData) {
+        logger.log('Loaded settings from database with card status:', asaasConfigData.manual_card_status);
+        
         setSettings({
           isEnabled: asaasConfigData.asaas_enabled || false,
           apiKey: '',
@@ -71,6 +74,7 @@ export const AsaasProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const saveSettings = async (newSettings: AsaasSettings) => {
     try {
       setLoading(true);
+      logger.log('Saving settings to database with card status:', newSettings.manualCardStatus);
 
       // Save Asaas settings
       const { error: settingsError } = await supabase.from('settings').insert({
@@ -115,6 +119,7 @@ export const AsaasProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateSettings = async (newSettings: AsaasSettings) => {
     try {
       setLoading(true);
+      logger.log('Updating settings in database with card status:', newSettings.manualCardStatus);
 
       // Update Asaas settings
       const { data: existingSettings } = await supabase
@@ -144,6 +149,9 @@ export const AsaasProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           console.error('Error updating settings:', settingsError);
           throw settingsError;
         }
+      } else {
+        // If no settings exist yet, create them
+        return await saveSettings(newSettings);
       }
 
       // Update Asaas API keys

@@ -21,8 +21,9 @@ export const validateCardStatus = (status: string | null): ManualCardStatus => {
     return 'ANALYSIS';
   }
   
-  const isValid = validStatuses.includes(status as ManualCardStatus);
+  const upperStatus = status.toUpperCase() as ManualCardStatus;
+  const isValid = validStatuses.includes(upperStatus);
   logger.log(`Status ${status} is ${isValid ? 'valid' : 'invalid'}`);
   
-  return isValid ? (status as ManualCardStatus) : 'ANALYSIS';
+  return isValid ? upperStatus : 'ANALYSIS';
 };

@@ -14,6 +14,7 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { AsaasSettings as AsaasSettingsType, ManualCardStatus } from '@/types/asaas';
+import { logger } from '@/utils/logger';
 
 const asaasSettingsSchema = z.object({
   isEnabled: z.boolean().default(false),
@@ -82,7 +83,8 @@ const AsaasSettings = () => {
     setIsSubmitting(true);
 
     try {
-      console.log('Saving Asaas settings:', data);
+      logger.log('Saving Asaas settings:', data);
+      logger.log('Selected manual card status:', data.manualCardStatus);
 
       if (!data.apiKey && !data.sandboxApiKey && !data.productionApiKey) {
         toast({
@@ -90,6 +92,7 @@ const AsaasSettings = () => {
           description: "Please provide at least one API key (sandbox or production).",
           variant: "destructive",
         });
+        setIsSubmitting(false);
         return;
       }
 
@@ -108,7 +111,14 @@ const AsaasSettings = () => {
         manualPaymentConfig: data.manualPaymentConfig,
       };
 
-      await saveSettings(settingsToSave);
+      logger.log('Sending settings to API with card status:', settingsToSave.manualCardStatus);
+      
+      // Use updateSettings instead of saveSettings if available
+      if (settings && 'updateSettings' in useAsaas()) {
+        await (useAsaas() as any).updateSettings(settingsToSave);
+      } else {
+        await saveSettings(settingsToSave);
+      }
 
       toast({
         title: "Settings Saved",
