@@ -132,6 +132,51 @@ export type Database = {
         }
         Relationships: []
       }
+      pixel_settings: {
+        Row: {
+          created_at: string | null
+          google_page_view: boolean | null
+          google_pixel_enabled: boolean | null
+          google_pixel_id: string | null
+          google_purchase: boolean | null
+          id: number
+          meta_add_to_cart: boolean | null
+          meta_page_view: boolean | null
+          meta_pixel_enabled: boolean | null
+          meta_pixel_id: string | null
+          meta_purchase: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          google_page_view?: boolean | null
+          google_pixel_enabled?: boolean | null
+          google_pixel_id?: string | null
+          google_purchase?: boolean | null
+          id?: number
+          meta_add_to_cart?: boolean | null
+          meta_page_view?: boolean | null
+          meta_pixel_enabled?: boolean | null
+          meta_pixel_id?: string | null
+          meta_purchase?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          google_page_view?: boolean | null
+          google_pixel_enabled?: boolean | null
+          google_pixel_id?: string | null
+          google_purchase?: boolean | null
+          id?: number
+          meta_add_to_cart?: boolean | null
+          meta_page_view?: boolean | null
+          meta_pixel_enabled?: boolean | null
+          meta_pixel_id?: string | null
+          meta_purchase?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           created_at: string | null

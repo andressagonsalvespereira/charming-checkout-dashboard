@@ -13,14 +13,14 @@ interface PixelContextType {
   pixelSettings: PixelSettings | null;
   isInitialized: boolean;
   trackPurchase: (data: TrackPurchaseData) => void;
-  trackPageView: () => void; // Add this property to fix the type error
+  trackPageView: () => void;
 }
 
 const PixelContext = createContext<PixelContextType>({
   pixelSettings: null,
   isInitialized: false,
   trackPurchase: () => {},
-  trackPageView: () => {} // Add default implementation
+  trackPageView: () => {}
 });
 
 export const usePixel = () => useContext(PixelContext);
@@ -34,30 +34,30 @@ export const PixelProvider: React.FC<PixelProviderProps> = ({ children }) => {
   const [isInitialized, setIsInitialized] = React.useState(false);
   const [pixelSettings, setPixelSettings] = React.useState<PixelSettings | null>(null);
 
-  // Inicializa pixels no primeiro carregamento
+  // Initialize pixels on first load
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         const settings = await getPixelSettings();
         setPixelSettings(settings);
         
-        // Verifica se temos configurações e se algum pixel está habilitado
+        // Check if we have settings and if any pixel is enabled
         if (settings && (
           (settings.googlePixelEnabled && settings.googlePixelId) || 
           (settings.metaPixelEnabled && settings.metaPixelId)
         )) {
-          await initializePixels();
+          initializePixels();
           setIsInitialized(true);
         }
       } catch (error) {
-        console.error('Erro ao inicializar pixels:', error);
+        console.error('Error initializing pixels:', error);
       }
     };
     
     fetchSettings();
   }, []);
 
-  // Rastreia visualizações de página quando a localização muda
+  // Track page views when location changes
   useEffect(() => {
     if (isInitialized) {
       trackPageViewService();
@@ -85,7 +85,7 @@ export const PixelProvider: React.FC<PixelProviderProps> = ({ children }) => {
       pixelSettings, 
       isInitialized, 
       trackPurchase,
-      trackPageView // Add the function to the context value
+      trackPageView
     }}>
       {children}
     </PixelContext.Provider>
