@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormDescription } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -22,18 +22,12 @@ interface ManualPaymentSettingsProps {
 
 const ManualPaymentSettings: React.FC<ManualPaymentSettingsProps> = ({ form }) => {
   const showManualSettings = form.watch('manualCardProcessing');
+  const currentStatus = form.watch('manualCardStatus');
 
-  // Log form values for debugging
-  React.useEffect(() => {
-    const subscription = form.watch((value) => {
-      logger.log('Manual payment settings changed:', {
-        manualCardProcessing: value.manualCardProcessing,
-        manualCardStatus: value.manualCardStatus
-      });
-    });
-    
-    return () => subscription.unsubscribe();
-  }, [form]);
+  // Log when component mounts and whenever status changes
+  useEffect(() => {
+    logger.log('ManualPaymentSettings initialized with status:', currentStatus);
+  }, [currentStatus]);
   
   if (!showManualSettings) {
     return null;

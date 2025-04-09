@@ -35,6 +35,7 @@ export const usePaymentSettingsForm = () => {
   const form = useForm<PaymentSettingsFormValues>({
     resolver: zodResolver(PaymentSettingsSchema),
     defaultValues: asaasSettingsToFormValues(formState),
+    mode: 'onChange',
   });
 
   // Load settings on mount
@@ -44,6 +45,10 @@ export const usePaymentSettingsForm = () => {
       try {
         const settings = await getPaymentSettings();
         logger.log('Loaded payment settings:', settings);
+        
+        // Ensure status is properly set
+        logger.log('Card status from database:', settings.manualCardStatus);
+        
         const formValues = asaasSettingsToFormValues(settings);
         form.reset(formValues);
         setFormState(settings);
@@ -65,7 +70,15 @@ export const usePaymentSettingsForm = () => {
   // Update formState when the form values change
   useEffect(() => {
     const subscription = form.watch((value) => {
+      if (!value) return;
+      
       logger.log('Form values changed:', value);
+      
+      // Explicitly log the manual card status
+      if (value.manualCardStatus) {
+        logger.log('Manual card status updated in form:', value.manualCardStatus);
+      }
+      
       setFormState(formValuesToAsaasSettings(value as PaymentSettingsFormValues));
     });
     
@@ -76,6 +89,7 @@ export const usePaymentSettingsForm = () => {
     setIsSaving(true);
     try {
       logger.log('Saving payment settings with form values:', data);
+      logger.log('Selected card status to save:', data.manualCardStatus);
       
       // Calculate apiKey based on sandbox mode
       const apiKey = data.sandboxMode 
@@ -88,6 +102,7 @@ export const usePaymentSettingsForm = () => {
       });
       
       logger.log('Transformed settings to save:', settingsToUpdate);
+      logger.log('Manual card status being saved:', settingsToUpdate.manualCardStatus);
       
       const success = await savePaymentSettings(settingsToUpdate);
       
@@ -99,6 +114,9 @@ export const usePaymentSettingsForm = () => {
         
         // Re-fetch settings to ensure we have the latest data
         const updatedSettings = await getPaymentSettings();
+        logger.log('Reloaded settings after save:', updatedSettings);
+        logger.log('Reloaded manual card status:', updatedSettings.manualCardStatus);
+        
         form.reset(asaasSettingsToFormValues(updatedSettings));
         setFormState(updatedSettings);
       } else {
@@ -120,6 +138,8 @@ export const usePaymentSettingsForm = () => {
     updater: (prev: AsaasSettings) => AsaasSettings
   ) => {
     const newFormState = updater(formState);
+    logger.log('Updating form state with new values:', newFormState);
+    logger.log('New manual card status:', newFormState.manualCardStatus);
     form.reset(asaasSettingsToFormValues(newFormState));
   };
 

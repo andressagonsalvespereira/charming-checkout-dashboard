@@ -9,10 +9,19 @@ import { logger } from '@/utils/logger';
  * @returns Valid ManualCardStatus or 'ANALYSIS' as fallback
  */
 const validateCardStatus = (status: string | null): ManualCardStatus => {
-  const validStatuses: ManualCardStatus[] = ['APPROVED', 'PENDING', 'CONFIRMED', 'DECLINED', 'REJECTED', 'ANALYSIS'];
-  return status && validStatuses.includes(status as ManualCardStatus) 
-    ? (status as ManualCardStatus) 
-    : 'ANALYSIS';
+  const validStatuses: ManualCardStatus[] = ['APPROVED', 'PENDING', 'CONFIRMED', 'DECLINED', 'REJECTED', 'ANALYSIS', 'DENIED'];
+  
+  logger.log('Validating card status:', status);
+  
+  if (!status) {
+    logger.log('Status is null or undefined, using ANALYSIS as default');
+    return 'ANALYSIS';
+  }
+  
+  const isValid = validStatuses.includes(status as ManualCardStatus);
+  logger.log(`Status ${status} is ${isValid ? 'valid' : 'invalid'}`);
+  
+  return isValid ? (status as ManualCardStatus) : 'ANALYSIS';
 };
 
 /**
@@ -55,8 +64,10 @@ export const getPaymentSettings = async (): Promise<AsaasSettings> => {
 
     // Validate the card status to ensure it's a valid ManualCardStatus
     const cardStatus = validateCardStatus(settingsData?.manual_card_status);
+    logger.log('Validated card status:', cardStatus);
 
-    return {
+    // Create the settings object with all retrieved data
+    const settings: AsaasSettings = {
       isEnabled: settingsData?.asaas_enabled || false,
       apiKey: settingsData?.sandbox_mode ? 
         (configData?.sandbox_api_key || '') : (configData?.production_api_key || ''),
@@ -71,6 +82,9 @@ export const getPaymentSettings = async (): Promise<AsaasSettings> => {
       manualPaymentConfig: settingsData?.manual_payment_config || false,
       manualCardStatus: cardStatus
     };
+    
+    logger.log('Loaded payment settings:', settings);
+    return settings;
   } catch (error) {
     logger.error('Error fetching payment settings:', error);
     // Return default settings in case of error
@@ -99,6 +113,7 @@ export const getPaymentSettings = async (): Promise<AsaasSettings> => {
 export const savePaymentSettings = async (settings: AsaasSettings): Promise<boolean> => {
   try {
     logger.log('Saving payment settings to database:', settings);
+    logger.log('Manual card status to save:', settings.manualCardStatus);
     
     // First, check if settings already exist
     const { data: existingData, error: existingError } = await supabase
@@ -115,6 +130,7 @@ export const savePaymentSettings = async (settings: AsaasSettings): Promise<bool
     const settingsId = existingData && existingData.length > 0 ? existingData[0].id : 1;
 
     logger.log(`Using settings ID: ${settingsId} for upsert operation`);
+    logger.log(`Saving manual card status: ${settings.manualCardStatus}`);
 
     // Save settings data
     const { error: settingsError } = await supabase
@@ -170,6 +186,20 @@ export const savePaymentSettings = async (settings: AsaasSettings): Promise<bool
     }
 
     logger.log('Successfully saved all payment settings to database');
+    
+    // Verify that settings were saved correctly by fetching them again
+    const { data: verifyData, error: verifyError } = await supabase
+      .from('settings')
+      .select('manual_card_status')
+      .eq('id', settingsId)
+      .single();
+      
+    if (verifyError) {
+      logger.warn('Could not verify settings were saved correctly:', verifyError);
+    } else {
+      logger.log('Verified saved manual card status:', verifyData.manual_card_status);
+    }
+    
     return true;
   } catch (error) {
     logger.error('Error saving payment settings:', error);
