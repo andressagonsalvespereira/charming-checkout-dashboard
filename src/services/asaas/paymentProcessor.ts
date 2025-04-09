@@ -40,14 +40,14 @@ export async function processAsaasPayment(
     const paymentResult = await processPaymentApi(sanitizedPaymentData, apiKey, sandboxMode);
     
     if (!paymentResult.success) {
-      throw new Error(paymentResult.error || 'Unknown payment error');
+      throw new Error(paymentResult.error ? paymentResult.error.toString() : 'Unknown payment error');
     }
     
     // For PIX payments, we need to get the QR code
-    if (sanitizedPaymentData.billingType === 'PIX' && paymentResult.paymentId) {
-      logger.log('Getting PIX QR code for payment', paymentResult.paymentId);
+    if (sanitizedPaymentData.billingType === 'PIX' && paymentResult.data?.id) {
+      logger.log('Getting PIX QR code for payment', paymentResult.data.id);
       
-      const pixResult = await getAsaasPixQrCode(paymentResult.paymentId, settings);
+      const pixResult = await getAsaasPixQrCode(paymentResult.data.id, settings);
       
       if (!pixResult.success) {
         // Extract the message if it's an object
@@ -61,13 +61,18 @@ export async function processAsaasPayment(
       // Access data from the data property of the response
       return {
         ...paymentResult,
+        paymentId: paymentResult.data.id,
         pixQrCode: pixResult.data?.payload,
         pixQrCodeImage: pixResult.data?.encodedImage,
         pixExpirationDate: pixResult.data?.expirationDate
       };
     }
     
-    return paymentResult;
+    // For other payment types
+    return {
+      ...paymentResult,
+      paymentId: paymentResult.data?.id
+    };
   } catch (error) {
     logger.error('Error processing payment:', error);
     throw error;

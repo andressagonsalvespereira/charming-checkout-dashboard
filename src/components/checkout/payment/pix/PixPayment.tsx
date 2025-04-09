@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { QrCode, ClipboardCopy, CheckCircle, AlertCircle } from 'lucide-react';
@@ -106,7 +107,7 @@ const PixPayment: React.FC<PixPaymentProps> = ({
             )}
           </>
         ) : (
-          <Alert variant="info">
+          <Alert variant="warning">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Aguardando a geração do código PIX...

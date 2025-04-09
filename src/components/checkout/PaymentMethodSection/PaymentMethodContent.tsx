@@ -6,7 +6,7 @@ import CheckoutForm from '@/components/checkout/CheckoutForm';
 import SimplifiedPixOption from '@/components/checkout/payment-methods/SimplifiedPixOption';
 import PixPayment from '@/components/checkout/PixPayment';
 import { PaymentMethodType } from './usePaymentMethodLogic';
-import { PaymentResult } from '@/components/checkout/payment/shared/types';
+import { PaymentResult } from '@/types/payment';
 import { logger } from '@/utils/logger';
 
 // Set para rastrear IDs de pagamento já processados
@@ -133,7 +133,7 @@ const PaymentMethodContent: React.FC<PaymentMethodContentProps> = ({
   };
 
   // Function to handle PIX button click
-  const handleShowPixPayment = (): Promise<PaymentResult> => {
+  const handleShowPixPayment = () => {
     setShowPixPayment(true);
     return Promise.resolve({
       success: true,
@@ -168,25 +168,32 @@ const PaymentMethodContent: React.FC<PaymentMethodContentProps> = ({
       
       {pixEnabled && paymentMethod === 'pix' && !showPixPayment && (
         <SimplifiedPixOption 
-          onSubmit={handleShowPixPayment}
+          onSelect={handleShowPixPayment}
+          isSelected={true}
           isProcessing={isProcessing}
-          productData={productDetails ? {
-            productId: productDetails.id,
-            productName: productDetails.name,
-            productPrice: productDetails.price
-          } : undefined}
-          customerData={customerData}
-          isSandbox={settings.sandboxMode || true}
-          isDigitalProduct={isDigitalProduct}
         />
       )}
       
       {pixEnabled && paymentMethod === 'pix' && showPixPayment && (
         <PixPayment 
-          onSubmit={pixFormCallback}
-          isSandbox={settings.sandboxMode || true}
-          isDigitalProduct={isDigitalProduct}
-          customerData={customerData}
+          onPaymentSuccess={(paymentId) => {
+            logger.log("PIX payment success with ID:", paymentId);
+            return pixFormCallback({
+              success: true,
+              method: 'pix',
+              paymentId,
+              status: 'pending',
+              timestamp: new Date().toISOString()
+            });
+          }}
+          onPaymentError={(error) => {
+            logger.error("PIX payment error:", error);
+          }}
+          value={productDetails?.price || 0}
+          customerName={customerData?.name || ''}
+          customerCpfCnpj={customerData?.cpf || ''}
+          customerEmail={customerData?.email || ''}
+          description={`Payment for ${productDetails?.name || 'product'}`}
         />
       )}
     </div>
