@@ -1,26 +1,20 @@
 
 import { useState } from 'react';
-
-export interface CustomerInfo {
-  name: string;
-  email: string;
-  phone?: string;
-  document: string;
-}
+import { CustomerInfo } from '@/types/order';
 
 export const useCustomerInfo = () => {
   const [customerDetails, setCustomerDetails] = useState<CustomerInfo>({
     name: '',
     email: '',
     phone: '',
-    document: ''
+    cpf: ''
   });
 
   const [step, setStep] = useState<'customer-info' | 'payment-method'>('customer-info');
 
   const handleSubmitCustomerInfo = () => {
     // Validate customer information
-    if (!customerDetails.name || !customerDetails.email || !customerDetails.document) {
+    if (!customerDetails.name || !customerDetails.email || !customerDetails.cpf) {
       console.error('Missing required customer information');
       return false;
     }

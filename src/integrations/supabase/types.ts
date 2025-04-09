@@ -9,7 +9,158 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      checkout_customization: {
+        Row: {
+          banner_image_url: string | null
+          button_color: string | null
+          button_text: string | null
+          button_text_color: string | null
+          created_at: string | null
+          header_message: string
+          heading_color: string | null
+          id: number
+          show_banner: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          banner_image_url?: string | null
+          button_color?: string | null
+          button_text?: string | null
+          button_text_color?: string | null
+          created_at?: string | null
+          header_message?: string
+          heading_color?: string | null
+          id?: number
+          show_banner?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          banner_image_url?: string | null
+          button_color?: string | null
+          button_text?: string | null
+          button_text_color?: string | null
+          created_at?: string | null
+          header_message?: string
+          heading_color?: string | null
+          id?: number
+          show_banner?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          asaas_payment_id: string | null
+          created_at: string | null
+          credit_card_brand: string | null
+          customer_cpf: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          device_type: string | null
+          id: number
+          is_digital_product: boolean | null
+          payment_id: string | null
+          payment_method: string | null
+          payment_status: string | null
+          price: number
+          product_id: number | null
+          product_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          asaas_payment_id?: string | null
+          created_at?: string | null
+          credit_card_brand?: string | null
+          customer_cpf: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          device_type?: string | null
+          id?: number
+          is_digital_product?: boolean | null
+          payment_id?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          price: number
+          product_id?: number | null
+          product_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          asaas_payment_id?: string | null
+          created_at?: string | null
+          credit_card_brand?: string | null
+          customer_cpf?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          device_type?: string | null
+          id?: number
+          is_digital_product?: boolean | null
+          payment_id?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          price?: number
+          product_id?: number | null
+          product_name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          created_at: string | null
+          custom_manual_status: string | null
+          description: string | null
+          id: number
+          image: string | null
+          image_url: string | null
+          is_digital: boolean | null
+          name: string
+          override_global_status: boolean | null
+          price: number
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          custom_manual_status?: string | null
+          description?: string | null
+          id?: number
+          image?: string | null
+          image_url?: string | null
+          is_digital?: boolean | null
+          name: string
+          override_global_status?: boolean | null
+          price: number
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          custom_manual_status?: string | null
+          description?: string | null
+          id?: number
+          image?: string | null
+          image_url?: string | null
+          is_digital?: boolean | null
+          name?: string
+          override_global_status?: boolean | null
+          price?: number
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

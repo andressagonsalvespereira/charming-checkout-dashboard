@@ -1,52 +1,25 @@
 
-/**
- * Utilitário de logging para centralizar e padronizar logs da aplicação
- * Controla exibição de logs baseado em ambiente de desenvolvimento
- */
-
-const isDev = import.meta.env.MODE === 'development';
+const isDevelopment = import.meta.env.DEV || process.env.NODE_ENV === 'development';
 
 export const logger = {
-  /**
-   * Log informativo (só exibido em desenvolvimento)
-   * @param message Mensagem a ser logada
-   * @param data Dados adicionais (opcional)
-   */
-  log: (message: string, data?: any) => {
-    if (isDev) {
-      if (data) {
-        console.log(`[INFO] ${message}`, data);
-      } else {
-        console.log(`[INFO] ${message}`);
-      }
+  log: (...args: any[]): void => {
+    if (isDevelopment) {
+      console.log(...args);
     }
   },
-  
-  /**
-   * Log de aviso (só exibido em desenvolvimento)
-   * @param message Mensagem de aviso
-   * @param data Dados adicionais (opcional)
-   */
-  warn: (message: string, data?: any) => {
-    if (isDev) {
-      if (data) {
-        console.warn(`[WARN] ${message}`, data);
-      } else {
-        console.warn(`[WARN] ${message}`);
-      }
+  error: (...args: any[]): void => {
+    if (isDevelopment) {
+      console.error(...args);
     }
   },
-  
-  /**
-   * Log de erro (exibido em todos os ambientes)
-   * @param message Mensagem de erro
-   * @param error Objeto de erro ou dados adicionais
-   */
-  error: (message: string, error?: any) => {
-    if (error) {
-      console.error(`[ERROR] ${message}`, error);
-    } else {
-      console.error(`[ERROR] ${message}`);
+  warn: (...args: any[]): void => {
+    if (isDevelopment) {
+      console.warn(...args);
+    }
+  },
+  info: (...args: any[]): void => {
+    if (isDevelopment) {
+      console.info(...args);
     }
   }
 };
