@@ -10,10 +10,14 @@ import { logger } from '@/utils/logger';
  */
 export const useFormWatcher = (
   form: UseFormReturn<PaymentSettingsFormValues>,
-  updateFormState: (updater: (prev: AsaasSettings) => AsaasSettings) => void
+  updateFormState: (updater: (prev: AsaasSettings) => AsaasSettings) => void,
+  loading: boolean = false
 ) => {
   // Update formState when the form values change
   useEffect(() => {
+    // Don't watch during initial loading to prevent unnecessary updates
+    if (loading) return;
+    
     let previousValues = JSON.stringify(form.getValues());
     
     const subscription = form.watch((value) => {
@@ -35,5 +39,5 @@ export const useFormWatcher = (
     });
     
     return () => subscription.unsubscribe();
-  }, [form, updateFormState]);
+  }, [form, updateFormState, loading]);
 };
