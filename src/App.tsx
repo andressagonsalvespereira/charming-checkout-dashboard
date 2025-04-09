@@ -2,6 +2,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { ProductProvider } from './contexts/product';
 
 // Pages
 import Index from './pages/Index';
@@ -26,26 +27,28 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/checkout/:productSlug" element={<Checkout />} />
-          <Route path="/payment-success" element={<PaymentSuccess />} />
-          <Route path="/payment-failed" element={<PaymentFailed />} />
-          <Route path="/pix-payment-manual" element={<PixPaymentManual />} />
-          
-          {/* Admin Routes */}
-          <Route path="/admin/dashboard" element={<Dashboard />} />
-          <Route path="/admin/products" element={<Products />} />
-          <Route path="/admin/orders" element={<Orders />} />
-          <Route path="/admin/settings/payment" element={<PaymentSettings />} />
-          <Route path="/admin/settings/manual-payment" element={<ManualPaymentSettingsPage />} />
-          <Route path="/admin/pixel-settings" element={<PixelSettings />} />
-          <Route path="/admin/checkout-customization" element={<CheckoutCustomization />} />
-          <Route path="/admin/customers" element={<Customers />} />
-          <Route path="/admin/login" element={<Login />} />
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <ProductProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/checkout/:productSlug" element={<Checkout />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/payment-failed" element={<PaymentFailed />} />
+            <Route path="/pix-payment-manual" element={<PixPaymentManual />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/dashboard" element={<Dashboard />} />
+            <Route path="/admin/products" element={<Products />} />
+            <Route path="/admin/orders" element={<Orders />} />
+            <Route path="/admin/settings/payment" element={<PaymentSettings />} />
+            <Route path="/admin/settings/manual-payment" element={<ManualPaymentSettingsPage />} />
+            <Route path="/admin/pixel-settings" element={<PixelSettings />} />
+            <Route path="/admin/checkout-customization" element={<CheckoutCustomization />} />
+            <Route path="/admin/customers" element={<Customers />} />
+            <Route path="/admin/login" element={<Login />} />
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </ProductProvider>
       </AuthProvider>
     </BrowserRouter>
   );
