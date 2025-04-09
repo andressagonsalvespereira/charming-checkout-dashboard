@@ -38,6 +38,7 @@ export const getPaymentSettings = async (): Promise<AsaasSettings> => {
     });
     
     logger.log('Card status from database:', settings.manualCardStatus);
+    logger.log('Integration enabled status from database:', settings.isEnabled);
     
     return settings;
   } catch (error) {
@@ -60,6 +61,8 @@ export const savePaymentSettings = async (settings: AsaasSettings): Promise<bool
       sandboxApiKey: settings.sandboxApiKey ? `${settings.sandboxApiKey.substring(0, 5)}...` : '[empty]',
       productionApiKey: settings.productionApiKey ? `${settings.productionApiKey.substring(0, 5)}...` : '[empty]'
     });
+    
+    logger.log('Integration enabled status being saved to DB:', settings.isEnabled);
     
     // First, check if settings already exist
     const existingSettingsId = await checkSettingsExist();
@@ -86,6 +89,7 @@ export const savePaymentSettings = async (settings: AsaasSettings): Promise<bool
     // Verify that settings were saved correctly by fetching them again
     const verifiedSettings = await verifySettings(settingsId);
     logger.log('Verified saved manual card status:', verifiedSettings?.manual_card_status);
+    logger.log('Verified saved integration enabled status:', verifiedSettings?.asaas_enabled);
     
     const verifiedConfig = await verifyApiConfig(configId);
     

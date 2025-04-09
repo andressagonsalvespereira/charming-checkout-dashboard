@@ -20,6 +20,7 @@ export const useFormState = (initialState: AsaasSettings) => {
       if (JSON.stringify(prev) !== JSON.stringify(newFormState)) {
         logger.log('Updating form state with new values:', newFormState);
         logger.log('New manual card status:', newFormState.manualCardStatus);
+        logger.log('New integration enabled status:', newFormState.isEnabled);
       }
       
       return newFormState;

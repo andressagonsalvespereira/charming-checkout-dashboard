@@ -1,37 +1,37 @@
 
-import { AsaasSettings } from '@/types/asaas';
+import { AsaasSettings, ManualCardStatus } from '@/types/asaas';
 import { logger } from '@/utils/logger';
-import { validateCardStatus } from './validators';
 
 /**
- * Map database data to AsaasSettings object
- * @param settingsData Settings data from the database
- * @param configData API config data from the database
+ * Map database settings data to AsaasSettings object
+ * @param settingsData Settings data from database
+ * @param configData API configuration data from database
  * @returns AsaasSettings object
  */
 export const mapToAsaasSettings = (settingsData: any, configData: any): AsaasSettings => {
-  // Validate the card status to ensure it's a valid ManualCardStatus
+  // Validate the card status
   const cardStatus = validateCardStatus(settingsData?.manual_card_status);
   logger.log('Validated card status:', cardStatus);
-
-  // Create the settings object with all retrieved data
-  const settings: AsaasSettings = {
+  
+  // Log the enabled status from database
+  logger.log('Asaas enabled status from database:', settingsData?.asaas_enabled);
+  
+  return {
     isEnabled: settingsData?.asaas_enabled || false,
     apiKey: settingsData?.sandbox_mode ? 
-      (configData?.sandbox_api_key || '') : (configData?.production_api_key || ''),
-    allowPix: settingsData?.allow_pix || true,
-    allowCreditCard: settingsData?.allow_credit_card || true,
-    manualCreditCard: settingsData?.manual_credit_card || false,
-    sandboxMode: settingsData?.sandbox_mode || true,
+      (configData?.sandbox_api_key || '') : 
+      (configData?.production_api_key || ''),
+    allowPix: settingsData?.allow_pix ?? true,
+    allowCreditCard: settingsData?.allow_credit_card ?? true,
+    manualCreditCard: settingsData?.manual_credit_card ?? false,
+    sandboxMode: settingsData?.sandbox_mode ?? true,
     sandboxApiKey: configData?.sandbox_api_key || '',
     productionApiKey: configData?.production_api_key || '',
-    manualCardProcessing: settingsData?.manual_card_processing || false,
-    manualPixPage: settingsData?.manual_pix_page || false,
-    manualPaymentConfig: settingsData?.manual_payment_config || false,
+    manualCardProcessing: settingsData?.manual_card_processing ?? false,
+    manualPixPage: settingsData?.manual_pix_page ?? false,
+    manualPaymentConfig: settingsData?.manual_payment_config ?? false,
     manualCardStatus: cardStatus
   };
-  
-  return settings;
 };
 
 /**
@@ -53,4 +53,32 @@ export const getDefaultSettings = (): AsaasSettings => {
     manualPaymentConfig: false,
     manualCardStatus: 'ANALYSIS'
   };
+};
+
+/**
+ * Validate card status
+ * @param status Card status to validate
+ * @returns Valid card status
+ */
+const validateCardStatus = (status?: string): ManualCardStatus => {
+  logger.log('Validating card status:', status);
+  
+  // List of valid card statuses
+  const validStatuses: ManualCardStatus[] = [
+    'APPROVED', 'PENDING', 'CONFIRMED', 'REJECTED', 
+    'ANALYSIS', 'RECEIVED', 'CANCELLED', 'FAILED', 
+    'DECLINED', 'DENIED'
+  ];
+  
+  // Default status if not provided or invalid
+  const defaultStatus: ManualCardStatus = 'ANALYSIS';
+  
+  // Check if status is valid
+  if (status && validStatuses.includes(status as ManualCardStatus)) {
+    logger.log(`Status ${status} is valid`);
+    return status as ManualCardStatus;
+  }
+  
+  logger.log(`Status ${status} is invalid, using default status ${defaultStatus}`);
+  return defaultStatus;
 };

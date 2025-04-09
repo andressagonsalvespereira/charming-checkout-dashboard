@@ -30,12 +30,24 @@ export const useFormWatcher = (
       previousValues = currentValues;
       logger.log('Form values changed:', value);
       
-      // Explicitly log the manual card status
+      // Explicitly log the manual card status and integration status
       if (value.manualCardStatus) {
         logger.log('Manual card status updated in form:', value.manualCardStatus);
       }
       
-      updateFormState(() => formValuesToAsaasSettings(value as PaymentSettingsFormValues));
+      if (value.isEnabled !== undefined) {
+        logger.log('Integration enabled status updated in form:', value.isEnabled);
+      }
+      
+      const updatedSettings = formValuesToAsaasSettings(value as PaymentSettingsFormValues);
+      logger.log('Transformed settings from form watch:', {
+        ...updatedSettings,
+        isEnabled: updatedSettings.isEnabled,
+        sandboxApiKey: updatedSettings.sandboxApiKey ? '[present]' : '[empty]',
+        productionApiKey: updatedSettings.productionApiKey ? '[present]' : '[empty]',
+      });
+      
+      updateFormState(() => updatedSettings);
     });
     
     return () => subscription.unsubscribe();

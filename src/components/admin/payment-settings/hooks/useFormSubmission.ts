@@ -35,6 +35,7 @@ export const useFormSubmission = (
       });
       logger.log('Selected card status to save:', data.manualCardStatus);
       logger.log('API keys to save - Sandbox:', sandboxKeyPreview, 'Production:', productionKeyPreview);
+      logger.log('Integration enabled status:', data.isEnabled);
       
       // Preserve API keys for transformation
       const settingsToUpdate = formValuesToAsaasSettings({
@@ -46,6 +47,9 @@ export const useFormSubmission = (
       settingsToUpdate.sandboxApiKey = data.sandboxApiKey || '';
       settingsToUpdate.productionApiKey = data.productionApiKey || '';
       
+      // Ensure isEnabled is correctly set
+      settingsToUpdate.isEnabled = data.isEnabled;
+      
       logger.log('Transformed settings to save:', {
         ...settingsToUpdate,
         sandboxApiKey: settingsToUpdate.sandboxApiKey ? `${settingsToUpdate.sandboxApiKey.substring(0, 5)}...` : '[empty]',
@@ -53,6 +57,7 @@ export const useFormSubmission = (
       });
       
       logger.log('Manual card status being saved:', settingsToUpdate.manualCardStatus);
+      logger.log('Integration enabled status being saved:', settingsToUpdate.isEnabled);
       
       const success = await savePaymentSettings(settingsToUpdate);
       
@@ -70,6 +75,7 @@ export const useFormSubmission = (
           productionApiKey: updatedSettings.productionApiKey ? `${updatedSettings.productionApiKey.substring(0, 5)}...` : '[empty]'
         });
         logger.log('Reloaded manual card status:', updatedSettings.manualCardStatus);
+        logger.log('Reloaded integration enabled status:', updatedSettings.isEnabled);
         
         // Preserve the original API keys if they're not returned properly from the database
         if (!updatedSettings.sandboxApiKey && data.sandboxApiKey) {

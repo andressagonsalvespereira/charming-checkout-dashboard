@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { AsaasSettings } from '@/types/asaas';
 import { logger } from '@/utils/logger';
@@ -59,6 +58,7 @@ export const fetchApiConfig = async () => {
 export const saveSettingsData = async (settings: AsaasSettings, settingsId: number) => {
   logger.log(`Saving settings data with ID ${settingsId}...`);
   logger.log(`Saving manual card status: ${settings.manualCardStatus}`);
+  logger.log(`Saving integration enabled status: ${settings.isEnabled}`);
 
   // Validate the status before saving
   const validatedStatus = validateCardStatus(settings.manualCardStatus);
@@ -172,7 +172,7 @@ export const checkApiConfigExists = async () => {
 export const verifySettings = async (settingsId: number) => {
   const { data, error } = await supabase
     .from('settings')
-    .select('manual_card_status')
+    .select('manual_card_status, asaas_enabled')
     .eq('id', settingsId)
     .single();
     
@@ -182,6 +182,7 @@ export const verifySettings = async (settingsId: number) => {
   }
 
   logger.log('Verified saved manual card status:', data.manual_card_status);
+  logger.log('Verified saved integration enabled status:', data.asaas_enabled);
   return data;
 };
 
