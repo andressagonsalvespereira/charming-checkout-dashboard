@@ -14,6 +14,7 @@ import { useAsaas } from '@/contexts/asaas';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AsaasSettings } from '@/types/asaas';
 
 // Define the form schema using Zod
 const asaasSettingsSchema = z.object({
@@ -94,11 +95,13 @@ const AsaasSettings = () => {
         return;
       }
 
-      // Save settings
+      // Save settings with required sandboxMode
       await saveSettings({
         ...data,
         // When in sandbox mode, use sandboxApiKey as the main apiKey
         apiKey: data.sandboxMode ? data.sandboxApiKey : data.productionApiKey,
+        // Ensure sandboxMode is always defined as required by AsaasSettings type
+        sandboxMode: data.sandboxMode,
       });
 
       toast({

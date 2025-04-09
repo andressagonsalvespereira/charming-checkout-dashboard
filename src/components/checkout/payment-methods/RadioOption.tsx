@@ -5,21 +5,41 @@ import { Label } from '@/components/ui/label';
 import { LucideIcon } from 'lucide-react';
 
 interface RadioOptionProps {
-  id: string;
-  value: string;
-  label: string;
   Icon: LucideIcon;
-  iconColor: string;
+  label: string;
+  description: string;
+  onClick: () => void;
+  selected: boolean;
+  disabled?: boolean;
+  loading?: boolean;
 }
 
-const RadioOption: React.FC<RadioOptionProps> = ({ id, value, label, Icon, iconColor }) => {
+const RadioOption: React.FC<RadioOptionProps> = ({ 
+  Icon, 
+  label, 
+  description, 
+  onClick, 
+  selected, 
+  disabled = false,
+  loading = false
+}) => {
   return (
-    <div className="flex-1 flex items-center space-x-2 border p-3 rounded-md hover:bg-gray-50 cursor-pointer">
-      <RadioGroupItem value={value} id={id} />
-      <Label htmlFor={id} className="flex items-center cursor-pointer">
-        <Icon className={`h-5 w-5 mr-2 ${iconColor}`} />
-        <span>{label}</span>
-      </Label>
+    <div 
+      className={`flex items-center space-x-3 border p-4 rounded-md cursor-pointer transition-colors ${
+        selected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
+      } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+      onClick={!disabled ? onClick : undefined}
+    >
+      <div className="flex-shrink-0">
+        <Icon className={`h-6 w-6 ${selected ? 'text-blue-500' : 'text-gray-500'}`} />
+      </div>
+      <div className="flex-1">
+        <p className="font-medium">{label}</p>
+        <p className="text-sm text-gray-500">{description}</p>
+      </div>
+      {loading && (
+        <div className="h-5 w-5 border-2 border-t-transparent border-blue-500 rounded-full animate-spin ml-2"></div>
+      )}
     </div>
   );
 };

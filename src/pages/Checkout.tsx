@@ -9,6 +9,7 @@ import ProductDetails from '@/components/checkout/ProductDetails';
 import ProductNotFound from '@/components/checkout/quick-checkout/ProductNotFound';
 import { useProductLoader } from '@/hooks/checkout/useProductLoader';
 import { useAsaas } from '@/contexts/asaas';
+import { useCheckoutCustomization } from '@/contexts/CheckoutCustomizationContext';
 import { logger } from '@/utils/logger';
 
 const Checkout = () => {
@@ -16,6 +17,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { product, loading } = useProductLoader(productSlug);
   const { settings } = useAsaas();
+  const { customization } = useCheckoutCustomization();
   const [isCheckoutEnabled, setIsCheckoutEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,14 +54,14 @@ const Checkout = () => {
 
   return (
     <CheckoutLayout>
-      <CheckoutHeader />
+      <CheckoutHeader customization={customization} />
       <CheckoutContainer>
         {isCheckoutEnabled ? (
           <div className="flex flex-col space-y-6">
             <CheckoutForm 
               onSubmit={handlePayment}
               isSandbox={settings?.sandboxMode || false}
-              isDigitalProduct={product.isDigital || false}
+              isDigitalProduct={product.is_digital || false}
             />
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md">
@@ -77,7 +79,7 @@ const Checkout = () => {
           <div className="mt-6 border-t pt-6">
             <h2 className="text-lg font-semibold mb-4">Detalhes do Produto</h2>
             <div className="bg-gray-50 p-4 rounded-md">
-              <h3 className="font-bold text-xl">{product.name || product.title}</h3>
+              <h3 className="font-bold text-xl">{product.name}</h3>
               <p className="text-lg font-semibold text-green-600">
                 R$ {(product.price || 0).toFixed(2)}
               </p>
