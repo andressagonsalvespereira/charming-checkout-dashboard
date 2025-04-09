@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -12,7 +13,7 @@ import { useAsaas } from '@/contexts/asaas';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { AsaasSettings as AsaasSettingsType } from '@/types/asaas';
+import type { AsaasSettings as AsaasSettingsType, ManualCardStatus } from '@/types/asaas';
 
 const asaasSettingsSchema = z.object({
   isEnabled: z.boolean().default(false),
@@ -26,7 +27,11 @@ const asaasSettingsSchema = z.object({
   manualCardProcessing: z.boolean().default(false),
   manualPixPage: z.boolean().default(false),
   manualPaymentConfig: z.boolean().default(false),
-  manualCardStatus: z.enum(['CONFIRMED', 'RECEIVED', 'PENDING', 'APPROVED', 'CANCELLED', 'FAILED', 'ANALYSIS', 'REJECTED', 'DECLINED', 'DENIED']).default('ANALYSIS'),
+  manualCardStatus: z.enum([
+    'CONFIRMED', 'RECEIVED', 'PENDING', 'APPROVED', 
+    'CANCELLED', 'FAILED', 'ANALYSIS', 'REJECTED', 
+    'DECLINED', 'DENIED'
+  ]).default('ANALYSIS'),
 });
 
 type AsaasSettingsFormValues = z.infer<typeof asaasSettingsSchema>;
@@ -88,20 +93,22 @@ const AsaasSettings = () => {
         return;
       }
 
-      await saveSettings({
+      const settingsToSave: AsaasSettingsType = {
         isEnabled: data.isEnabled,
-        apiKey: data.sandboxMode ? data.sandboxApiKey || '' : data.productionApiKey || '',
+        apiKey: data.sandboxMode ? (data.sandboxApiKey || '') : (data.productionApiKey || ''),
         allowCreditCard: data.allowCreditCard,
         allowPix: data.allowPix,
         sandboxMode: data.sandboxMode,
-        manualCardStatus: data.manualCardStatus,
+        manualCardStatus: data.manualCardStatus as ManualCardStatus,
         manualCreditCard: data.manualCreditCard,
         sandboxApiKey: data.sandboxApiKey,
         productionApiKey: data.productionApiKey,
         manualCardProcessing: data.manualCardProcessing,
         manualPixPage: data.manualPixPage,
         manualPaymentConfig: data.manualPaymentConfig,
-      });
+      };
+
+      await saveSettings(settingsToSave);
 
       toast({
         title: "Settings Saved",

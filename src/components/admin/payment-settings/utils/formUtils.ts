@@ -6,7 +6,10 @@ import { AsaasSettings, ManualCardStatus } from '@/types/asaas';
 export const PaymentSettingsSchema = z.object({
   isEnabled: z.boolean().default(false),
   manualCardProcessing: z.boolean().default(false),
-  manualCardStatus: z.enum(['APPROVED', 'PENDING', 'ANALYSIS', 'DECLINED', 'REJECTED', 'CONFIRMED', 'DENIED', 'CANCELLED', 'FAILED', 'RECEIVED']).default('ANALYSIS'),
+  manualCardStatus: z.enum([
+    'APPROVED', 'PENDING', 'ANALYSIS', 'DECLINED', 'REJECTED', 
+    'CONFIRMED', 'DENIED', 'CANCELLED', 'FAILED', 'RECEIVED'
+  ]).default('ANALYSIS'),
   manualCreditCard: z.boolean().default(false),
   allowPix: z.boolean().default(true),
   allowCreditCard: z.boolean().default(true),
