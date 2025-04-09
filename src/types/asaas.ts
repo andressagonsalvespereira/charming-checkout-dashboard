@@ -21,7 +21,7 @@ export interface AsaasCustomer {
 export interface AsaasPayment {
   id?: string;
   customer: string;
-  billingType: 'CREDIT_CARD' | 'PIX' | 'BOLETO' | 'UNDEFINED';
+  billingType: 'CREDIT_CARD' | 'PIX';
   value: number;
   dueDate?: string;
   description?: string;

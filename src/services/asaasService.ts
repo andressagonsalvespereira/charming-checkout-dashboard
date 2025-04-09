@@ -29,23 +29,29 @@ export async function processPayment(
   
   try {
     logger.log('Processing payment through Asaas');
-    const paymentResult = await createPayment({
+    // Create sanitized payment data with only the allowed billing types
+    const sanitizedPaymentData = {
       customer: {
         name: paymentData.customer,
         email: '',
         cpfCnpj: ''
       },
-      billingType: paymentData.billingType,
+      // Restrict billingType to only allowed values
+      billingType: paymentData.billingType === 'CREDIT_CARD' || paymentData.billingType === 'PIX' 
+        ? paymentData.billingType 
+        : 'PIX', // Default to PIX if an unsupported type is provided
       value: paymentData.value,
       description: paymentData.description
-    });
+    };
+    
+    const paymentResult = await createPayment(sanitizedPaymentData);
     
     if (!paymentResult.success) {
-      throw new Error(paymentResult.error);
+      throw new Error(paymentResult.error || 'Unknown payment error');
     }
     
     // For PIX payments, we need to get the QR code
-    if (paymentData.billingType === 'PIX' && paymentResult.paymentId) {
+    if (sanitizedPaymentData.billingType === 'PIX' && paymentResult.paymentId) {
       logger.log('Getting PIX QR code for payment', paymentResult.paymentId);
       
       const pixResult = await retrievePixQrCode(
@@ -55,14 +61,15 @@ export async function processPayment(
       );
       
       if (!pixResult.success) {
-        throw new Error(pixResult.error);
+        throw new Error(pixResult.error || 'Failed to retrieve PIX QR code');
       }
       
+      // Access data from the data property of the response
       return {
         ...paymentResult,
-        pixQrCode: pixResult.qrCode,
-        pixQrCodeImage: pixResult.qrCodeImage,
-        pixExpirationDate: pixResult.expirationDate
+        pixQrCode: pixResult.data?.payload,
+        pixQrCodeImage: pixResult.data?.encodedImage,
+        pixExpirationDate: pixResult.data?.expirationDate
       };
     }
     

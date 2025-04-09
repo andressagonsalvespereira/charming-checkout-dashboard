@@ -53,8 +53,9 @@ export const getAsaasSettings = async (): Promise<AsaasSettings> => {
 
     // Make sure the status is a valid ManualCardStatus
     const cardStatus = settings.manual_card_status as string;
-    const validStatus: ManualCardStatus = ['APPROVED', 'PENDING', 'CONFIRMED', 'DECLINED', 'REJECTED', 'ANALYSIS'].includes(cardStatus) 
-      ? cardStatus as ManualCardStatus 
+    const validStatuses: ManualCardStatus[] = ['APPROVED', 'PENDING', 'CONFIRMED', 'DECLINED', 'REJECTED', 'ANALYSIS'];
+    const validStatus: ManualCardStatus = validStatuses.includes(cardStatus as ManualCardStatus) 
+      ? (cardStatus as ManualCardStatus) 
       : 'ANALYSIS';
 
     return {
