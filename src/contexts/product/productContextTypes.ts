@@ -1,23 +1,19 @@
 
-import { ReactNode } from 'react';
+import React from 'react';
 import { Product, CriarProdutoInput } from '@/types/product';
 
 export interface ProductContextType {
   products: Product[];
   loading: boolean;
   error: string | null;
-  addProduct: (product: CriarProdutoInput) => Promise<Product>;
-  editProduct: (id: string, product: Partial<Product>) => Promise<Product>;
-  removeProduct: (id: string) => Promise<void>;
-  getProductById: (id: string) => Promise<Product | undefined>;
-  getProductBySlug: (slug: string) => Promise<Product | undefined>;
   refreshProducts: () => Promise<void>;
-  updateProduct: (id: string, product: Partial<Product>) => Promise<Product>;
-  deleteProduct: (id: string) => Promise<void>;
-  retryFetchProducts: () => Promise<void>;
-  isOffline: boolean;
+  addProduct: (product: CriarProdutoInput) => Promise<Product>;
+  updateProduct: (id: number, product: Partial<Product>) => Promise<Product>;
+  deleteProduct: (id: number) => Promise<void>;
+  getProductById: (id: number | string) => Promise<Product | null>;
+  getProductBySlug: (slug: string) => Promise<Product | null>;
 }
 
 export interface ProductProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }

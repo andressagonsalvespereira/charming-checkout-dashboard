@@ -4,8 +4,8 @@ export type ManualCardStatus = 'APPROVED' | 'DENIED' | 'ANALYSIS';
 export interface AsaasSettings {
   isEnabled: boolean;
   apiKey: string;
-  allowPix: boolean;
   allowCreditCard: boolean;
+  allowPix: boolean;
   manualCreditCard: boolean;
   sandboxMode: boolean;
   sandboxApiKey: string;
@@ -13,30 +13,38 @@ export interface AsaasSettings {
   manualCardProcessing: boolean;
   manualPixPage: boolean;
   manualPaymentConfig: boolean;
-  manualCardStatus: ManualCardStatus;
+  manualCardStatus: string;
 }
 
-export interface AsaasPaymentInfo {
-  id: string;
+export interface AsaasCustomer {
+  id?: string;
+  name: string;
+  email: string;
+  cpfCnpj: string;
+  phone?: string;
+  mobilePhone?: string;
+  postalCode?: string;
+  address?: string;
+  addressNumber?: string;
+  complement?: string;
+  province?: string;
+  city?: string;
+  state?: string;
+}
+
+export interface AsaasPayment {
+  id?: string;
   customer: string;
-  value: number;
-  netValue: number;
   billingType: string;
-  status: string;
+  value: number;
   dueDate: string;
-  paymentDate?: string;
-  clientPaymentDate?: string;
-  installmentCount?: number;
-  invoiceUrl: string;
-  bankSlipUrl?: string;
-  invoiceNumber: string;
-  externalReference?: string;
-  deleted: boolean;
-  postalService: boolean;
+  description?: string;
   creditCard?: {
-    creditCardNumber: string;
-    creditCardBrand: string;
-    creditCardToken: string;
+    holderName: string;
+    number: string;
+    expiryMonth: string;
+    expiryYear: string;
+    ccv: string;
   };
   creditCardHolderInfo?: {
     name: string;
@@ -45,27 +53,52 @@ export interface AsaasPaymentInfo {
     postalCode: string;
     addressNumber: string;
     addressComplement?: string;
-    phone: string;
-    mobilePhone: string;
-  };
-  fine?: {
-    value: number;
-    type: string;
-  };
-  interest?: {
-    value: number;
-    type: string;
-  };
-  discount?: {
-    value: number;
-    limitDate: string;
-    type: string;
-    dueDateLimitDays: number;
+    phone?: string;
+    mobilePhone?: string;
   };
 }
 
-export interface AsaasPixInfo {
+export interface AsaasPaymentInfo {
+  id: string;
+  dateCreated: string;
+  customer: string;
+  value: number;
+  status: string;
+  description?: string;
+  billingType: string;
+  paymentDate?: string;
+  clientPaymentDate?: string;
+  invoiceUrl?: string;
+  invoiceNumber?: string;
+  externalReference?: string;
+}
+
+export interface AsaasPaymentResponse {
+  id: string;
+  dateCreated: string;
+  customer: string;
+  value: number;
+  netValue: number;
+  status: string;
+  description?: string;
+  billingType: string;
+  invoiceUrl?: string;
+  bankSlipUrl?: string;
+}
+
+export interface AsaasPixQrCodeResponse {
+  success: boolean;
   encodedImage: string;
   payload: string;
   expirationDate: string;
+}
+
+export interface AsaasApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  errors?: Array<{
+    code: string;
+    description: string;
+  }>;
 }

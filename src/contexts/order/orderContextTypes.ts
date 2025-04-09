@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Order, CreateOrderInput, PaymentMethod } from '@/types/order';
+import { Order, PaymentMethod, PaymentStatus, CreateOrderInput } from '@/types/order';
 
 export interface OrderContextType {
   orders: Order[];
@@ -8,10 +8,10 @@ export interface OrderContextType {
   error: string | null;
   addOrder: (orderData: CreateOrderInput) => Promise<Order>;
   getOrdersByPaymentMethod: (method: PaymentMethod) => Order[];
-  getOrdersByStatus: (status: Order['paymentStatus']) => Order[];
+  getOrdersByStatus: (status: PaymentStatus) => Order[];
   getOrdersByDevice: (deviceType: Order['deviceType']) => Order[];
   getLatestOrders: (count?: number) => Order[];
-  updateOrderStatus: (id: string, status: Order['paymentStatus']) => Promise<Order>;
+  updateOrderStatus: (id: string, status: PaymentStatus) => Promise<Order>;
   refreshOrders: () => void;
   deleteOrder: (id: string) => Promise<void>;
   deleteAllOrdersByPaymentMethod: (method: PaymentMethod) => Promise<void>;

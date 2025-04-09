@@ -1,6 +1,22 @@
 
 import { supabase } from '@/lib/supabase';
 
+export const slugify = (text: string): string => {
+  return text
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-');
+};
+
+export const generateLocalSlug = (name: string): string => {
+  return slugify(name);
+};
+
 export const isSlugUnique = async (slug: string, currentProductId?: number): Promise<boolean> => {
   try {
     let query = supabase

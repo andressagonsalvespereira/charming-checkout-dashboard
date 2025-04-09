@@ -1,8 +1,8 @@
 
-import { Order, PaymentMethod, PaymentStatus } from '@/types/order';
+import { Order, PaymentMethod, PaymentStatus, CustomerInfo } from '@/types/order';
 
 export const convertDBOrderToOrder = (dbOrder: any): Order => {
-  return {
+  const order: Order = {
     id: dbOrder.id,
     customerName: dbOrder.customer_name,
     customerEmail: dbOrder.customer_email,
@@ -11,6 +11,7 @@ export const convertDBOrderToOrder = (dbOrder: any): Order => {
     productId: dbOrder.product_id,
     productName: dbOrder.product_name,
     price: dbOrder.price,
+    productPrice: dbOrder.price, // For legacy component compatibility
     paymentMethod: dbOrder.payment_method as PaymentMethod,
     paymentStatus: dbOrder.payment_status as PaymentStatus,
     paymentId: dbOrder.payment_id,
@@ -20,6 +21,16 @@ export const convertDBOrderToOrder = (dbOrder: any): Order => {
     asaasPaymentId: dbOrder.asaas_payment_id,
     createdAt: dbOrder.created_at,
     updatedAt: dbOrder.updated_at,
+    orderDate: dbOrder.created_at, // For legacy component compatibility
+    
+    // Add customer object for legacy components
+    customer: {
+      name: dbOrder.customer_name,
+      email: dbOrder.customer_email,
+      cpf: dbOrder.customer_cpf,
+      phone: dbOrder.customer_phone
+    },
+    
     // If asaas_payments is included in the query, extract the PIX details
     pixDetails: dbOrder.asaas_payments ? {
       qrCode: dbOrder.asaas_payments.qr_code,
@@ -27,18 +38,20 @@ export const convertDBOrderToOrder = (dbOrder: any): Order => {
       paymentId: dbOrder.asaas_payments.payment_id
     } : undefined
   };
+  
+  return order;
 };
 
 export const convertOrderToDBOrder = (order: Order): any => {
   return {
     id: order.id,
-    customer_name: order.customerName,
-    customer_email: order.customerEmail,
-    customer_cpf: order.customerCpf,
-    customer_phone: order.customerPhone,
+    customer_name: order.customerName || order.customer?.name,
+    customer_email: order.customerEmail || order.customer?.email,
+    customer_cpf: order.customerCpf || order.customer?.cpf,
+    customer_phone: order.customerPhone || order.customer?.phone,
     product_id: order.productId,
     product_name: order.productName,
-    price: order.price,
+    price: order.price || order.productPrice,
     payment_method: order.paymentMethod,
     payment_status: order.paymentStatus,
     payment_id: order.paymentId,
@@ -46,7 +59,17 @@ export const convertOrderToDBOrder = (order: Order): any => {
     device_type: order.deviceType,
     is_digital_product: order.isDigitalProduct,
     asaas_payment_id: order.asaasPaymentId,
-    created_at: order.createdAt,
+    created_at: order.createdAt || order.orderDate,
     updated_at: order.updatedAt
+  };
+};
+
+export const convertCustomerInfoToCustomer = (customerInfo: CustomerInfo): Order['customer'] => {
+  return {
+    name: customerInfo.name,
+    email: customerInfo.email,
+    cpf: customerInfo.cpf,
+    phone: customerInfo.phone,
+    address: customerInfo.address
   };
 };

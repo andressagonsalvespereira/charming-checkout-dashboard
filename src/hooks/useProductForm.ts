@@ -1,72 +1,57 @@
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { CriarProdutoInput } from '@/types/product';
 
-// Estado inicial do formulário
-const estadoInicialFormulario: CriarProdutoInput = {
+const initialFormData: CriarProdutoInput = {
   nome: '',
   descricao: '',
   preco: 0,
   urlImagem: '',
   digital: false,
   usarProcessamentoPersonalizado: false,
-  statusCartaoManual: 'ANALISE'
+  statusCartaoManual: 'ANALYSIS'
 };
 
-/**
- * Hook para gerenciar o estado do formulário de produtos
- */
 export const useProductForm = () => {
-  const [dadosFormulario, definirDadosFormulario] = useState<CriarProdutoInput>(estadoInicialFormulario);
+  const [formData, setFormData] = useState<CriarProdutoInput>({ ...initialFormData });
   
-  const redefinirFormulario = useCallback(() => {
-    definirDadosFormulario(estadoInicialFormulario);
-  }, []);
+  const resetForm = () => {
+    setFormData({ ...initialFormData });
+  };
 
-  const manipularMudancaInput = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name: nome, value: valor } = e.target;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
     
-    if (nome === 'preco') {
-      definirDadosFormulario(prev => ({
-        ...prev,
-        [nome]: parseFloat(valor) || 0
-      }));
+    // Special handling for price to ensure it's a number
+    if (name === 'preco') {
+      const numericValue = value === '' ? 0 : Number(value);
+      if (!isNaN(numericValue)) {
+        setFormData(prev => ({ ...prev, [name]: numericValue }));
+      }
     } else {
-      definirDadosFormulario(prev => ({
-        ...prev,
-        [nome]: valor
-      }));
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
-  }, []);
+  };
 
-  const manipularMudancaSwitch = useCallback((checked: boolean) => {
-    definirDadosFormulario(prev => ({
-      ...prev,
-      digital: checked
-    }));
-  }, []);
+  const handleSwitchChange = (checked: boolean) => {
+    setFormData(prev => ({ ...prev, digital: checked }));
+  };
 
-  const manipularMudancaProcessamentoPersonalizado = useCallback((checked: boolean) => {
-    definirDadosFormulario(prev => ({
-      ...prev,
-      usarProcessamentoPersonalizado: checked
-    }));
-  }, []);
+  const handleUseCustomProcessingChange = (checked: boolean) => {
+    setFormData(prev => ({ ...prev, usarProcessamentoPersonalizado: checked }));
+  };
 
-  const manipularMudancaStatusCartaoManual = useCallback((value: string) => {
-    definirDadosFormulario(prev => ({
-      ...prev,
-      statusCartaoManual: value
-    }));
-  }, []);
+  const handleManualCardStatusChange = (value: string) => {
+    setFormData(prev => ({ ...prev, statusCartaoManual: value }));
+  };
 
   return {
-    dadosFormulario,
-    definirDadosFormulario,
-    redefinirFormulario,
-    manipularMudancaInput,
-    manipularMudancaSwitch,
-    manipularMudancaProcessamentoPersonalizado,
-    manipularMudancaStatusCartaoManual
+    formData,
+    setFormData,
+    resetForm,
+    handleInputChange,
+    handleSwitchChange,
+    handleUseCustomProcessingChange,
+    handleManualCardStatusChange
   };
 };

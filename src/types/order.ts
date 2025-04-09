@@ -20,6 +20,22 @@ export interface PixDetails {
   paymentId?: string;
 }
 
+export interface CustomerInfo {
+  name: string;
+  email: string;
+  cpf: string;
+  phone?: string;
+  address?: {
+    street?: string;
+    number?: string;
+    complement?: string;
+    neighborhood?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+  };
+}
+
 export interface Order {
   id: number | string;
   customerName: string;
@@ -29,6 +45,7 @@ export interface Order {
   productId?: number;
   productName: string;
   price: number;
+  productPrice?: number; // Legacy compatibility
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
   paymentId?: string;
@@ -40,4 +57,37 @@ export interface Order {
   asaasPaymentId?: string;
   createdAt: string;
   updatedAt: string;
+  orderDate?: string; // Legacy compatibility
+  
+  // Legacy compatibility for component interfaces
+  customer?: {
+    name: string;
+    email: string;
+    cpf: string;
+    phone?: string;
+    address?: {
+      street?: string;
+      number?: string;
+      complement?: string;
+      neighborhood?: string;
+      city?: string;
+      state?: string;
+      postalCode?: string;
+    };
+  };
+}
+
+export interface CreateOrderInput {
+  customer: CustomerInfo;
+  productId: number | string;
+  productName: string;
+  productPrice: number;
+  paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
+  paymentId?: string;
+  cardDetails?: CardDetails;
+  pixDetails?: PixDetails;
+  orderDate?: string;
+  deviceType?: string;
+  isDigitalProduct?: boolean;
 }
