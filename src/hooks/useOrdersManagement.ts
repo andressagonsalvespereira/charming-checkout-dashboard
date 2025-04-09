@@ -11,8 +11,9 @@ import {
   type OrderInsert,
   type OrderUpdate
 } from '@/services/orderService';
-import { Order, PaymentMethod, PaymentStatus } from '@/types/order';
+import { Order, PaymentMethod, PaymentStatus, RawOrder } from '@/types/order';
 import { logger } from '@/utils/logger';
+import { mapOrderFromSupabase, mapOrdersFromSupabase } from '@/contexts/order/utils/orderMappers';
 
 export const useOrdersManagement = () => {
   const { toast } = useToast();
@@ -31,8 +32,9 @@ export const useOrdersManagement = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const loadedOrders = await getAllOrders();
-      setOrders(loadedOrders);
+      const loadedRawOrders = await getAllOrders();
+      const mappedOrders = mapOrdersFromSupabase(loadedRawOrders);
+      setOrders(mappedOrders);
       setError(null);
     } catch (err) {
       logger.error('Error loading orders:', err);
@@ -58,7 +60,8 @@ export const useOrdersManagement = () => {
       
       setPendingOrder(true);
       
-      const newOrder = await createOrder(orderData);
+      const rawNewOrder = await createOrder(orderData);
+      const newOrder = mapOrderFromSupabase(rawNewOrder);
       
       setOrders(prev => [newOrder, ...prev]);
       
@@ -92,7 +95,8 @@ export const useOrdersManagement = () => {
     status: PaymentStatus
   ): Promise<Order> => {
     try {
-      const updatedOrder = await updateOrderStatus(id, status);
+      const rawUpdatedOrder = await updateOrderStatus(id, status);
+      const updatedOrder = mapOrderFromSupabase(rawUpdatedOrder);
       
       setOrders(prev => 
         prev.map(order => 
