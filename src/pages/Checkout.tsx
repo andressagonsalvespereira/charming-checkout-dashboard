@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import CheckoutLayout from '@/components/checkout/CheckoutLayout';
@@ -12,7 +13,7 @@ import { useAsaas } from '@/contexts/asaas';
 const Checkout = () => {
   const { productSlug } = useParams<{ productSlug: string }>();
   const navigate = useNavigate();
-  const { product, isLoading, error } = useProductLoader(productSlug);
+  const { product, loading, error } = useProductLoader(productSlug);
   const { settings } = useAsaas();
   const [isCheckoutEnabled, setIsCheckoutEnabled] = useState(false);
 
@@ -22,7 +23,7 @@ const Checkout = () => {
     }
   }, [settings]);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <CheckoutLayout>
         <p>Carregando...</p>
@@ -40,16 +41,16 @@ const Checkout = () => {
 
   return (
     <CheckoutLayout>
-      <CheckoutHeader product={product} />
-      <CheckoutContainer product={product}>
+      <CheckoutHeader />
+      <CheckoutContainer>
         {isCheckoutEnabled ? (
-          <CheckoutForm product={product} />
+          <CheckoutForm />
         ) : (
           <div>
             <p>O checkout está desabilitado. Por favor, entre em contato com o administrador.</p>
           </div>
         )}
-        <ProductDetails product={product} />
+        <ProductDetails slug={productSlug} />
       </CheckoutContainer>
     </CheckoutLayout>
   );

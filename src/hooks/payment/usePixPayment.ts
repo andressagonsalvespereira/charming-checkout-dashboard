@@ -1,32 +1,17 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { PaymentResult, CustomerData } from '@/types/payment';
-import { AsaasSettings } from '@/types/asaas';
+import { useState, useCallback } from 'react';
+import { PaymentResult } from '@/types/payment';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/utils/logger';
 
-interface PixPaymentHookProps {
-  onSubmit: (data: PaymentResult) => Promise<any>;
-  isSandbox: boolean;
-  isDigitalProduct?: boolean;
-  customerData?: CustomerData;
-  settings?: AsaasSettings;
-}
-
-interface PixData {
+export interface PixData {
   qrCode?: string;
   qrCodeImage?: string;
   paymentId?: string;
   expirationDate?: string;
 }
 
-export const usePixPayment = ({
-  onSubmit,
-  isSandbox,
-  isDigitalProduct = false,
-  customerData,
-  settings
-}: PixPaymentHookProps) => {
+export const usePixPayment = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pixData, setPixData] = useState<PixData | null>(null);
@@ -37,12 +22,12 @@ export const usePixPayment = ({
   };
   
   // Generate PIX QR code
-  const generatePixQrCode = async () => {
+  const generatePixQrCode = async (): Promise<PaymentResult> => {
     try {
       setIsLoading(true);
       clearError();
       
-      logger.log("Generating PIX QR Code", { isSandbox, isDigitalProduct });
+      logger.log("Generating PIX QR Code");
       
       // In a real implementation, you would call your payment processor API
       // This is just a simulation
@@ -68,11 +53,6 @@ export const usePixPayment = ({
         paymentId: response.paymentId,
         expirationDate: response.expirationDate
       });
-      
-      // Submit payment data to parent component
-      if (onSubmit) {
-        await onSubmit(response);
-      }
       
       logger.log("PIX QR Code generated successfully");
       
@@ -113,15 +93,6 @@ export const usePixPayment = ({
         });
       });
   }, [toast]);
-  
-  // Auto-generate PIX code on first render if in manual mode
-  useEffect(() => {
-    if (settings?.manualPixPage && !pixData && !isLoading) {
-      generatePixQrCode().catch((err) => {
-        logger.error("Auto-generation of PIX code failed:", err);
-      });
-    }
-  }, [settings?.manualPixPage, pixData, isLoading]);
   
   return {
     isLoading,

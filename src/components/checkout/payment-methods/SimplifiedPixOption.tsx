@@ -1,9 +1,9 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import RadioOption from './RadioOption';
 import { QrCode } from 'lucide-react';
-import { usePixPayment } from '@/hooks/payment/usePixPayment';
-import { usePaymentProcessing } from '@/hooks/payment/usePaymentProcessing';
 import { useAsaas } from '@/contexts/asaas';
+import { PaymentResult } from '@/types/payment';
 
 interface SimplifiedPixOptionProps {
   onSelect: () => void;
@@ -12,19 +12,18 @@ interface SimplifiedPixOptionProps {
 
 const SimplifiedPixOption: React.FC<SimplifiedPixOptionProps> = ({ onSelect, isSelected }) => {
   const { settings } = useAsaas();
-  const { handlePixPayment } = usePixPayment();
-  const { processing, startProcessing, stopProcessing } = usePaymentProcessing();
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handlePayment = async () => {
+  const handlePixPayment = async () => {
     if (settings?.apiKey) {
-      startProcessing();
+      setIsProcessing(true);
       try {
-        await handlePixPayment();
+        // Generate PIX payment (handled by parent component)
         onSelect();
       } catch (error) {
         console.error("Error during PIX payment:", error);
       } finally {
-        stopProcessing();
+        setIsProcessing(false);
       }
     } else {
       console.error("Asaas API key is not configured.");
@@ -33,13 +32,13 @@ const SimplifiedPixOption: React.FC<SimplifiedPixOptionProps> = ({ onSelect, isS
 
   return (
     <RadioOption
-      icon={QrCode}
+      Icon={QrCode}
       label="Pagar com PIX"
       description="Pague usando seu aplicativo bancário"
-      onClick={handlePayment}
+      onClick={handlePixPayment}
       selected={isSelected}
-      disabled={processing}
-      loading={processing}
+      disabled={isProcessing}
+      loading={isProcessing}
     />
   );
 };
