@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { UseFormReturn } from 'react-hook-form';
 import { AsaasSettings } from '@/types/asaas';
@@ -16,9 +16,13 @@ export const useSettingsLoader = (
 ) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const isLoadedRef = useRef(false);
 
-  // Load settings on mount
+  // Load settings on mount - only once
   useEffect(() => {
+    // Prevent multiple loads
+    if (isLoadedRef.current) return;
+
     const loadSettings = async () => {
       setLoading(true);
       try {
@@ -31,6 +35,9 @@ export const useSettingsLoader = (
         const formValues = asaasSettingsToFormValues(settings);
         form.reset(formValues);
         updateFormState(() => settings);
+        
+        // Mark as loaded
+        isLoadedRef.current = true;
       } catch (error) {
         console.error('Error loading settings:', error);
         toast({

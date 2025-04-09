@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AsaasSettings } from '@/types/asaas';
 import { PaymentSettingsFormValues, asaasSettingsToFormValues } from '../../utils/formUtils';
 import { logger } from '@/utils/logger';
@@ -13,11 +13,19 @@ export const useFormState = (initialState: AsaasSettings) => {
   const updateFormState = (
     updater: (prev: AsaasSettings) => AsaasSettings
   ) => {
-    const newFormState = updater(formState);
-    logger.log('Updating form state with new values:', newFormState);
-    logger.log('New manual card status:', newFormState.manualCardStatus);
-    setFormState(newFormState);
-    return asaasSettingsToFormValues(newFormState);
+    setFormState(prev => {
+      const newFormState = updater(prev);
+      
+      // Only log if there's an actual change
+      if (JSON.stringify(prev) !== JSON.stringify(newFormState)) {
+        logger.log('Updating form state with new values:', newFormState);
+        logger.log('New manual card status:', newFormState.manualCardStatus);
+      }
+      
+      return newFormState;
+    });
+    
+    return asaasSettingsToFormValues(formState);
   };
 
   return { formState, updateFormState };

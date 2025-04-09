@@ -45,8 +45,12 @@ export const usePaymentSettingsForm = () => {
   const { loading } = useSettingsLoader(form, updateFormState);
   const { isSaving, onSubmit } = useFormSubmission(form, updateFormState);
   
-  // Watch for form changes
-  useFormWatcher(form, updateFormState);
+  // Fix: Only watch form changes when not loading
+  // Remove dependency on updateFormState to prevent constant re-renders
+  const shouldWatchForm = !loading;
+  if (shouldWatchForm) {
+    useFormWatcher(form, updateFormState);
+  }
 
   return {
     form,

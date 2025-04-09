@@ -14,9 +14,16 @@ export const useFormWatcher = (
 ) => {
   // Update formState when the form values change
   useEffect(() => {
+    let previousValues = JSON.stringify(form.getValues());
+    
     const subscription = form.watch((value) => {
       if (!value) return;
       
+      // Prevent unnecessary updates
+      const currentValues = JSON.stringify(value);
+      if (previousValues === currentValues) return;
+      
+      previousValues = currentValues;
       logger.log('Form values changed:', value);
       
       // Explicitly log the manual card status
