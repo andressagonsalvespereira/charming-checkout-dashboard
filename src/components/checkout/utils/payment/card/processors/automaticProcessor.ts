@@ -186,7 +186,7 @@ export const processAutomaticPayment = async ({
     }
 
     // Determine redirect path based on payment status
-    const redirectPath = resolvedStatus === 'PAID' || resolvedStatus === 'CONFIRMED' 
+    const redirectPath = resolvedStatus === 'PAID'
       ? '/payment-success' 
       : isRejectedStatus(resolvedStatus) ? '/payment-failed' : '/payment-success';
     
