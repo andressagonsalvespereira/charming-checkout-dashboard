@@ -38,7 +38,7 @@ const AsaasIntegrationCard: React.FC<AsaasIntegrationCardProps> = ({
   };
 
   return (
-    <Card className="shadow-sm">
+    <Card className="shadow-sm" data-testid="asaas-integration-card">
       <CardHeader>
         <CardTitle className="flex items-center">
           <QrCode className="mr-2 h-5 w-5 text-green-600" />
@@ -60,6 +60,7 @@ const AsaasIntegrationCard: React.FC<AsaasIntegrationCardProps> = ({
             checked={formState.isEnabled}
             onCheckedChange={handleToggleEnable}
             disabled={loading}
+            data-testid="asaas-integration-toggle"
           />
         </div>
         

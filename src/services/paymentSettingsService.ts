@@ -33,12 +33,14 @@ export const getPaymentSettings = async (): Promise<AsaasSettings> => {
     // Log sanitized settings
     logger.log('Loaded payment settings:', {
       ...settings,
+      isEnabled: settings.isEnabled,
       sandboxApiKey: settings.sandboxApiKey ? `${settings.sandboxApiKey.substring(0, 5)}...` : '[empty]',
       productionApiKey: settings.productionApiKey ? `${settings.productionApiKey.substring(0, 5)}...` : '[empty]'
     });
     
     logger.log('Card status from database:', settings.manualCardStatus);
     logger.log('Integration enabled status from database:', settings.isEnabled);
+    logger.log('API keys from database - Sandbox:', settings.sandboxApiKey ? 'PRESENT' : 'EMPTY', 'Production:', settings.productionApiKey ? 'PRESENT' : 'EMPTY');
     
     return settings;
   } catch (error) {
@@ -58,11 +60,13 @@ export const savePaymentSettings = async (settings: AsaasSettings): Promise<bool
     // Log sanitized settings
     logger.log('Saving payment settings to database:', {
       ...settings,
+      isEnabled: settings.isEnabled,
       sandboxApiKey: settings.sandboxApiKey ? `${settings.sandboxApiKey.substring(0, 5)}...` : '[empty]',
       productionApiKey: settings.productionApiKey ? `${settings.productionApiKey.substring(0, 5)}...` : '[empty]'
     });
     
     logger.log('Integration enabled status being saved to DB:', settings.isEnabled);
+    logger.log('API keys being saved to DB - Sandbox:', settings.sandboxApiKey ? 'PRESENT' : 'EMPTY', 'Production:', settings.productionApiKey ? 'PRESENT' : 'EMPTY');
     
     // First, check if settings already exist
     const existingSettingsId = await checkSettingsExist();
@@ -100,15 +104,17 @@ export const savePaymentSettings = async (settings: AsaasSettings): Promise<bool
     
     // Check if API keys were saved correctly
     if (verifiedConfig) {
-      const sandboxSaved = verifiedConfig.sandbox_api_key && verifiedConfig.sandbox_api_key === settings.sandboxApiKey;
-      const productionSaved = verifiedConfig.production_api_key && verifiedConfig.production_api_key === settings.productionApiKey;
+      const sandboxSaved = verifiedConfig.sandbox_api_key === settings.sandboxApiKey;
+      const productionSaved = verifiedConfig.production_api_key === settings.productionApiKey;
+      
+      logger.log('Verified API keys - Sandbox:', verifiedConfig.sandbox_api_key ? 'PRESENT' : 'EMPTY', 'Production:', verifiedConfig.production_api_key ? 'PRESENT' : 'EMPTY');
       
       if (!sandboxSaved && settings.sandboxApiKey) {
-        logger.warn('Sandbox API key was not saved correctly');
+        logger.warn('Sandbox API key was not saved correctly. Expected length:', settings.sandboxApiKey.length, 'Got length:', verifiedConfig.sandbox_api_key?.length || 0);
       }
       
       if (!productionSaved && settings.productionApiKey) {
-        logger.warn('Production API key was not saved correctly');
+        logger.warn('Production API key was not saved correctly. Expected length:', settings.productionApiKey.length, 'Got length:', verifiedConfig.production_api_key?.length || 0);
       }
     }
     

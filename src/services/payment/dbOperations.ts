@@ -46,7 +46,7 @@ export const fetchApiConfig = async () => {
     logger.warn('No Asaas config found, using defaults for API keys');
   }
 
-  logger.log('Fetched API config data:', configData);
+  logger.log('Fetched API config data:', configData || {});
   return configData;
 };
 
@@ -66,7 +66,7 @@ export const saveSettingsData = async (settings: AsaasSettings, settingsId: numb
   logger.log(`Validated status for saving: ${validatedStatus}`);
   
   // Ensure isEnabled is properly cast to boolean
-  const isEnabled = !!settings.isEnabled;
+  const isEnabled = settings.isEnabled === true;
   logger.log(`isEnabled properly cast to boolean: ${isEnabled}`);
 
   const { error } = await supabase
@@ -116,25 +116,33 @@ export const saveApiConfig = async (settings: AsaasSettings, configId: number) =
   const productionKeyPreview = settings.productionApiKey ? `${settings.productionApiKey.substring(0, 5)}...` : '[empty]';
   logger.log(`Saving API keys - Sandbox: ${sandboxKeyPreview}, Production: ${productionKeyPreview}`);
   
-  // Ensure we're not saving undefined values
-  const sandboxApiKey = settings.sandboxApiKey || '';
-  const productionApiKey = settings.productionApiKey || '';
-  
   // Double-check before saving
-  logger.log(`API key lengths - Sandbox: ${sandboxApiKey.length}, Production: ${productionApiKey.length}`);
+  logger.log(`API key lengths - Sandbox: ${settings.sandboxApiKey?.length || 0}, Production: ${settings.productionApiKey?.length || 0}`);
   
   const { error } = await supabase
     .from('asaas_config')
     .upsert({
       id: configId,
-      sandbox_api_key: sandboxApiKey,
-      production_api_key: productionApiKey,
+      sandbox_api_key: settings.sandboxApiKey || '',
+      production_api_key: settings.productionApiKey || '',
       updated_at: new Date().toISOString()
     });
 
   if (error) {
     logger.error('Error saving API config:', error);
     throw error;
+  }
+
+  // Verify the keys were saved correctly
+  const { data: verifyData } = await supabase
+    .from('asaas_config')
+    .select('sandbox_api_key, production_api_key')
+    .eq('id', configId)
+    .single();
+
+  if (verifyData) {
+    logger.log(`Verified sandbox key length: ${verifyData.sandbox_api_key?.length || 0}`);
+    logger.log(`Verified production key length: ${verifyData.production_api_key?.length || 0}`);
   }
 
   logger.log('API config saved successfully');

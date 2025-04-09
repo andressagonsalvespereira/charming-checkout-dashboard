@@ -16,21 +16,24 @@ export const mapToAsaasSettings = (settingsData: any, configData: any): AsaasSet
   // Ensure isEnabled is a proper boolean
   const isEnabled = settingsData?.asaas_enabled === true;
   
+  // Ensure API keys are proper strings
+  const sandboxApiKey = configData?.sandbox_api_key || '';
+  const productionApiKey = configData?.production_api_key || '';
+  
   // Log the enabled status from database
   logger.log('Asaas enabled status from database:', settingsData?.asaas_enabled);
   logger.log('Mapped isEnabled value (after proper boolean conversion):', isEnabled);
+  logger.log('API keys from database - Sandbox:', sandboxApiKey ? 'PRESENT' : 'EMPTY', 'Production:', productionApiKey ? 'PRESENT' : 'EMPTY');
   
   return {
     isEnabled: isEnabled,
-    apiKey: settingsData?.sandbox_mode ? 
-      (configData?.sandbox_api_key || '') : 
-      (configData?.production_api_key || ''),
+    apiKey: settingsData?.sandbox_mode ? sandboxApiKey : productionApiKey,
     allowPix: settingsData?.allow_pix ?? true,
     allowCreditCard: settingsData?.allow_credit_card ?? true,
     manualCreditCard: settingsData?.manual_credit_card ?? false,
     sandboxMode: settingsData?.sandbox_mode ?? true,
-    sandboxApiKey: configData?.sandbox_api_key || '',
-    productionApiKey: configData?.production_api_key || '',
+    sandboxApiKey: sandboxApiKey,
+    productionApiKey: productionApiKey,
     manualCardProcessing: settingsData?.manual_card_processing ?? false,
     manualPixPage: settingsData?.manual_pix_page ?? false,
     manualPaymentConfig: settingsData?.manual_payment_config ?? false,

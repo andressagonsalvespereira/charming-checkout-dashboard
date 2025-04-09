@@ -3,27 +3,58 @@ import { ManualCardStatus } from '@/types/asaas';
 import { logger } from '@/utils/logger';
 
 /**
- * Validate that a status string is a valid ManualCardStatus
- * @param status String to validate
- * @returns Valid ManualCardStatus or 'ANALYSIS' as fallback
+ * Validate card status
+ * @param status Card status to validate
+ * @returns Valid card status
  */
-export const validateCardStatus = (status: string | null): ManualCardStatus => {
-  const validStatuses: ManualCardStatus[] = [
-    'APPROVED', 'PENDING', 'CONFIRMED', 'DECLINED', 
-    'REJECTED', 'ANALYSIS', 'DENIED', 'CANCELLED',
-    'FAILED', 'RECEIVED'
-  ];
-  
+export const validateCardStatus = (status?: string): ManualCardStatus => {
   logger.log('Validating card status:', status);
   
-  if (!status) {
-    logger.log('Status is null or undefined, using ANALYSIS as default');
-    return 'ANALYSIS';
+  // List of valid card statuses
+  const validStatuses: ManualCardStatus[] = [
+    'APPROVED', 'PENDING', 'CONFIRMED', 'REJECTED', 
+    'ANALYSIS', 'RECEIVED', 'CANCELLED', 'FAILED', 
+    'DECLINED', 'DENIED'
+  ];
+  
+  // Default status if not provided or invalid
+  const defaultStatus: ManualCardStatus = 'ANALYSIS';
+  
+  // Check if status is valid
+  if (status && validStatuses.includes(status as ManualCardStatus)) {
+    logger.log(`Status ${status} is valid`);
+    return status as ManualCardStatus;
   }
   
-  const upperStatus = status.toUpperCase() as ManualCardStatus;
-  const isValid = validStatuses.includes(upperStatus);
-  logger.log(`Status ${status} is ${isValid ? 'valid' : 'invalid'}`);
+  logger.log(`Status ${status} is invalid, using default status ${defaultStatus}`);
+  return defaultStatus;
+};
+
+/**
+ * Validate boolean value
+ * @param value Value to validate
+ * @returns Validated boolean
+ */
+export const validateBoolean = (value: any): boolean => {
+  if (typeof value === 'boolean') {
+    return value;
+  }
   
-  return isValid ? upperStatus : 'ANALYSIS';
+  if (value === 'true') {
+    return true;
+  }
+  
+  if (value === 'false') {
+    return false;
+  }
+  
+  if (value === 1 || value === '1') {
+    return true;
+  }
+  
+  if (value === 0 || value === '0') {
+    return false;
+  }
+  
+  return !!value;
 };

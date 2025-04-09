@@ -35,7 +35,7 @@ export const useFormSubmission = (
       });
       logger.log('Selected card status to save:', data.manualCardStatus);
       logger.log('API keys to save - Sandbox:', sandboxKeyPreview, 'Production:', productionKeyPreview);
-      logger.log('Integration enabled status:', data.isEnabled);
+      logger.log('Integration enabled status to save:', data.isEnabled);
       
       // Transform form values to settings
       const settingsToUpdate = formValuesToAsaasSettings({
@@ -52,12 +52,14 @@ export const useFormSubmission = (
       
       logger.log('Transformed settings to save:', {
         ...settingsToUpdate,
+        isEnabled: settingsToUpdate.isEnabled,
         sandboxApiKey: settingsToUpdate.sandboxApiKey ? `${settingsToUpdate.sandboxApiKey.substring(0, 5)}...` : '[empty]',
         productionApiKey: settingsToUpdate.productionApiKey ? `${settingsToUpdate.productionApiKey.substring(0, 5)}...` : '[empty]'
       });
       
       logger.log('Manual card status being saved:', settingsToUpdate.manualCardStatus);
       logger.log('Integration enabled status being saved:', settingsToUpdate.isEnabled);
+      logger.log('API keys being saved - Sandbox:', settingsToUpdate.sandboxApiKey ? 'PRESENT' : 'EMPTY', 'Production:', settingsToUpdate.productionApiKey ? 'PRESENT' : 'EMPTY');
       
       const success = await savePaymentSettings(settingsToUpdate);
       
@@ -71,11 +73,13 @@ export const useFormSubmission = (
         const updatedSettings = await getPaymentSettings();
         logger.log('Reloaded settings after save:', {
           ...updatedSettings,
+          isEnabled: updatedSettings.isEnabled,
           sandboxApiKey: updatedSettings.sandboxApiKey ? `${updatedSettings.sandboxApiKey.substring(0, 5)}...` : '[empty]',
           productionApiKey: updatedSettings.productionApiKey ? `${updatedSettings.productionApiKey.substring(0, 5)}...` : '[empty]'
         });
         logger.log('Reloaded manual card status:', updatedSettings.manualCardStatus);
         logger.log('Reloaded integration enabled status:', updatedSettings.isEnabled);
+        logger.log('Reloaded API keys - Sandbox:', updatedSettings.sandboxApiKey ? 'PRESENT' : 'EMPTY', 'Production:', updatedSettings.productionApiKey ? 'PRESENT' : 'EMPTY');
         
         // Update form state with the latest settings
         updateFormState(() => updatedSettings);

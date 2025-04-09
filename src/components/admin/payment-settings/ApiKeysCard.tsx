@@ -25,13 +25,17 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
 
   // Update local state when form state changes
   useEffect(() => {
-    // Only update if the values are different to prevent unnecessary renders
-    if (formState.sandboxApiKey !== sandboxApiKey && formState.sandboxApiKey) {
-      setSandboxApiKey(formState.sandboxApiKey);
+    logger.log('ApiKeysCard received updated formState', {
+      sandboxApiKey: formState.sandboxApiKey ? '[PRESENT]' : '[EMPTY]',
+      productionApiKey: formState.productionApiKey ? '[PRESENT]' : '[EMPTY]'
+    });
+    
+    if (formState.sandboxApiKey !== sandboxApiKey) {
+      setSandboxApiKey(formState.sandboxApiKey || '');
     }
     
-    if (formState.productionApiKey !== productionApiKey && formState.productionApiKey) {
-      setProductionApiKey(formState.productionApiKey);
+    if (formState.productionApiKey !== productionApiKey) {
+      setProductionApiKey(formState.productionApiKey || '');
     }
   }, [formState.sandboxApiKey, formState.productionApiKey]);
 
@@ -44,7 +48,10 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
     logger.log('Sandbox API key changed to:', previewKey);
     
     // Update form state with the new key
-    onUpdateFormState(prev => ({ ...prev, sandboxApiKey: value }));
+    onUpdateFormState(prev => {
+      logger.log('Updating formState with new sandbox key');
+      return { ...prev, sandboxApiKey: value };
+    });
   };
 
   const handleProductionKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,7 +63,10 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
     logger.log('Production API key changed to:', previewKey);
     
     // Update form state with the new key
-    onUpdateFormState(prev => ({ ...prev, productionApiKey: value }));
+    onUpdateFormState(prev => {
+      logger.log('Updating formState with new production key');
+      return { ...prev, productionApiKey: value };
+    });
   };
 
   return (
