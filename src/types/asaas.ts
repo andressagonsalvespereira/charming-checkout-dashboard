@@ -1,12 +1,11 @@
 
-// Define the main types used in the Asaas integration
 export type ManualCardStatus = 'APPROVED' | 'DENIED' | 'ANALYSIS';
 
 export interface AsaasSettings {
   isEnabled: boolean;
   apiKey: string;
-  allowCreditCard: boolean;
   allowPix: boolean;
+  allowCreditCard: boolean;
   manualCreditCard: boolean;
   sandboxMode: boolean;
   sandboxApiKey: string;
@@ -17,40 +16,27 @@ export interface AsaasSettings {
   manualCardStatus: ManualCardStatus;
 }
 
-export interface AsaasApiResponse<T> {
-  data?: T;
-  error?: {
-    message: string;
-    code?: string;
-  };
-  status?: number;
-}
-
-export interface AsaasCustomer {
-  id?: string;
-  name: string;
-  email: string;
-  cpfCnpj: string;
-  mobilePhone?: string;
-  address?: string;
-  addressNumber?: string;
-  complement?: string;
-  province?: string;
-  postalCode?: string;
-}
-
-export interface AsaasPayment {
-  id?: string;
-  value: number;
+export interface AsaasPaymentInfo {
+  id: string;
   customer: string;
-  billingType: 'CREDIT_CARD' | 'PIX';
+  value: number;
+  netValue: number;
+  billingType: string;
+  status: string;
   dueDate: string;
+  paymentDate?: string;
+  clientPaymentDate?: string;
+  installmentCount?: number;
+  invoiceUrl: string;
+  bankSlipUrl?: string;
+  invoiceNumber: string;
+  externalReference?: string;
+  deleted: boolean;
+  postalService: boolean;
   creditCard?: {
-    holderName: string;
-    number: string;
-    expiryMonth: string;
-    expiryYear: string;
-    ccv: string;
+    creditCardNumber: string;
+    creditCardBrand: string;
+    creditCardToken: string;
   };
   creditCardHolderInfo?: {
     name: string;
@@ -60,40 +46,26 @@ export interface AsaasPayment {
     addressNumber: string;
     addressComplement?: string;
     phone: string;
+    mobilePhone: string;
   };
-  remoteIp?: string;
-}
-
-export interface AsaasPaymentResponse {
-  id: string;
-  customer?: string;
-  status: string;
-  dueDate?: string;
-  invoiceUrl?: string;
-  value: number;
-  netValue: number;
-  originalValue?: number;
-  interestValue?: number;
-  description?: string;
-  billingType: string;
-  confirmedDate?: string;
-  pixTransaction?: any;
-  creditCard?: {
-    creditCardBrand?: string;
-    creditCardNumber?: string;
-    creditCardToken?: string;
+  fine?: {
+    value: number;
+    type: string;
+  };
+  interest?: {
+    value: number;
+    type: string;
+  };
+  discount?: {
+    value: number;
+    limitDate: string;
+    type: string;
+    dueDateLimitDays: number;
   };
 }
 
-export interface AsaasPixQrCodeResponse {
+export interface AsaasPixInfo {
   encodedImage: string;
   payload: string;
   expirationDate: string;
-}
-
-export interface AsaasContextType {
-  settings: AsaasSettings;
-  loading: boolean;
-  saveSettings: (settings: AsaasSettings) => Promise<void>;
-  updateSettings: (settings: AsaasSettings) => Promise<void>;
 }

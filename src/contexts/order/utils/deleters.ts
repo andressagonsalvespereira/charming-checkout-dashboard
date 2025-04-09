@@ -1,6 +1,6 @@
 
 import { PaymentMethod } from '@/types/order';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 // Delete a single order
 export const deleteOrderData = async (id: string): Promise<void> => {

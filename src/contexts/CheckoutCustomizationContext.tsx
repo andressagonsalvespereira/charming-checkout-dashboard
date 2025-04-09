@@ -1,87 +1,68 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
-  getCheckoutCustomization, 
-  updateCheckoutCustomization, 
-  uploadBannerImage,
-  type CheckoutCustomization 
+  getCheckoutCustomization,
+  updateCheckoutCustomization,
+  uploadBannerImage as uploadBannerImageService,
+  CheckoutCustomization
 } from '@/services/checkoutCustomizationService';
+import { useToast } from '@/hooks/use-toast';
 
-interface CheckoutCustomizationContextType {
+export interface CheckoutCustomizationContextType {
   customization: CheckoutCustomization | null;
   loading: boolean;
-  error: string | null;
-  updateCustomization: (data: Partial<CheckoutCustomization>) => Promise<void>;
-  uploadBanner: (file: File) => Promise<string | null>;
-  refreshCustomization: () => Promise<void>;
+  error: Error | null;
+  updateCustomization: (updates: Partial<CheckoutCustomization>) => Promise<void>;
+  uploadBannerImage: (file: File) => Promise<string | null>;
 }
 
 const CheckoutCustomizationContext = createContext<CheckoutCustomizationContextType | undefined>(undefined);
 
-export const useCheckoutCustomization = () => {
-  const context = useContext(CheckoutCustomizationContext);
-  if (!context) {
-    throw new Error('useCheckoutCustomization must be used within a CheckoutCustomizationProvider');
-  }
-  return context;
-};
-
-interface CheckoutCustomizationProviderProps {
-  children: ReactNode;
-}
-
-export const CheckoutCustomizationProvider: React.FC<CheckoutCustomizationProviderProps> = ({ children }) => {
+export const CheckoutCustomizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { toast } = useToast();
   const [customization, setCustomization] = useState<CheckoutCustomization | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  const [error, setError] = useState<Error | null>(null);
 
-  const fetchCustomization = async () => {
+  useEffect(() => {
+    fetchCheckoutCustomization();
+  }, []);
+
+  const fetchCheckoutCustomization = async () => {
     try {
       setLoading(true);
-      setError(null);
-
       const data = await getCheckoutCustomization();
       setCustomization(data);
     } catch (err) {
       console.error('Error fetching checkout customization:', err);
-      setError('Falha ao carregar configurações de personalização do checkout');
+      setError(err instanceof Error ? err : new Error('An unknown error occurred'));
+      toast({
+        title: 'Error',
+        description: 'Failed to load checkout customization',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const refreshCustomization = async () => {
-    await fetchCustomization();
-  };
-
-  const updateCustomization = async (data: Partial<CheckoutCustomization>) => {
+  const updateCustomization = async (updates: Partial<CheckoutCustomization>) => {
+    if (!customization) return;
+    
     try {
       setLoading(true);
-      setError(null);
-
-      if (!customization?.id) {
-        throw new Error('No customization record found to update');
-      }
-
-      const updated = await updateCheckoutCustomization(customization.id, data);
-
-      if (updated) {
-        setCustomization(updated);
-        
-        toast({
-          title: 'Personalização atualizada',
-          description: 'As configurações do checkout foram atualizadas com sucesso',
-        });
-      }
+      const updated = await updateCheckoutCustomization(customization.id, updates);
+      setCustomization(updated);
+      toast({
+        title: 'Success',
+        description: 'Checkout customization updated',
+      });
     } catch (err) {
       console.error('Error updating checkout customization:', err);
-      setError('Falha ao atualizar configurações de personalização');
-      
+      setError(err instanceof Error ? err : new Error('An unknown error occurred'));
       toast({
-        title: 'Erro',
-        description: 'Não foi possível atualizar as configurações de personalização',
+        title: 'Error',
+        description: 'Failed to update checkout customization',
         variant: 'destructive',
       });
     } finally {
@@ -89,47 +70,45 @@ export const CheckoutCustomizationProvider: React.FC<CheckoutCustomizationProvid
     }
   };
 
-  const uploadBanner = async (file: File): Promise<string | null> => {
+  const uploadBannerImage = async (file: File): Promise<string | null> => {
     try {
-      const url = await uploadBannerImage(file);
-      
-      if (url) {
-        toast({
-          title: 'Imagem enviada',
-          description: 'A imagem do banner foi enviada com sucesso',
-        });
-      }
-      
-      return url;
+      setLoading(true);
+      const imageUrl = await uploadBannerImageService(file);
+      return imageUrl;
     } catch (err) {
       console.error('Error uploading banner image:', err);
-      
       toast({
-        title: 'Erro',
-        description: 'Não foi possível enviar a imagem do banner',
+        title: 'Error',
+        description: 'Failed to upload banner image',
         variant: 'destructive',
       });
-      
       return null;
+    } finally {
+      setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchCustomization();
-  }, []);
-
-  const value = {
-    customization,
-    loading,
-    error,
-    updateCustomization,
-    uploadBanner,
-    refreshCustomization
   };
 
   return (
-    <CheckoutCustomizationContext.Provider value={value}>
+    <CheckoutCustomizationContext.Provider
+      value={{
+        customization,
+        loading,
+        error,
+        updateCustomization,
+        uploadBannerImage
+      }}
+    >
       {children}
     </CheckoutCustomizationContext.Provider>
   );
+};
+
+export const useCheckoutCustomization = () => {
+  const context = useContext(CheckoutCustomizationContext);
+  
+  if (context === undefined) {
+    throw new Error('useCheckoutCustomization must be used within a CheckoutCustomizationProvider');
+  }
+  
+  return context;
 };

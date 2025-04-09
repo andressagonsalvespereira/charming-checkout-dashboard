@@ -8,8 +8,9 @@ export interface Product {
   image_url?: string | null;
   image?: string | null;
   is_digital?: boolean | null;
-  override_global_status?: boolean | null;
-  custom_manual_status?: string | null;
+  digital?: boolean;
+  usarProcessamentoPersonalizado?: boolean; 
+  statusCartaoManual?: string;
   created_at?: string | null;
   updated_at?: string | null;
 }

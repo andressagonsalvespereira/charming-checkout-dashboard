@@ -1,6 +1,6 @@
 
 import { Order } from '@/types/order';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { convertDBOrderToOrder } from './converters';
 
 // Load all orders from the database

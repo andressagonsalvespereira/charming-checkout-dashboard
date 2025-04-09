@@ -1,5 +1,5 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -77,7 +77,7 @@ export const fetchDashboardStats = async (): Promise<DashboardStats> => {
     // Calculate payment methods distribution
     const totalOrderCount = (cardOrders || 0) + (pixOrders || 0);
     
-    // Resolve the infinite type recursion by simplifying the calculation
+    // Simplify the calculation to avoid type recursion issues
     let paymentMethodsDistribution = [
       { name: 'Cartão de Crédito', value: 0 },
       { name: 'PIX', value: 0 }
@@ -91,7 +91,7 @@ export const fetchDashboardStats = async (): Promise<DashboardStats> => {
       ];
     }
     
-    // Generate visitor data for the last 7 days (still using random data as we don't track visitors)
+    // Generate visitor data for the last 7 days
     const visitorsData = generateVisitorData(7);
     
     return {
