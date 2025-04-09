@@ -2,40 +2,17 @@
 import React, { useEffect, useState } from 'react';
 import CheckoutHeader from './CheckoutHeader';
 import CheckoutFooter from './CheckoutFooter';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getCheckoutCustomization } from '@/services/checkoutCustomizationService';
+import type { CheckoutCustomization } from '@/services/checkoutCustomizationService';
 
 interface CheckoutContainerProps {
   children: React.ReactNode;
 }
 
-interface CheckoutCustomization {
-  id: number;
-  button_color: string;
-  button_text_color?: string; // Make optional
-  button_text: string;
-  header_message: string;
-  banner_image_url?: string; // Make optional
-  show_banner: boolean;
-  heading_color?: string; // Make optional
-  created_at: string;
-  updated_at: string;
-}
-
 const CheckoutContainer: React.FC<CheckoutContainerProps> = ({ children }) => {
   const { toast } = useToast();
-  const [customization, setCustomization] = useState<CheckoutCustomization>({
-    id: 0,
-    button_color: '#3b82f6',
-    button_text_color: '#ffffff',
-    button_text: 'Finalizar Pagamento',
-    header_message: 'Oferta por tempo limitado!',
-    banner_image_url: '',
-    show_banner: true,
-    heading_color: '#000000',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  });
+  const [customization, setCustomization] = useState<CheckoutCustomization | null>(null);
   const [isCustomizationLoaded, setIsCustomizationLoaded] = useState(false);
 
   useEffect(() => {
@@ -43,44 +20,16 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({ children }) => {
       try {
         console.log("Fetching checkout customization...");
         
-        const { data, error } = await supabase
-          .from('checkout_customization')
-          .select('*')
-          .order('id', { ascending: false })
-          .limit(1)
-          .single();
+        const data = await getCheckoutCustomization();
 
-        if (error) {
-          // Using more specific error logging
-          if (error.code === "PGRST116") {
-            console.log("No checkout customization found, using defaults");
-          } else {
-            console.error('Error fetching checkout customization:', error);
-          }
-          
-          // Continue with defaults
+        if (!data) {
+          console.log("No checkout customization found, using defaults");
           setIsCustomizationLoaded(true);
           return;
         }
 
-        if (data) {
-          console.log("Checkout customization loaded:", data);
-          // Ensure all required fields have values, falling back to defaults if needed
-          const safeData: CheckoutCustomization = {
-            ...customization, // Start with defaults
-            ...data, // Override with actual data
-            // Ensure all required fields are present
-            button_color: data.button_color || '#3b82f6',
-            button_text_color: data.button_text_color || '#ffffff',
-            button_text: data.button_text || 'Finalizar Pagamento',
-            header_message: data.header_message || 'Oferta por tempo limitado!',
-            banner_image_url: data.banner_image_url || '',
-            show_banner: data.show_banner ?? true,
-            heading_color: data.heading_color || '#000000'
-          };
-          
-          setCustomization(safeData);
-        }
+        console.log("Checkout customization loaded:", data);
+        setCustomization(data);
         
         setIsCustomizationLoaded(true);
       } catch (err) {
@@ -95,10 +44,10 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({ children }) => {
 
   // Add CSS variables for checkout button styling
   const customStyles = {
-    '--button-color': customization.button_color || '#3b82f6',
-    '--button-text-color': customization.button_text_color || '#ffffff',
-    '--button-text': `'${customization.button_text || 'Finalizar Pagamento'}'`,
-    '--heading-color': customization.heading_color || '#000000',
+    '--button-color': customization?.button_color || '#3b82f6',
+    '--button-text-color': customization?.button_text_color || '#ffffff',
+    '--button-text': `'${customization?.button_text || 'Finalizar Pagamento'}'`,
+    '--heading-color': customization?.heading_color || '#000000',
   } as React.CSSProperties;
 
   // Show a simple loading state while customization is loading
@@ -112,7 +61,7 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 touch-manipulation" style={customStyles}>
-      <CheckoutHeader />
+      <CheckoutHeader customization={customization} />
       <main className="max-w-xl mx-auto py-2 px-4">
         {children}
       </main>

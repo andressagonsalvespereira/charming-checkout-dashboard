@@ -1,67 +1,35 @@
 
 import React, { useState, useEffect } from 'react';
 import { Clock, Timer } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import type { CheckoutCustomization } from '@/services/checkoutCustomizationService';
 
-interface CheckoutCustomization {
-  header_message: string;
-  banner_image_url?: string;
-  show_banner: boolean;
-  button_color: string;
-  button_text_color?: string; // Make optional
-  heading_color?: string; // Make optional
-  button_text?: string;
+interface CheckoutHeaderProps {
+  customization: CheckoutCustomization | null;
 }
 
-const CheckoutHeader = () => {
+const CheckoutHeader: React.FC<CheckoutHeaderProps> = ({ customization }) => {
   const [timeLeft, setTimeLeft] = useState({
     minutes: 14,
     seconds: 59
   });
-  const [customization, setCustomization] = useState<CheckoutCustomization>({
+
+  const defaultCustomization: CheckoutCustomization = {
+    id: 0,
     header_message: 'Oferta por tempo limitado!',
     banner_image_url: '',
     show_banner: true,
     button_color: '#3b82f6',
     button_text_color: '#ffffff',
     heading_color: '#000000',
-    button_text: 'Finalizar Pagamento'
-  });
+    button_text: 'Finalizar Pagamento',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  
+  // Use provided customization or default values
+  const settings = customization || defaultCustomization;
 
   useEffect(() => {
-    const fetchCustomization = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('checkout_customization')
-          .select('*')
-          .order('id', { ascending: false })
-          .limit(1)
-          .single();
-
-        if (error) {
-          console.error('Error fetching checkout customization:', error);
-          return;
-        }
-
-        if (data) {
-          // Ensure we handle missing properties gracefully
-          setCustomization({
-            header_message: data.header_message || 'Oferta por tempo limitado!',
-            banner_image_url: data.banner_image_url || '',
-            show_banner: data.show_banner ?? true,
-            button_color: data.button_color || '#3b82f6',
-            button_text_color: data.button_text_color || '#ffffff',
-            heading_color: data.heading_color || '#000000',
-            button_text: data.button_text || 'Finalizar Pagamento'
-          });
-        }
-      } catch (err) {
-        console.error('Failed to fetch checkout customization', err);
-      }
-    };
-
-    fetchCustomization();
-
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev.seconds > 0) {
@@ -87,16 +55,16 @@ const CheckoutHeader = () => {
       <header className="bg-gradient-to-r from-black to-gray-800 text-white py-3 px-4 text-center">
         <div className="max-w-5xl mx-auto">
           <div className="text-base md:text-lg">
-            {customization.header_message} <span className="font-bold text-yellow-300">{formatTime(timeLeft.minutes, timeLeft.seconds)}</span>
+            {settings.header_message} <span className="font-bold text-yellow-300">{formatTime(timeLeft.minutes, timeLeft.seconds)}</span>
           </div>
         </div>
       </header>
       
-      {customization.show_banner && customization.banner_image_url && (
+      {settings.show_banner && settings.banner_image_url && (
         <div className="w-full flex justify-center mt-2 mb-4">
           <div className="max-w-xl w-full px-4">
             <img 
-              src={customization.banner_image_url} 
+              src={settings.banner_image_url} 
               alt="Checkout Banner" 
               className="w-full h-auto object-cover rounded-md"
             />

@@ -1,118 +1,188 @@
 
-import { useState } from 'react';
-import { useOrders } from '@/contexts/OrderContext';
-import { Order, PaymentMethod } from '@/types/order';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  getAllOrders, 
+  createOrder, 
+  updateOrderStatus, 
+  deleteOrder, 
+  deleteOrdersByPaymentMethod,
+  type Order,
+  type CreateOrderInput,
+  type PaymentStatus,
+  type PaymentMethod
+} from '@/services/orderService';
+import { logger } from '@/utils/logger';
 
-export function useOrdersManagement() {
-  const { loading, getOrdersByPaymentMethod, refreshOrders, deleteOrder, deleteAllOrdersByPaymentMethod } = useOrders();
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
-  const [paymentMethodToDelete, setPaymentMethodToDelete] = useState<PaymentMethod | null>(null);
-  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+export const useOrdersManagement = () => {
   const { toast } = useToast();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pendingOrder, setPendingOrder] = useState(false);
+  const [filterMethod, setFilterMethod] = useState<PaymentMethod | 'ALL'>('ALL');
 
-  const pixOrders = getOrdersByPaymentMethod('PIX' as PaymentMethod);
-  const cardOrders = getOrdersByPaymentMethod('CREDIT_CARD' as PaymentMethod);
+  // Load orders on component mount
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
-  const handleViewOrder = (order: Order) => {
-    setSelectedOrder(order);
-    setIsDetailsOpen(true);
-  };
-
-  const handleRefreshOrders = async () => {
-    setIsRefreshing(true);
+  // Get orders from the database
+  const fetchOrders = async () => {
+    setLoading(true);
     try {
-      await refreshOrders();
+      const loadedOrders = await getAllOrders();
+      setOrders(loadedOrders);
+      setError(null);
+    } catch (err) {
+      logger.error('Error loading orders:', err);
+      setError('Failed to load orders');
+      
       toast({
-        title: "Lista atualizada",
-        description: "A lista de pedidos foi atualizada com sucesso!",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar a lista de pedidos.",
+        title: "Error",
+        description: "Failed to load orders",
         variant: "destructive",
       });
     } finally {
-      setIsRefreshing(false);
+      setLoading(false);
     }
   };
 
-  const handleDeleteOrder = (order: Order) => {
-    setOrderToDelete(order);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const confirmDeleteOrder = async () => {
-    if (!orderToDelete) return;
-    
+  // Create a new order
+  const addOrder = async (orderData: CreateOrderInput): Promise<Order> => {
     try {
-      await deleteOrder(String(orderToDelete.id));
+      if (pendingOrder) {
+        logger.warn("Duplicate order creation request detected");
+        throw new Error("An order is already being processed");
+      }
+      
+      setPendingOrder(true);
+      
+      const newOrder = await createOrder(orderData);
+      
+      setOrders(prev => [newOrder, ...prev]);
+      
       toast({
-        title: "Pedido removido",
-        description: "O pedido foi removido com sucesso.",
+        title: "Success",
+        description: "Order added successfully",
       });
-    } catch (error) {
+      
+      return newOrder;
+    } catch (err) {
+      logger.error('Error adding order:', err);
+      
       toast({
-        title: "Erro",
-        description: "Não foi possível remover o pedido.",
+        title: "Error",
+        description: "Failed to add order",
         variant: "destructive",
       });
+      
+      throw err;
     } finally {
-      setIsDeleteDialogOpen(false);
-      setOrderToDelete(null);
+      // Reset pending state after a delay to prevent duplicate submissions
+      setTimeout(() => {
+        setPendingOrder(false);
+      }, 1000);
     }
   };
 
-  const handleDeleteAllOrders = (paymentMethod: PaymentMethod) => {
-    setPaymentMethodToDelete(paymentMethod);
-    setIsDeleteAllDialogOpen(true);
-  };
-
-  const confirmDeleteAllOrders = async () => {
-    if (!paymentMethodToDelete) return;
-    
+  // Update an order's status
+  const changeOrderStatus = async (
+    id: string, 
+    status: PaymentStatus
+  ): Promise<Order> => {
     try {
-      await deleteAllOrdersByPaymentMethod(paymentMethodToDelete);
+      const updatedOrder = await updateOrderStatus(id, status);
+      
+      setOrders(prev => 
+        prev.map(order => 
+          String(order.id) === String(id) ? updatedOrder : order
+        )
+      );
+      
       toast({
-        title: "Pedidos removidos",
-        description: `Todos os pedidos via ${paymentMethodToDelete === 'PIX' ? 'PIX' : 'Cartão'} foram removidos com sucesso.`,
+        title: "Success",
+        description: "Order status updated successfully",
       });
-    } catch (error) {
+      
+      return updatedOrder;
+    } catch (err) {
+      logger.error('Error updating order status:', err);
+      
       toast({
-        title: "Erro",
-        description: "Não foi possível remover os pedidos.",
+        title: "Error",
+        description: "Failed to update order status",
         variant: "destructive",
       });
-    } finally {
-      setIsDeleteAllDialogOpen(false);
-      setPaymentMethodToDelete(null);
+      
+      throw err;
     }
   };
+
+  // Delete an order
+  const removeOrder = async (id: string): Promise<void> => {
+    try {
+      await deleteOrder(id);
+      
+      setOrders(prev => prev.filter(order => String(order.id) !== String(id)));
+      
+      toast({
+        title: "Success",
+        description: "Order removed successfully",
+      });
+    } catch (err) {
+      logger.error('Error deleting order:', err);
+      
+      toast({
+        title: "Error",
+        description: "Failed to delete order",
+        variant: "destructive",
+      });
+      
+      throw err;
+    }
+  };
+
+  // Delete all orders by payment method
+  const removeAllOrdersByPaymentMethod = async (method: PaymentMethod): Promise<void> => {
+    try {
+      await deleteOrdersByPaymentMethod(method);
+      
+      setOrders(prev => prev.filter(order => order.payment_method !== method));
+      
+      toast({
+        title: "Success",
+        description: `All ${method === 'PIX' ? 'PIX' : 'Credit Card'} orders were removed`,
+      });
+    } catch (err) {
+      logger.error('Error deleting orders by payment method:', err);
+      
+      toast({
+        title: "Error",
+        description: `Failed to delete ${method === 'PIX' ? 'PIX' : 'Credit Card'} orders`,
+        variant: "destructive",
+      });
+      
+      throw err;
+    }
+  };
+
+  // Filter orders by payment method
+  const filteredOrders = filterMethod === 'ALL' 
+    ? orders 
+    : orders.filter(order => order.payment_method === filterMethod);
 
   return {
+    orders: filteredOrders,
+    allOrders: orders,
     loading,
-    pixOrders,
-    cardOrders,
-    selectedOrder,
-    isDetailsOpen,
-    isRefreshing,
-    isDeleteDialogOpen,
-    isDeleteAllDialogOpen,
-    orderToDelete,
-    paymentMethodToDelete,
-    handleViewOrder,
-    handleRefreshOrders,
-    handleDeleteOrder,
-    handleDeleteAllOrders,
-    confirmDeleteOrder,
-    confirmDeleteAllOrders,
-    setIsDetailsOpen,
-    setIsDeleteDialogOpen,
-    setIsDeleteAllDialogOpen
+    error,
+    filterMethod,
+    setFilterMethod,
+    refreshOrders: fetchOrders,
+    addOrder,
+    updateOrderStatus: changeOrderStatus,
+    deleteOrder: removeOrder,
+    deleteAllOrdersByPaymentMethod: removeAllOrdersByPaymentMethod
   };
-}
+};
