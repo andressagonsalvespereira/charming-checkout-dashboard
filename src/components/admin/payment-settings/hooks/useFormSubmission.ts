@@ -24,43 +24,29 @@ export const useFormSubmission = (
   const onSubmit = async (data: PaymentSettingsFormValues) => {
     setIsSaving(true);
     try {
-      // Explicitly log the API keys being saved
-      const sandboxKeyPreview = data.sandboxApiKey ? `${data.sandboxApiKey.substring(0, 5)}...` : 'empty';
-      const productionKeyPreview = data.productionApiKey ? `${data.productionApiKey.substring(0, 5)}...` : 'empty';
-      
-      logger.log('Saving payment settings with form values:', {
-        ...data,
-        sandboxApiKey: sandboxKeyPreview,
-        productionApiKey: productionKeyPreview
-      });
-      logger.log('Selected card status to save:', data.manualCardStatus);
-      logger.log('API keys to save - Sandbox:', sandboxKeyPreview, 'Production:', productionKeyPreview);
-      logger.log('Integration enabled status to save:', data.isEnabled);
-      
-      // Transform form values to settings
-      const settingsToUpdate = formValuesToAsaasSettings({
-        ...data,
-        apiKey: data.sandboxMode ? data.sandboxApiKey || '' : data.productionApiKey || ''
+      logger.log('Submitting form with values:', {
+        isEnabled: data.isEnabled,
+        sandboxApiKey: data.sandboxApiKey ? '[PRESENT]' : '[EMPTY]',
+        productionApiKey: data.productionApiKey ? '[PRESENT]' : '[EMPTY]'
       });
       
-      // Double-check that API keys are included
-      settingsToUpdate.sandboxApiKey = data.sandboxApiKey || '';
-      settingsToUpdate.productionApiKey = data.productionApiKey || '';
+      // Prepare settings object
+      const settingsToUpdate: AsaasSettings = {
+        isEnabled: data.isEnabled,
+        apiKey: data.sandboxMode ? data.sandboxApiKey || '' : data.productionApiKey || '',
+        allowPix: data.allowPix,
+        allowCreditCard: data.allowCreditCard,
+        manualCreditCard: data.manualCreditCard,
+        sandboxMode: data.sandboxMode,
+        sandboxApiKey: data.sandboxApiKey || '',
+        productionApiKey: data.productionApiKey || '',
+        manualCardProcessing: data.manualCardProcessing,
+        manualPixPage: data.manualPixPage,
+        manualPaymentConfig: data.manualPaymentConfig,
+        manualCardStatus: data.manualCardStatus
+      };
       
-      // Explicitly ensure isEnabled is correctly set from form data
-      settingsToUpdate.isEnabled = data.isEnabled;
-      
-      logger.log('Transformed settings to save:', {
-        ...settingsToUpdate,
-        isEnabled: settingsToUpdate.isEnabled,
-        sandboxApiKey: settingsToUpdate.sandboxApiKey ? `${settingsToUpdate.sandboxApiKey.substring(0, 5)}...` : '[empty]',
-        productionApiKey: settingsToUpdate.productionApiKey ? `${settingsToUpdate.productionApiKey.substring(0, 5)}...` : '[empty]'
-      });
-      
-      logger.log('Manual card status being saved:', settingsToUpdate.manualCardStatus);
-      logger.log('Integration enabled status being saved:', settingsToUpdate.isEnabled);
-      logger.log('API keys being saved - Sandbox:', settingsToUpdate.sandboxApiKey ? 'PRESENT' : 'EMPTY', 'Production:', settingsToUpdate.productionApiKey ? 'PRESENT' : 'EMPTY');
-      
+      // Save settings
       const success = await savePaymentSettings(settingsToUpdate);
       
       if (success) {
@@ -71,15 +57,6 @@ export const useFormSubmission = (
         
         // Re-fetch settings to ensure we have the latest data
         const updatedSettings = await getPaymentSettings();
-        logger.log('Reloaded settings after save:', {
-          ...updatedSettings,
-          isEnabled: updatedSettings.isEnabled,
-          sandboxApiKey: updatedSettings.sandboxApiKey ? `${updatedSettings.sandboxApiKey.substring(0, 5)}...` : '[empty]',
-          productionApiKey: updatedSettings.productionApiKey ? `${updatedSettings.productionApiKey.substring(0, 5)}...` : '[empty]'
-        });
-        logger.log('Reloaded manual card status:', updatedSettings.manualCardStatus);
-        logger.log('Reloaded integration enabled status:', updatedSettings.isEnabled);
-        logger.log('Reloaded API keys - Sandbox:', updatedSettings.sandboxApiKey ? 'PRESENT' : 'EMPTY', 'Production:', updatedSettings.productionApiKey ? 'PRESENT' : 'EMPTY');
         
         // Update form state with the latest settings
         updateFormState(() => updatedSettings);

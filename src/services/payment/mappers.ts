@@ -1,49 +1,62 @@
 
 import { AsaasSettings, ManualCardStatus } from '@/types/asaas';
+import { validateCardStatus, validateBoolean } from './validators';
 import { logger } from '@/utils/logger';
 
 /**
  * Map database settings data to AsaasSettings object
- * @param settingsData Settings data from database
- * @param configData API configuration data from database
- * @returns AsaasSettings object
  */
 export const mapToAsaasSettings = (settingsData: any, configData: any): AsaasSettings => {
-  // Validate the card status
-  const cardStatus = validateCardStatus(settingsData?.manual_card_status);
-  logger.log('Validated card status:', cardStatus);
+  if (!settingsData) {
+    return getDefaultSettings();
+  }
+
+  logger.log('Mapping database data to AsaasSettings');
+  logger.log('Raw settings data:', {
+    asaas_enabled: settingsData.asaas_enabled,
+    manual_card_status: settingsData.manual_card_status
+  });
+  logger.log('Raw API config data:', {
+    sandbox_api_key: configData?.sandbox_api_key ? '[PRESENT]' : '[EMPTY]',
+    production_api_key: configData?.production_api_key ? '[PRESENT]' : '[EMPTY]'
+  });
   
   // Ensure isEnabled is a proper boolean
-  const isEnabled = settingsData?.asaas_enabled === true;
+  const isEnabled = validateBoolean(settingsData.asaas_enabled);
+  
+  // Validate the card status
+  const cardStatus = validateCardStatus(settingsData.manual_card_status);
   
   // Ensure API keys are proper strings
   const sandboxApiKey = configData?.sandbox_api_key || '';
   const productionApiKey = configData?.production_api_key || '';
   
-  // Log the enabled status from database
-  logger.log('Asaas enabled status from database:', settingsData?.asaas_enabled);
-  logger.log('Mapped isEnabled value (after proper boolean conversion):', isEnabled);
-  logger.log('API keys from database - Sandbox:', sandboxApiKey ? 'PRESENT' : 'EMPTY', 'Production:', productionApiKey ? 'PRESENT' : 'EMPTY');
-  
-  return {
+  const result: AsaasSettings = {
     isEnabled: isEnabled,
-    apiKey: settingsData?.sandbox_mode ? sandboxApiKey : productionApiKey,
-    allowPix: settingsData?.allow_pix ?? true,
-    allowCreditCard: settingsData?.allow_credit_card ?? true,
-    manualCreditCard: settingsData?.manual_credit_card ?? false,
-    sandboxMode: settingsData?.sandbox_mode ?? true,
+    apiKey: settingsData.sandbox_mode ? sandboxApiKey : productionApiKey,
+    allowPix: validateBoolean(settingsData.allow_pix ?? true),
+    allowCreditCard: validateBoolean(settingsData.allow_credit_card ?? true),
+    manualCreditCard: validateBoolean(settingsData.manual_credit_card ?? false),
+    sandboxMode: validateBoolean(settingsData.sandbox_mode ?? true),
     sandboxApiKey: sandboxApiKey,
     productionApiKey: productionApiKey,
-    manualCardProcessing: settingsData?.manual_card_processing ?? false,
-    manualPixPage: settingsData?.manual_pix_page ?? false,
-    manualPaymentConfig: settingsData?.manual_payment_config ?? false,
+    manualCardProcessing: validateBoolean(settingsData.manual_card_processing ?? false),
+    manualPixPage: validateBoolean(settingsData.manual_pix_page ?? false),
+    manualPaymentConfig: validateBoolean(settingsData.manual_payment_config ?? false),
     manualCardStatus: cardStatus
   };
+  
+  logger.log('Mapped settings:', {
+    isEnabled: result.isEnabled,
+    sandboxApiKey: result.sandboxApiKey ? '[PRESENT]' : '[EMPTY]',
+    productionApiKey: result.productionApiKey ? '[PRESENT]' : '[EMPTY]'
+  });
+  
+  return result;
 };
 
 /**
  * Get default AsaasSettings object
- * @returns Default AsaasSettings object
  */
 export const getDefaultSettings = (): AsaasSettings => {
   return {
@@ -60,32 +73,4 @@ export const getDefaultSettings = (): AsaasSettings => {
     manualPaymentConfig: false,
     manualCardStatus: 'ANALYSIS'
   };
-};
-
-/**
- * Validate card status
- * @param status Card status to validate
- * @returns Valid card status
- */
-const validateCardStatus = (status?: string): ManualCardStatus => {
-  logger.log('Validating card status:', status);
-  
-  // List of valid card statuses
-  const validStatuses: ManualCardStatus[] = [
-    'APPROVED', 'PENDING', 'CONFIRMED', 'REJECTED', 
-    'ANALYSIS', 'RECEIVED', 'CANCELLED', 'FAILED', 
-    'DECLINED', 'DENIED'
-  ];
-  
-  // Default status if not provided or invalid
-  const defaultStatus: ManualCardStatus = 'ANALYSIS';
-  
-  // Check if status is valid
-  if (status && validStatuses.includes(status as ManualCardStatus)) {
-    logger.log(`Status ${status} is valid`);
-    return status as ManualCardStatus;
-  }
-  
-  logger.log(`Status ${status} is invalid, using default status ${defaultStatus}`);
-  return defaultStatus;
 };

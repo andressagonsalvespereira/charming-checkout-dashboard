@@ -1,11 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Eye, EyeOff, AlertCircle as AlertCircleIcon, Key } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Key } from 'lucide-react';
 import { AsaasSettings } from '@/types/asaas';
 import { logger } from '@/utils/logger';
 
@@ -20,53 +20,17 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
 }) => {
   const [showSandboxKey, setShowSandboxKey] = useState(false);
   const [showProductionKey, setShowProductionKey] = useState(false);
-  const [sandboxApiKey, setSandboxApiKey] = useState(formState.sandboxApiKey || '');
-  const [productionApiKey, setProductionApiKey] = useState(formState.productionApiKey || '');
-
-  // Update local state when form state changes
-  useEffect(() => {
-    logger.log('ApiKeysCard received updated formState', {
-      sandboxApiKey: formState.sandboxApiKey ? '[PRESENT]' : '[EMPTY]',
-      productionApiKey: formState.productionApiKey ? '[PRESENT]' : '[EMPTY]'
-    });
-    
-    if (formState.sandboxApiKey !== sandboxApiKey) {
-      setSandboxApiKey(formState.sandboxApiKey || '');
-    }
-    
-    if (formState.productionApiKey !== productionApiKey) {
-      setProductionApiKey(formState.productionApiKey || '');
-    }
-  }, [formState.sandboxApiKey, formState.productionApiKey]);
 
   const handleSandboxKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setSandboxApiKey(value);
-    
-    // Log a sanitized version of the key for debugging
-    const previewKey = value ? `${value.substring(0, 5)}...` : 'empty';
-    logger.log('Sandbox API key changed to:', previewKey);
-    
-    // Update form state with the new key
-    onUpdateFormState(prev => {
-      logger.log('Updating formState with new sandbox key');
-      return { ...prev, sandboxApiKey: value };
-    });
+    logger.log('Sandbox API key updated');
+    onUpdateFormState(prev => ({ ...prev, sandboxApiKey: value }));
   };
 
   const handleProductionKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setProductionApiKey(value);
-    
-    // Log a sanitized version of the key for debugging
-    const previewKey = value ? `${value.substring(0, 5)}...` : 'empty';
-    logger.log('Production API key changed to:', previewKey);
-    
-    // Update form state with the new key
-    onUpdateFormState(prev => {
-      logger.log('Updating formState with new production key');
-      return { ...prev, productionApiKey: value };
-    });
+    logger.log('Production API key updated');
+    onUpdateFormState(prev => ({ ...prev, productionApiKey: value }));
   };
 
   return (
@@ -83,7 +47,7 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
       <CardContent className="space-y-6">
         {!formState.isEnabled && (
           <Alert className="bg-amber-50 border-amber-200">
-            <AlertCircleIcon className="h-4 w-4 text-amber-600" />
+            <AlertCircle className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-amber-800">
               Ative a integração com o Asaas na aba Configurações Gerais para utilizar as chaves de API.
             </AlertDescription>
@@ -98,9 +62,9 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
                 id="sandbox-key"
                 type={showSandboxKey ? "text" : "password"}
                 placeholder="Digite a chave de API para ambiente sandbox"
-                value={sandboxApiKey}
+                value={formState.sandboxApiKey || ''}
                 onChange={handleSandboxKeyChange}
-                disabled={!formState.isEnabled || !formState.sandboxMode}
+                disabled={!formState.isEnabled}
                 className="rounded-r-none"
               />
               <Button
@@ -108,7 +72,7 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
                 onClick={() => setShowSandboxKey(!showSandboxKey)}
                 variant="outline"
                 className="rounded-l-none border-l-0"
-                disabled={!formState.isEnabled || !formState.sandboxMode}
+                disabled={!formState.isEnabled}
               >
                 {showSandboxKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
@@ -125,9 +89,9 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
                 id="production-key"
                 type={showProductionKey ? "text" : "password"}
                 placeholder="Digite a chave de API para ambiente de produção"
-                value={productionApiKey}
+                value={formState.productionApiKey || ''}
                 onChange={handleProductionKeyChange}
-                disabled={!formState.isEnabled || formState.sandboxMode}
+                disabled={!formState.isEnabled}
                 className="rounded-r-none"
               />
               <Button
@@ -135,7 +99,7 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
                 onClick={() => setShowProductionKey(!showProductionKey)}
                 variant="outline"
                 className="rounded-l-none border-l-0"
-                disabled={!formState.isEnabled || formState.sandboxMode}
+                disabled={!formState.isEnabled}
               >
                 {showProductionKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>

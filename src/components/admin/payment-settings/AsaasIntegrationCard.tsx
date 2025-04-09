@@ -1,10 +1,10 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Settings, QrCode } from 'lucide-react';
+import { QrCode } from 'lucide-react';
 import { AsaasSettings } from '@/types/asaas';
 import { logger } from '@/utils/logger';
 
@@ -19,22 +19,9 @@ const AsaasIntegrationCard: React.FC<AsaasIntegrationCardProps> = ({
   loading,
   onUpdateFormState,
 }) => {
-  // Log the current state of isEnabled when the component renders or updates
-  useEffect(() => {
-    logger.log('AsaasIntegrationCard - isEnabled status:', formState.isEnabled);
-  }, [formState.isEnabled]);
-
   const handleToggleEnable = (checked: boolean) => {
     logger.log('AsaasIntegrationCard - Toggling isEnabled to:', checked);
-    onUpdateFormState(prev => {
-      // Create a completely new object to ensure state updates properly
-      const updated = { 
-        ...prev, 
-        isEnabled: checked 
-      };
-      logger.log('AsaasIntegrationCard - Updated formState:', updated);
-      return updated;
-    });
+    onUpdateFormState(prev => ({ ...prev, isEnabled: checked }));
   };
 
   return (

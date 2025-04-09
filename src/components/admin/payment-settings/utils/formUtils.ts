@@ -26,18 +26,18 @@ export type PaymentSettingsFormValues = z.infer<typeof PaymentSettingsSchema>;
 // Function to convert FormValues to AsaasSettings
 export const formValuesToAsaasSettings = (values: PaymentSettingsFormValues): AsaasSettings => {
   return {
-    isEnabled: values.isEnabled ?? false,
-    apiKey: values.apiKey || '',
-    allowPix: values.allowPix ?? true,
-    allowCreditCard: values.allowCreditCard ?? true,
-    manualCreditCard: values.manualCreditCard ?? false,
-    sandboxMode: values.sandboxMode ?? true,
+    isEnabled: values.isEnabled,
+    apiKey: values.sandboxMode ? values.sandboxApiKey || '' : values.productionApiKey || '',
+    allowPix: values.allowPix,
+    allowCreditCard: values.allowCreditCard,
+    manualCreditCard: values.manualCreditCard,
+    sandboxMode: values.sandboxMode,
     sandboxApiKey: values.sandboxApiKey || '',
     productionApiKey: values.productionApiKey || '',
-    manualCardProcessing: values.manualCardProcessing ?? false,
+    manualCardProcessing: values.manualCardProcessing,
     manualCardStatus: values.manualCardStatus as ManualCardStatus,
-    manualPixPage: values.manualPixPage ?? false,
-    manualPaymentConfig: values.manualPaymentConfig ?? false,
+    manualPixPage: values.manualPixPage,
+    manualPaymentConfig: values.manualPaymentConfig,
   };
 };
 

@@ -31,9 +31,7 @@ export const validateCardStatus = (status?: string): ManualCardStatus => {
 };
 
 /**
- * Validate boolean value
- * @param value Value to validate
- * @returns Validated boolean
+ * Validate boolean value with strict conversion
  */
 export const validateBoolean = (value: any): boolean => {
   if (typeof value === 'boolean') {
@@ -56,5 +54,5 @@ export const validateBoolean = (value: any): boolean => {
     return false;
   }
   
-  return !!value;
+  return Boolean(value);
 };
