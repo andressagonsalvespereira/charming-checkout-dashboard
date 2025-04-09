@@ -1,11 +1,11 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormDescription } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Check, AlertTriangle, Clock, Settings } from 'lucide-react';
+import { Check, AlertTriangle, Clock, Settings, CreditCard } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 import { logger } from '@/utils/logger';
 import { Switch } from '@/components/ui/switch';
@@ -22,27 +22,19 @@ interface ManualPaymentSettingsPanelProps {
 }
 
 const ManualPaymentSettingsPanel: React.FC<ManualPaymentSettingsPanelProps> = ({ form }) => {
-  const manualCardProcessing = form.watch('manualCardProcessing');
-  const currentStatus = form.watch('manualCardStatus');
-
-  // Log when component mounts and whenever status changes
-  useEffect(() => {
-    logger.log('ManualPaymentSettingsPanel initialized with status:', currentStatus);
-  }, [currentStatus]);
-  
   return (
     <>
-      <Card>
+      <Card className="mb-6">
         <CardHeader>
           <div className="flex items-center space-x-2">
             <Settings className="h-5 w-5 text-primary" />
-            <CardTitle>Ativar Processamento Manual</CardTitle>
+            <CardTitle>Configurações de Pagamento Manual</CardTitle>
           </div>
           <CardDescription>
-            Habilite ou desabilite o processamento manual de pagamentos com cartão
+            Configure as opções de processamento manual de pagamentos
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <FormField
             control={form.control}
             name="manualCardProcessing"
@@ -57,6 +49,30 @@ const ManualPaymentSettingsPanel: React.FC<ManualPaymentSettingsPanelProps> = ({
                 <FormControl>
                   <Switch
                     checked={field.value}
+                    onCheckedChange={(checked) => {
+                      logger.log('Manual card processing toggled:', checked);
+                      field.onChange(checked);
+                    }}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="manualPixPage"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Página de PIX Manual</FormLabel>
+                  <FormDescription>
+                    Exibe uma página simplificada para pagamentos PIX
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
                     onCheckedChange={field.onChange}
                   />
                 </FormControl>
@@ -66,10 +82,13 @@ const ManualPaymentSettingsPanel: React.FC<ManualPaymentSettingsPanelProps> = ({
         </CardContent>
       </Card>
       
-      {manualCardProcessing && (
+      {form.watch('manualCardProcessing') && (
         <Card>
           <CardHeader>
-            <CardTitle>Configurações de Pagamento Manual</CardTitle>
+            <div className="flex items-center space-x-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              <CardTitle>Status de Pagamento Manual</CardTitle>
+            </div>
             <CardDescription>
               Configure como os pagamentos manuais de cartão serão processados
             </CardDescription>

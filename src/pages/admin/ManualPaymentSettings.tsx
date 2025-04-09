@@ -1,7 +1,6 @@
 
 import React from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { Loader2 } from 'lucide-react';
 import { usePaymentSettingsForm } from '@/components/admin/payment-settings/hooks/usePaymentSettingsForm';
@@ -9,7 +8,7 @@ import ManualPaymentSettingsPanel from '@/components/admin/payment-settings/Manu
 import SubmitButton from '@/components/admin/payment-settings/SubmitButton';
 
 const ManualPaymentSettingsPage = () => {
-  const { form, formState, loading, isSaving, onSubmit, updateFormState } = usePaymentSettingsForm();
+  const { form, formState, loading, isSaving, onSubmit } = usePaymentSettingsForm();
 
   if (loading) {
     return (
