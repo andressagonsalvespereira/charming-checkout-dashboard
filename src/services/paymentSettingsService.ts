@@ -132,6 +132,10 @@ export const savePaymentSettings = async (settings: AsaasSettings): Promise<bool
     logger.log(`Using settings ID: ${settingsId} for upsert operation`);
     logger.log(`Saving manual card status: ${settings.manualCardStatus}`);
 
+    // Validate the status before saving
+    const validatedStatus = validateCardStatus(settings.manualCardStatus);
+    logger.log(`Validated status for saving: ${validatedStatus}`);
+
     // Save settings data
     const { error: settingsError } = await supabase
       .from('settings')
@@ -145,7 +149,7 @@ export const savePaymentSettings = async (settings: AsaasSettings): Promise<bool
         manual_card_processing: settings.manualCardProcessing,
         manual_pix_page: settings.manualPixPage,
         manual_payment_config: settings.manualPaymentConfig,
-        manual_card_status: settings.manualCardStatus,
+        manual_card_status: validatedStatus,
         updated_at: new Date().toISOString()
       });
 

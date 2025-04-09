@@ -117,6 +117,12 @@ export const usePaymentSettingsForm = () => {
         logger.log('Reloaded settings after save:', updatedSettings);
         logger.log('Reloaded manual card status:', updatedSettings.manualCardStatus);
         
+        // Explicitly preserve the manualCardStatus that was just saved
+        if (updatedSettings.manualCardStatus !== data.manualCardStatus) {
+          logger.warn(`Manual card status changed from ${data.manualCardStatus} to ${updatedSettings.manualCardStatus} during reload. Restoring original value.`);
+          updatedSettings.manualCardStatus = data.manualCardStatus;
+        }
+        
         form.reset(asaasSettingsToFormValues(updatedSettings));
         setFormState(updatedSettings);
       } else {
