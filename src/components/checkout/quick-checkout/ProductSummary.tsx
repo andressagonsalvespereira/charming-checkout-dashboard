@@ -8,10 +8,10 @@ interface ProductSummaryProps {
 }
 
 const ProductSummary: React.FC<ProductSummaryProps> = ({ product }) => {
-  // Format price as currency
+  // Formatar preço como moeda, usando chaves legadas como fallback
   const formattedPrice = typeof (product.price || product.preco) === 'number' 
     ? formatCurrency(product.price || product.preco || 0) 
-    : 'Price unavailable';
+    : 'Preço indisponível';
 
   return (
     <div className="flex items-start space-x-4 mb-6 p-4 bg-gray-50 rounded-lg">
@@ -19,7 +19,7 @@ const ProductSummary: React.FC<ProductSummaryProps> = ({ product }) => {
         <div className="flex-shrink-0">
           <img 
             src={product.image_url || product.urlImagem} 
-            alt={product.name || product.nome || 'Product'} 
+            alt={product.name || product.nome || 'Produto'} 
             className="w-16 h-16 object-cover rounded-md"
           />
         </div>
@@ -33,7 +33,7 @@ const ProductSummary: React.FC<ProductSummaryProps> = ({ product }) => {
           
           {(product.is_digital || product.digital) && (
             <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-              Digital Product
+              Produto Digital
             </span>
           )}
         </div>
