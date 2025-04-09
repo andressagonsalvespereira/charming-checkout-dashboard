@@ -99,7 +99,7 @@ export const usePaymentProcessing = (
       
       const newOrder = await addOrder({
         customer: customerDetails,
-        productId: product.id,
+        productId: String(product.id),
         productName: product.nome,
         productPrice: product.preco,
         paymentMethod: paymentMethod,
@@ -127,7 +127,7 @@ export const usePaymentProcessing = (
         value: product.preco,
         transactionId: `order-${newOrder.id}`,
         products: [{
-          id: product.id,
+          id: String(product.id),
           name: product.nome,
           price: product.preco,
           quantity: 1

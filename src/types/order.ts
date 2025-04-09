@@ -1,6 +1,6 @@
 
 export type PaymentMethod = 'CREDIT_CARD' | 'PIX';
-export type PaymentStatus = 'PENDING' | 'PAID' | 'APPROVED' | 'DENIED' | 'ANALYSIS' | 'CANCELLED';
+export type PaymentStatus = 'PENDING' | 'PAID' | 'DENIED' | 'ANALYSIS' | 'CANCELLED';
 export type DeviceType = 'desktop' | 'mobile' | 'tablet';
 
 export interface CardDetails {

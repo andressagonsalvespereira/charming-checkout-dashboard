@@ -98,7 +98,7 @@ const PaymentSuccess = () => {
   });
   
   // Double-check for any rejected status and redirect
-  if (normalizedStatus === 'REJECTED') {
+  if (isRejectedStatus(normalizedStatus)) {
     logger.log("PaymentSuccess - Redirecting to failure page due to normalized rejected status");
     navigate('/payment-failed', { state });
     // Return null while redirecting

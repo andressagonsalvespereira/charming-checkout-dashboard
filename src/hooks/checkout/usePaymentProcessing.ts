@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Product } from '@/types/product';
 import { CustomerInfo } from '@/types/order';
-import { createAsaasPayment } from '@/services/asaas/paymentService';
-import { resolveManualPaymentStatus } from '@/contexts/order/utils/resolveManualStatus';
+import { createPayment } from '@/services/asaas/paymentService';
+import { resolveManualStatus } from '@/contexts/order/utils/resolveManualStatus';
 import { useOrders } from '@/contexts/order/useOrders';
 
 type PaymentMethod = 'CREDIT_CARD' | 'PIX';
@@ -42,12 +42,12 @@ export const usePaymentProcessing = (product: Product | null, customerInfo: Cust
       const manualCardStatus = product.statusCartaoManual || product.custom_manual_status || null;
       
       // Create payment with Asaas
-      const paymentResult = await createAsaasPayment({
+      const paymentResult = await createPayment({
         customer: {
           name: customerInfo.name,
           email: customerInfo.email,
           phone: customerInfo.phone || '',
-          cpfCnpj: customerInfo.document
+          cpfCnpj: customerInfo.cpf
         },
         billingType: 'CREDIT_CARD',
         value: productPrice,
@@ -64,18 +64,19 @@ export const usePaymentProcessing = (product: Product | null, customerInfo: Cust
       
       // Create order record in database
       const order = await addOrder({
-        customerName: customerInfo.name,
-        customerEmail: customerInfo.email,
-        customerPhone: customerInfo.phone || '',
-        customerDocument: customerInfo.document,
+        customer: {
+          name: customerInfo.name,
+          email: customerInfo.email,
+          phone: customerInfo.phone || '',
+          cpf: customerInfo.cpf
+        },
         paymentMethod: 'CREDIT_CARD',
+        productId: product.id,
         productName: productName,
         productPrice: productPrice,
         isDigitalProduct: isDigital,
-        useCustomProcessing: useCustomProcessing,
-        manualCardStatus: useCustomProcessing ? manualCardStatus : null,
-        paymentId: paymentResult.id,
-        status: resolveManualPaymentStatus(useCustomProcessing, manualCardStatus),
+        paymentStatus: resolveManualStatus(useCustomProcessing, manualCardStatus),
+        paymentId: paymentResult.paymentId,
         deviceType: 'MOBILE'
       });
       
@@ -119,12 +120,12 @@ export const usePaymentProcessing = (product: Product | null, customerInfo: Cust
       const isDigital = product.digital || product.is_digital || false;
       
       // Create payment with Asaas
-      const paymentResult = await createAsaasPayment({
+      const paymentResult = await createPayment({
         customer: {
           name: customerInfo.name,
           email: customerInfo.email,
           phone: customerInfo.phone || '',
-          cpfCnpj: customerInfo.document
+          cpfCnpj: customerInfo.cpf
         },
         billingType: 'PIX',
         value: productPrice,
@@ -140,23 +141,24 @@ export const usePaymentProcessing = (product: Product | null, customerInfo: Cust
       
       // Create order record in database
       await addOrder({
-        customerName: customerInfo.name,
-        customerEmail: customerInfo.email,
-        customerPhone: customerInfo.phone || '',
-        customerDocument: customerInfo.document,
+        customer: {
+          name: customerInfo.name,
+          email: customerInfo.email,
+          phone: customerInfo.phone || '',
+          cpf: customerInfo.cpf
+        },
         paymentMethod: 'PIX',
+        productId: product.id,
         productName: productName,
         productPrice: productPrice,
         isDigitalProduct: isDigital,
-        paymentId: paymentResult.id,
-        status: 'PENDING',
-        pixCode: paymentResult.encodedImage,
-        pixExpirationDate: expirationDate.toISOString(),
+        paymentStatus: 'PENDING',
+        paymentId: paymentResult.paymentId,
         deviceType: 'MOBILE'
       });
       
       // Redirect to PIX payment page
-      navigate(`/payment/pix/${paymentResult.id}`, {
+      navigate(`/payment/pix/${paymentResult.paymentId}`, {
         state: {
           pixCode: paymentResult.encodedImage,
           pixKey: paymentResult.payload,

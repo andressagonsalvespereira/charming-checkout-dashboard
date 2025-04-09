@@ -1,6 +1,14 @@
 
 import { useState } from 'react';
-import { CustomerInfo } from '@/types/order';
+
+// Export the interface so it can be imported elsewhere
+export interface CustomerInfo {
+  name: string;
+  email: string;
+  phone?: string;
+  cpf: string;
+  // Ensure we use consistent property names (cpf instead of document)
+}
 
 export const useCustomerInfo = () => {
   const [customerDetails, setCustomerDetails] = useState<CustomerInfo>({

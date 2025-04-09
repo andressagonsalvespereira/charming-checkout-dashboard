@@ -106,7 +106,7 @@ const QuickCheckout = () => {
     name: customerDetails.name,
     email: customerDetails.email, 
     phone: customerDetails.phone || '',
-    document: customerDetails.document
+    document: customerDetails.cpf
   };
   
   return (

@@ -70,13 +70,13 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
       </div>
 
       <div>
-        <label htmlFor="document" className="block text-sm font-medium mb-1">
+        <label htmlFor="cpf" className="block text-sm font-medium mb-1">
           CPF
         </label>
         <Input
-          id="document"
-          name="document"
-          value={customerDetails.document}
+          id="cpf"
+          name="cpf"
+          value={customerDetails.cpf}
           onChange={handleChange}
           placeholder="000.000.000-00"
           required
