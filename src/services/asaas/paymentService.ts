@@ -1,97 +1,139 @@
 
-import { 
-  AsaasPayment, 
-  AsaasPaymentResponse, 
-  AsaasPixQrCodeResponse 
-} from '@/types/asaas';
-import { createAsaasPayment, getPixQrCode } from './asaasApiService';
+import { createAsaasCustomer, createAsaasPayment, getPixQrCode } from './asaasApiService';
+import { getAsaasSettings } from '../settingsService';
+import { AsaasPayment } from '@/types/asaas';
 import { logger } from '@/utils/logger';
 
+// Interface that represents the result of creating a payment
 export interface CreatePaymentResult {
   success: boolean;
-  paymentId?: string;
-  invoiceUrl?: string;
-  status?: string;
-  error?: string;
-}
-
-export interface GetPixQrCodeResult {
-  success: boolean;
-  qrCodeImage?: string;
+  paymentId: string;
+  status: string;
   qrCode?: string;
-  expirationDate?: string;
+  qrCodeImage?: string;
   error?: string;
 }
 
-export const createPayment = async (
-  payment: AsaasPayment, 
-  apiKey: string, 
-  sandboxMode: boolean
-): Promise<CreatePaymentResult> => {
-  try {
-    logger.log('Creating Asaas payment', {
-      value: payment.value,
-      billingType: payment.billingType,
-      customerId: payment.customer,
-      hasCreditCardInfo: !!payment.creditCard
-    });
-    
-    const { data, error } = await createAsaasPayment(payment, apiKey, sandboxMode);
-    
-    if (error || !data) {
-      logger.error('Failed to create Asaas payment', error);
-      return { 
-        success: false, 
-        error: error?.message || 'Failed to create payment' 
-      };
-    }
-    
-    return {
-      success: true,
-      paymentId: data.id,
-      invoiceUrl: data.invoiceUrl,
-      status: data.status
-    };
-    
-  } catch (error) {
-    logger.error('Error in createPayment:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error creating payment' 
-    };
-  }
-};
+// Customer information required for payment
+interface CustomerInfo {
+  name: string;
+  email: string;
+  phone?: string;
+  cpfCnpj: string;
+}
 
-export const retrievePixQrCode = async (
-  paymentId: string, 
-  apiKey: string, 
-  sandboxMode: boolean
-): Promise<GetPixQrCodeResult> => {
+// Credit card information
+interface CreditCardInfo {
+  holderName: string;
+  number: string;
+  expiryMonth: string;
+  expiryYear: string;
+  ccv: string;
+}
+
+interface CreatePaymentOptions {
+  customer: CustomerInfo;
+  billingType: 'CREDIT_CARD' | 'PIX';
+  value: number;
+  creditCard?: CreditCardInfo;
+  creditCardHolderInfo?: any;
+  installmentCount?: number;
+  description?: string;
+  deviceType?: string;
+  overrideGlobalStatus?: boolean;
+  manualCardStatus?: string | null;
+}
+
+export const createPayment = async (options: CreatePaymentOptions): Promise<CreatePaymentResult> => {
   try {
-    logger.log('Retrieving PIX QR code for payment', paymentId);
-    
-    const { data, error } = await getPixQrCode(paymentId, apiKey, sandboxMode);
-    
-    if (error || !data) {
-      logger.error('Failed to retrieve PIX QR code', error);
-      return { 
-        success: false, 
-        error: error?.message || 'Failed to retrieve PIX QR code' 
-      };
+    const settings = await getAsaasSettings();
+    if (!settings || !settings.apiKey) {
+      throw new Error("Asaas settings not configured");
     }
-    
-    return {
-      success: true,
-      qrCodeImage: data.encodedImage,
-      qrCode: data.payload,
-      expirationDate: data.expirationDate
+
+    logger.log('Creating payment with billing type:', options.billingType);
+
+    // Create or find customer
+    const customerResponse = await createAsaasCustomer(
+      {
+        name: options.customer.name,
+        email: options.customer.email,
+        phone: options.customer.phone || undefined,
+        cpfCnpj: options.customer.cpfCnpj,
+        mobilePhone: options.customer.phone || undefined,
+      },
+      settings.apiKey,
+      settings.sandboxMode
+    );
+
+    if (!customerResponse.success || !customerResponse.data) {
+      logger.error('Failed to create customer:', customerResponse.error);
+      throw new Error(customerResponse.error?.message || "Failed to create customer");
+    }
+
+    const customerId = customerResponse.data.id;
+    logger.log('Customer created successfully with ID:', customerId);
+
+    // Build payment data
+    const paymentData: AsaasPayment = {
+      customer: customerId,
+      billingType: options.billingType,
+      value: options.value,
+      description: options.description || `Payment of R$ ${options.value}`,
+      externalReference: `Payment_${Date.now()}`,
     };
-    
+
+    if (options.billingType === 'CREDIT_CARD' && options.creditCard && options.creditCardHolderInfo) {
+      paymentData.creditCard = options.creditCard;
+      paymentData.creditCardHolderInfo = options.creditCardHolderInfo;
+      paymentData.installmentCount = options.installmentCount || 1;
+    }
+
+    // Create payment
+    const paymentResponse = await createAsaasPayment(
+      paymentData,
+      settings.apiKey,
+      settings.sandboxMode
+    );
+
+    if (!paymentResponse.success || !paymentResponse.data) {
+      logger.error('Failed to create payment:', paymentResponse.error);
+      throw new Error(paymentResponse.error?.message || "Failed to create payment");
+    }
+
+    const payment = paymentResponse.data;
+    logger.log('Payment created successfully:', payment);
+
+    let result: CreatePaymentResult = {
+      success: true,
+      paymentId: payment.id,
+      status: payment.status
+    };
+
+    // If PIX payment, get QR code
+    if (options.billingType === 'PIX') {
+      const pixResponse = await getPixQrCode(
+        payment.id,
+        settings.apiKey,
+        settings.sandboxMode
+      );
+
+      if (pixResponse.success && pixResponse.data) {
+        result.qrCode = pixResponse.data.payload || '';
+        result.qrCodeImage = pixResponse.data.encodedImage || '';
+      } else {
+        logger.warn('PIX QR code generation failed, but payment was created:', pixResponse.error);
+      }
+    }
+
+    return result;
   } catch (error) {
-    logger.error('Error in retrievePixQrCode:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error retrieving PIX QR code' 
+    logger.error('Payment creation failed:', error);
+    return {
+      success: false,
+      paymentId: '',
+      status: 'FAILED',
+      error: error instanceof Error ? error.message : 'Unknown payment error'
     };
   }
 };

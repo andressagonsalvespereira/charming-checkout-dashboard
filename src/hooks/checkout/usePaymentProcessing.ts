@@ -75,7 +75,7 @@ export const usePaymentProcessing = (product: Product | null, customerInfo: Cust
         productName: productName,
         productPrice: productPrice,
         isDigitalProduct: isDigital,
-        paymentStatus: resolveManualStatus(useCustomProcessing, manualCardStatus),
+        paymentStatus: resolveManualStatus(useCustomProcessing ? manualCardStatus : 'PENDING'),
         paymentId: paymentResult.paymentId,
         deviceType: 'MOBILE'
       });
@@ -157,11 +157,16 @@ export const usePaymentProcessing = (product: Product | null, customerInfo: Cust
         deviceType: 'MOBILE'
       });
       
+      // Adaptar para os nomes de campo corretos
+      // Se o resultado não vier com encodedImage e payload, use os campos que estiverem disponíveis
+      const pixImageUrl = paymentResult.qrCodeImage || '';
+      const pixCode = paymentResult.qrCode || '';
+      
       // Redirect to PIX payment page
       navigate(`/payment/pix/${paymentResult.paymentId}`, {
         state: {
-          pixCode: paymentResult.encodedImage,
-          pixKey: paymentResult.payload,
+          pixCode: pixImageUrl,
+          pixKey: pixCode,
           totalAmount: String(productPrice),
           productName: productName,
           expirationDate: expirationDate

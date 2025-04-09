@@ -25,15 +25,15 @@ export interface CustomerData {
   name: string;
   email: string;
   cpf: string;
-  phone: string;
+  phone?: string;
   address?: {
-    street: string;
-    number: string;
+    street?: string;
+    number?: string;
     complement?: string;
-    neighborhood: string;
-    city: string;
-    state: string;
-    postalCode: string;
+    neighborhood?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
   };
 }
 

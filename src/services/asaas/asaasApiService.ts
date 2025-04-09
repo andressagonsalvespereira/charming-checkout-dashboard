@@ -41,11 +41,16 @@ async function asaasApiCall<T>(
         error: {
           message: responseData.errors?.[0]?.description || 'Unknown error',
           code: responseData.errors?.[0]?.code || 'UNKNOWN_ERROR'
-        }
+        },
+        success: false
       };
     }
 
-    return { data: responseData, error: null };
+    return { 
+      data: responseData, 
+      error: null,
+      success: true
+    };
   } catch (error) {
     logger.error('Error calling Asaas API:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -54,7 +59,8 @@ async function asaasApiCall<T>(
       error: {
         message: errorMessage,
         code: 'REQUEST_FAILED'
-      }
+      },
+      success: false
     };
   }
 }

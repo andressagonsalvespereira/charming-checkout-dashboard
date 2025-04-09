@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CustomerInfo } from '@/hooks/checkout/useCustomerInfo';
+import { CustomerInfo } from '@/types/order';
 
 interface CustomerFormProps {
   customerDetails: CustomerInfo;
