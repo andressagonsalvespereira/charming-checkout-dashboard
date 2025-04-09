@@ -11,6 +11,7 @@ import {
   asaasSettingsToFormValues 
 } from '../../utils/formUtils';
 import { getPaymentSettings, savePaymentSettings } from '@/services/paymentSettingsService';
+import { logger } from '@/utils/logger';
 
 export const usePaymentSettingsForm = () => {
   const { toast } = useToast();
@@ -55,6 +56,7 @@ export const usePaymentSettingsForm = () => {
       setLoading(true);
       try {
         const settings = await getPaymentSettings();
+        logger.log('Loaded payment settings:', settings);
         const formValues = asaasSettingsToFormValues(settings);
         form.reset(formValues);
         setFormState(settings);
@@ -85,6 +87,8 @@ export const usePaymentSettingsForm = () => {
   const onSubmit = async (data: PaymentSettingsFormValues) => {
     setIsSaving(true);
     try {
+      logger.log('Saving payment settings with form values:', data);
+      
       // Calculate apiKey based on sandbox mode
       const apiKey = data.sandboxMode 
         ? data.sandboxApiKey || ''
@@ -95,6 +99,8 @@ export const usePaymentSettingsForm = () => {
         apiKey
       });
       
+      logger.log('Transformed settings to save:', settingsToUpdate);
+      
       const success = await savePaymentSettings(settingsToUpdate);
       
       if (success) {
@@ -102,6 +108,11 @@ export const usePaymentSettingsForm = () => {
           title: "Configurações salvas",
           description: "As configurações de pagamento foram atualizadas com sucesso.",
         });
+        
+        // Re-fetch settings to ensure we have the latest data
+        const updatedSettings = await getPaymentSettings();
+        form.reset(asaasSettingsToFormValues(updatedSettings));
+        setFormState(updatedSettings);
       } else {
         throw new Error("Failed to save settings");
       }

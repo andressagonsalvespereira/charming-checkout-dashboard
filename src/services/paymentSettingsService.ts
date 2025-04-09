@@ -21,6 +21,8 @@ const validateCardStatus = (status: string | null): ManualCardStatus => {
  */
 export const getPaymentSettings = async (): Promise<AsaasSettings> => {
   try {
+    logger.log('Fetching payment settings from database...');
+    
     // First, query the settings table
     const { data: settingsData, error: settingsError } = await supabase
       .from('settings')
@@ -33,6 +35,8 @@ export const getPaymentSettings = async (): Promise<AsaasSettings> => {
       logger.error('Error loading payment settings:', settingsError);
       throw settingsError;
     }
+
+    logger.log('Fetched settings data:', settingsData);
 
     // Then, query the asaas_config table for API keys
     const { data: configData, error: configError } = await supabase
@@ -47,22 +51,24 @@ export const getPaymentSettings = async (): Promise<AsaasSettings> => {
       logger.warn('No Asaas config found, using defaults for API keys');
     }
 
+    logger.log('Fetched API config data:', configData);
+
     // Validate the card status to ensure it's a valid ManualCardStatus
-    const cardStatus = validateCardStatus(settingsData.manual_card_status);
+    const cardStatus = validateCardStatus(settingsData?.manual_card_status);
 
     return {
-      isEnabled: settingsData.asaas_enabled || false,
-      apiKey: settingsData.sandbox_mode ? 
+      isEnabled: settingsData?.asaas_enabled || false,
+      apiKey: settingsData?.sandbox_mode ? 
         (configData?.sandbox_api_key || '') : (configData?.production_api_key || ''),
-      allowPix: settingsData.allow_pix || true,
-      allowCreditCard: settingsData.allow_credit_card || true,
-      manualCreditCard: settingsData.manual_credit_card || false,
-      sandboxMode: settingsData.sandbox_mode || true,
+      allowPix: settingsData?.allow_pix || true,
+      allowCreditCard: settingsData?.allow_credit_card || true,
+      manualCreditCard: settingsData?.manual_credit_card || false,
+      sandboxMode: settingsData?.sandbox_mode || true,
       sandboxApiKey: configData?.sandbox_api_key || '',
       productionApiKey: configData?.production_api_key || '',
-      manualCardProcessing: settingsData.manual_card_processing || false,
-      manualPixPage: settingsData.manual_pix_page || false,
-      manualPaymentConfig: settingsData.manual_payment_config || false,
+      manualCardProcessing: settingsData?.manual_card_processing || false,
+      manualPixPage: settingsData?.manual_pix_page || false,
+      manualPaymentConfig: settingsData?.manual_payment_config || false,
       manualCardStatus: cardStatus
     };
   } catch (error) {
@@ -92,14 +98,23 @@ export const getPaymentSettings = async (): Promise<AsaasSettings> => {
  */
 export const savePaymentSettings = async (settings: AsaasSettings): Promise<boolean> => {
   try {
-    // Check if settings already exist
-    const { data: existingData } = await supabase
+    logger.log('Saving payment settings to database:', settings);
+    
+    // First, check if settings already exist
+    const { data: existingData, error: existingError } = await supabase
       .from('settings')
       .select('id')
-      .limit(1)
-      .single();
+      .limit(1);
+    
+    if (existingError) {
+      logger.error('Error checking existing settings:', existingError);
+      return false;
+    }
 
-    const settingsId = existingData?.id || 1;
+    // Settings ID will be 1 if exists, otherwise create with ID 1
+    const settingsId = existingData && existingData.length > 0 ? existingData[0].id : 1;
+
+    logger.log(`Using settings ID: ${settingsId} for upsert operation`);
 
     // Save settings data
     const { error: settingsError } = await supabase
@@ -123,15 +138,23 @@ export const savePaymentSettings = async (settings: AsaasSettings): Promise<bool
       return false;
     }
 
-    // Save API keys
-    const { data: existingKeysData } = await supabase
+    // Check if API config already exists
+    const { data: existingKeysData, error: existingKeysError } = await supabase
       .from('asaas_config')
       .select('id')
-      .limit(1)
-      .single();
+      .limit(1);
+    
+    if (existingKeysError) {
+      logger.error('Error checking existing API keys:', existingKeysError);
+      return false;
+    }
 
-    const configId = existingKeysData?.id || 1;
+    // Config ID will be 1 if exists, otherwise create with ID 1
+    const configId = existingKeysData && existingKeysData.length > 0 ? existingKeysData[0].id : 1;
+    
+    logger.log(`Using config ID: ${configId} for upsert operation`);
 
+    // Save API keys
     const { error: keysError } = await supabase
       .from('asaas_config')
       .upsert({
@@ -146,6 +169,7 @@ export const savePaymentSettings = async (settings: AsaasSettings): Promise<bool
       return false;
     }
 
+    logger.log('Successfully saved all payment settings to database');
     return true;
   } catch (error) {
     logger.error('Error saving payment settings:', error);

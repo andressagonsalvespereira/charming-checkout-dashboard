@@ -1,65 +1,63 @@
 
 import { PaymentStatus } from '@/types/order';
-import { getPaymentSettings } from '@/services/paymentSettingsService';
-
-// Define the possible manual card status values
-export type ManualCardStatus = 'APPROVED' | 'PENDING' | 'CONFIRMED' | 'DECLINED' | 'REJECTED' | 'ANALYSIS';
+import { logger } from '@/utils/logger';
 
 /**
- * Get the manual card status from settings
+ * Resolves the payment status from various input formats
+ * to ensure consistent status values throughout the application
+ * 
+ * @param status Input status which may come in different formats
+ * @returns Normalized PaymentStatus
  */
-export const resolveManualCardStatus = async (): Promise<PaymentStatus> => {
-  try {
-    const settings = await getPaymentSettings();
-    return normalizeStatus(settings.manualCardStatus);
-  } catch (error) {
-    console.error('Error getting manual card status:', error);
-    return 'ANALYSIS';
-  }
-};
-
-/**
- * Normalize a manual status string to a valid PaymentStatus
- * This is a synchronous version of resolveManualCardStatus for use in components
- */
-export const resolveManualStatus = (status: string | ManualCardStatus | null | undefined): PaymentStatus => {
-  return normalizeStatus(status);
-};
-
-/**
- * Helper function to normalize status values
- */
-const normalizeStatus = (status: string | ManualCardStatus | null | undefined): PaymentStatus => {
-  if (!status) return 'ANALYSIS';
+export const resolveManualStatus = (status: string | undefined): PaymentStatus => {
+  if (!status) return 'PENDING';
   
-  // Map between API/manual status values and our internal PaymentStatus
-  switch (status.toUpperCase()) {
+  // Convert to uppercase for consistent comparison
+  const upperStatus = status.toUpperCase();
+  
+  logger.log('Resolving manual status from:', upperStatus);
+  
+  // Map various status formats to our application's payment status enum
+  switch (upperStatus) {
     case 'APPROVED':
     case 'CONFIRMED':
     case 'PAID':
-      return 'PAID';
-    case 'PENDING':
-      return 'PENDING';
-    case 'DECLINED':
+    case 'RECEIVED':
+    case 'COMPLETED':
+      return 'CONFIRMED';
+    
     case 'REJECTED':
-    case 'DENIED':
-      return 'DENIED';
+    case 'DECLINED':
+    case 'FAILED':
+    case 'CANCELED':
     case 'CANCELLED':
-      return 'CANCELLED';
+      return 'REJECTED';
+    
     case 'ANALYSIS':
-    default:
+    case 'REVIEW':
+    case 'ANALYZING':
+    case 'IN_ANALYSIS':
+    case 'UNDER_ANALYSIS':
       return 'ANALYSIS';
+    
+    case 'PENDING':
+    case 'AWAITING':
+    case 'AWAITING_PAYMENT':
+    case 'WAITING':
+      return 'PENDING';
+    
+    default:
+      logger.warn(`Unknown status format: "${upperStatus}", defaulting to PENDING`);
+      return 'PENDING';
   }
 };
 
 /**
- * Check if a status is a rejected/declined status
+ * Checks if a payment status is considered rejected
+ * 
+ * @param status PaymentStatus to check
+ * @returns boolean indicating if the status is rejected
  */
-export const isRejectedStatus = (status: string | ManualCardStatus | null | undefined): boolean => {
-  if (!status) return false;
-  
-  const upperStatus = status.toUpperCase();
-  return upperStatus === 'REJECTED' || 
-         upperStatus === 'DECLINED' || 
-         upperStatus === 'DENIED';
+export const isRejectedStatus = (status: PaymentStatus): boolean => {
+  return status === 'REJECTED';
 };
