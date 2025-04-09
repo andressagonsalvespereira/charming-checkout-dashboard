@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { PaymentProcessorProps, PaymentResult } from '../../types';
 import { detectCardBrand } from '../cardDetection';
 import { simulatePayment } from '../../paymentSimulator';
-import { DeviceType } from '@/types/order';
+import { DeviceType, PaymentStatus } from '@/types/order';
 import { logger } from '@/utils/logger';
 import { logCardProcessingDecisions } from '../cardProcessorLogs';
 import { resolveManualStatus, isRejectedStatus } from '@/contexts/order/utils';
@@ -62,7 +62,7 @@ export const processAutomaticPayment = async ({
 
     // Check if we should respect manual settings despite being in automatic mode
     // This allows product-specific or global manual settings to override automatic processing
-    let resolvedStatus = 'CONFIRMED';
+    let resolvedStatus: PaymentStatus = 'PAID';
 
     // Decision logic for determining payment status
     const useCustomProcessing = formState.useCustomProcessing || false;
@@ -137,8 +137,8 @@ export const processAutomaticPayment = async ({
             productName: formState.productName,
             productPrice: formState.productPrice,
             productSlug: formState.productSlug,
-            paymentStatus: 'DENIED',
-            status: 'DENIED'
+            paymentStatus: 'DENIED' as PaymentStatus,
+            status: 'DENIED' as PaymentStatus
           }
         }
       });
@@ -196,10 +196,8 @@ export const processAutomaticPayment = async ({
     if (toast) {
       if (!isRejectedStatus(resolvedStatus)) {
         toast({
-          title: resolvedStatus === "PAID" || resolvedStatus === "CONFIRMED" 
-            ? "Payment Approved" 
-            : "Payment in Analysis",
-          description: resolvedStatus === "PAID" || resolvedStatus === "CONFIRMED"
+          title: resolvedStatus === "PAID" ? "Payment Approved" : "Payment in Analysis",
+          description: resolvedStatus === "PAID"
             ? "Your payment was successfully approved!"
             : "Your payment has been received and is being analyzed.",
           duration: 5000,
