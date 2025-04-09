@@ -1,10 +1,18 @@
 
-// Re-export all utility functions from this directory
+// Export utility functions individually to avoid conflicts
 export * from './loaders';
 export * from './orderMappers';
 export * from './orderMapping';
 export * from './resolveManualStatus';
-export * from './orderOperations';
+
+// Export specific functions from orderOperations to avoid ambiguity
+export { 
+  createOrder,
+  updateOrderStatusData,
+  deleteOrderData,
+  deleteAllOrdersByPaymentMethodData
+} from './orderOperations';
+
 export * from './converters';
 export * from './creators';
 export * from './updaters';

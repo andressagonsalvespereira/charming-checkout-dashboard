@@ -7,11 +7,11 @@ import {
   updateOrderStatus, 
   deleteOrder, 
   deleteOrdersByPaymentMethod,
-  type Order,
-  type CreateOrderInput,
-  type PaymentStatus,
-  type PaymentMethod
+  type DBOrder,
+  type OrderInsert,
+  type OrderUpdate
 } from '@/services/orderService';
+import { Order, PaymentMethod, PaymentStatus } from '@/types/order';
 import { logger } from '@/utils/logger';
 
 export const useOrdersManagement = () => {
@@ -49,7 +49,7 @@ export const useOrdersManagement = () => {
   };
 
   // Create a new order
-  const addOrder = async (orderData: CreateOrderInput): Promise<Order> => {
+  const addOrder = async (orderData: any): Promise<Order> => {
     try {
       if (pendingOrder) {
         logger.warn("Duplicate order creation request detected");
@@ -148,7 +148,7 @@ export const useOrdersManagement = () => {
     try {
       await deleteOrdersByPaymentMethod(method);
       
-      setOrders(prev => prev.filter(order => order.payment_method !== method));
+      setOrders(prev => prev.filter(order => order.paymentMethod !== method));
       
       toast({
         title: "Success",
@@ -170,7 +170,7 @@ export const useOrdersManagement = () => {
   // Filter orders by payment method
   const filteredOrders = filterMethod === 'ALL' 
     ? orders 
-    : orders.filter(order => order.payment_method === filterMethod);
+    : orders.filter(order => order.paymentMethod === filterMethod);
 
   return {
     orders: filteredOrders,
