@@ -1,5 +1,5 @@
 
-export type ManualCardStatus = 'CONFIRMED' | 'RECEIVED' | 'PENDING' | 'APPROVED' | 'CANCELLED' | 'FAILED' | 'ANALYSIS' | 'REJECTED';
+export type ManualCardStatus = 'CONFIRMED' | 'RECEIVED' | 'PENDING' | 'APPROVED' | 'CANCELLED' | 'FAILED' | 'ANALYSIS' | 'REJECTED' | 'DECLINED' | 'DENIED';
 
 export interface AsaasSettings {
   isEnabled: boolean;

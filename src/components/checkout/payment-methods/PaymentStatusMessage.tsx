@@ -21,7 +21,7 @@ const PaymentStatusMessage: React.FC<PaymentStatusMessageProps> = ({ status }) =
     );
   }
   
-  if (status === 'PENDING' || status === 'AWAITING_PAYMENT' || status === 'ANALYSIS') {
+  if (status === 'PENDING' || status === 'AWAITING_PAYMENT' || status === 'ANALYSIS' || status === 'RECEIVED') {
     return (
       <div className="p-6 text-center">
         <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -39,7 +39,7 @@ const PaymentStatusMessage: React.FC<PaymentStatusMessageProps> = ({ status }) =
     );
   }
   
-  if (status === 'DECLINED' || status === 'FAILED' || status === 'DENIED' || status === 'CANCELLED') {
+  if (status === 'DECLINED' || status === 'FAILED' || status === 'DENIED' || status === 'CANCELLED' || status === 'REJECTED') {
     return (
       <div className="p-6 text-center">
         <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">

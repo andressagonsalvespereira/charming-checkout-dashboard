@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -15,7 +14,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { AsaasSettings as AsaasSettingsType } from '@/types/asaas';
 
-// Define the form schema using Zod
 const asaasSettingsSchema = z.object({
   isEnabled: z.boolean().default(false),
   apiKey: z.string().optional(),
@@ -28,10 +26,9 @@ const asaasSettingsSchema = z.object({
   manualCardProcessing: z.boolean().default(false),
   manualPixPage: z.boolean().default(false),
   manualPaymentConfig: z.boolean().default(false),
-  manualCardStatus: z.enum(['CONFIRMED', 'RECEIVED', 'PENDING', 'APPROVED', 'CANCELLED', 'FAILED', 'ANALYSIS', 'REJECTED']).default('ANALYSIS'),
+  manualCardStatus: z.enum(['CONFIRMED', 'RECEIVED', 'PENDING', 'APPROVED', 'CANCELLED', 'FAILED', 'ANALYSIS', 'REJECTED', 'DECLINED', 'DENIED']).default('ANALYSIS'),
 });
 
-// Set type for the form using the schema
 type AsaasSettingsFormValues = z.infer<typeof asaasSettingsSchema>;
 
 const AsaasSettings = () => {
@@ -39,7 +36,6 @@ const AsaasSettings = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Create and configure the form
   const form = useForm<AsaasSettingsFormValues>({
     resolver: zodResolver(asaasSettingsSchema),
     defaultValues: {
@@ -58,7 +54,6 @@ const AsaasSettings = () => {
     },
   });
 
-  // Update form values when settings are loaded
   useEffect(() => {
     if (!loading && settings) {
       form.reset({
@@ -84,7 +79,6 @@ const AsaasSettings = () => {
     try {
       console.log('Saving Asaas settings:', data);
 
-      // If API key isn't provided, show an error
       if (!data.apiKey && !data.sandboxApiKey && !data.productionApiKey) {
         toast({
           title: "API Key Required",
@@ -94,16 +88,13 @@ const AsaasSettings = () => {
         return;
       }
 
-      // Save settings with required fields
       await saveSettings({
-        // Required fields in AsaasSettings
         isEnabled: data.isEnabled,
-        apiKey: data.sandboxMode ? data.sandboxApiKey : data.productionApiKey,
+        apiKey: data.sandboxMode ? data.sandboxApiKey || '' : data.productionApiKey || '',
         allowCreditCard: data.allowCreditCard,
         allowPix: data.allowPix,
         sandboxMode: data.sandboxMode,
         manualCardStatus: data.manualCardStatus,
-        // Optional fields
         manualCreditCard: data.manualCreditCard,
         sandboxApiKey: data.sandboxApiKey,
         productionApiKey: data.productionApiKey,
@@ -348,6 +339,8 @@ const AsaasSettings = () => {
                           <SelectItem value="REJECTED">REJECTED</SelectItem>
                           <SelectItem value="CANCELLED">CANCELLED</SelectItem>
                           <SelectItem value="FAILED">FAILED</SelectItem>
+                          <SelectItem value="DECLINED">DECLINED</SelectItem>
+                          <SelectItem value="DENIED">DENIED</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormDescription>
