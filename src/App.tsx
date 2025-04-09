@@ -64,7 +64,8 @@ function App() {
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/checkout/:productSlug" element={<Checkout />} />
                     {/* Redirecionamento da rota antiga para a nova */}
-                    <Route path="/quick-checkout/:productId" element={<Navigate to={props => `/checkout/${props.params.productId}`} replace />} />
+                    <Route path="/quick-checkout/:productId" 
+                           element={<Navigate to={`/checkout/${productSlug}`} replace />} />
                     <Route path="/payment-failed" element={<PaymentFailed />} />
                     <Route path="/payment-success" element={<PaymentSuccess />} />
                     <Route path="/pix-payment-manual" element={<PixPaymentManual />} />

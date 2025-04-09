@@ -51,3 +51,41 @@ export function normalizeProductData(data: any): Product {
     statusCartaoManual: data.custom_manual_status || data.statusCartaoManual || '',
   };
 }
+
+// Local storage functions for offline functionality
+export const LOCAL_STORAGE_KEY = 'product_cache';
+
+export function saveProducts(products: Product[]): void {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(products));
+    console.log('Products saved to local storage:', products.length);
+  } catch (error) {
+    console.error('Error saving products to local storage:', error);
+  }
+}
+
+export function loadProducts(): Product[] {
+  try {
+    const data = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!data) {
+      console.log('No products found in local storage');
+      return [];
+    }
+    
+    const products: Product[] = JSON.parse(data);
+    console.log('Products loaded from local storage:', products.length);
+    return products.map(normalizeProductData);
+  } catch (error) {
+    console.error('Error loading products from local storage:', error);
+    return [];
+  }
+}
+
+export function clearProductCache(): void {
+  try {
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    console.log('Product cache cleared');
+  } catch (error) {
+    console.error('Error clearing product cache:', error);
+  }
+}

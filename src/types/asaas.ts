@@ -40,6 +40,15 @@ export interface AsaasSettings {
   allowCreditCard: boolean;
   allowPix: boolean;
   manualCardStatus: ManualCardStatus;
+  
+  // Extended properties required by the application
+  isEnabled?: boolean;
+  sandboxApiKey?: string;
+  productionApiKey?: string;
+  manualCardProcessing?: boolean;
+  manualPixPage?: boolean;
+  manualPaymentConfig?: any;
+  manualCreditCard?: any;
 }
 
 export type ManualCardStatus = 'APPROVED' | 'PENDING' | 'CONFIRMED' | 'DECLINED' | 'REJECTED' | 'ANALYSIS';
@@ -51,4 +60,5 @@ export interface AsaasApiResponse<T> {
     code: string;
   } | null;
   success: boolean;
+  status?: string; // Some API endpoints return status
 }
