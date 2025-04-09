@@ -91,6 +91,11 @@ export const savePaymentSettings = async (settings: AsaasSettings): Promise<bool
     logger.log('Verified saved manual card status:', verifiedSettings?.manual_card_status);
     logger.log('Verified saved integration enabled status:', verifiedSettings?.asaas_enabled);
     
+    // Double check that isEnabled was saved correctly
+    if (verifiedSettings && verifiedSettings.asaas_enabled !== settings.isEnabled) {
+      logger.error(`isEnabled not saved correctly! Expected: ${settings.isEnabled}, Got: ${verifiedSettings.asaas_enabled}`);
+    }
+    
     const verifiedConfig = await verifyApiConfig(configId);
     
     // Check if API keys were saved correctly

@@ -27,7 +27,11 @@ const AsaasIntegrationCard: React.FC<AsaasIntegrationCardProps> = ({
   const handleToggleEnable = (checked: boolean) => {
     logger.log('AsaasIntegrationCard - Toggling isEnabled to:', checked);
     onUpdateFormState(prev => {
-      const updated = { ...prev, isEnabled: checked };
+      // Create a completely new object to ensure state updates properly
+      const updated = { 
+        ...prev, 
+        isEnabled: checked 
+      };
       logger.log('AsaasIntegrationCard - Updated formState:', updated);
       return updated;
     });

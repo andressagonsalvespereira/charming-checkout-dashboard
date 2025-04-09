@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { AsaasSettings } from '@/types/asaas';
 import { logger } from '@/utils/logger';
@@ -63,12 +64,16 @@ export const saveSettingsData = async (settings: AsaasSettings, settingsId: numb
   // Validate the status before saving
   const validatedStatus = validateCardStatus(settings.manualCardStatus);
   logger.log(`Validated status for saving: ${validatedStatus}`);
+  
+  // Ensure isEnabled is properly cast to boolean
+  const isEnabled = !!settings.isEnabled;
+  logger.log(`isEnabled properly cast to boolean: ${isEnabled}`);
 
   const { error } = await supabase
     .from('settings')
     .upsert({
       id: settingsId,
-      asaas_enabled: settings.isEnabled,
+      asaas_enabled: isEnabled,
       allow_credit_card: settings.allowCreditCard,
       allow_pix: settings.allowPix,
       manual_credit_card: settings.manualCreditCard,
@@ -85,6 +90,14 @@ export const saveSettingsData = async (settings: AsaasSettings, settingsId: numb
     throw error;
   }
 
+  // Double-check the saved value
+  const { data: checkData } = await supabase
+    .from('settings')
+    .select('asaas_enabled')
+    .eq('id', settingsId)
+    .single();
+    
+  logger.log('Saved isEnabled value in database:', checkData?.asaas_enabled);
   logger.log('Settings data saved successfully');
   return true;
 };

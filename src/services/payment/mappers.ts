@@ -13,11 +13,15 @@ export const mapToAsaasSettings = (settingsData: any, configData: any): AsaasSet
   const cardStatus = validateCardStatus(settingsData?.manual_card_status);
   logger.log('Validated card status:', cardStatus);
   
+  // Ensure isEnabled is a proper boolean
+  const isEnabled = settingsData?.asaas_enabled === true;
+  
   // Log the enabled status from database
   logger.log('Asaas enabled status from database:', settingsData?.asaas_enabled);
+  logger.log('Mapped isEnabled value (after proper boolean conversion):', isEnabled);
   
   return {
-    isEnabled: settingsData?.asaas_enabled || false,
+    isEnabled: isEnabled,
     apiKey: settingsData?.sandbox_mode ? 
       (configData?.sandbox_api_key || '') : 
       (configData?.production_api_key || ''),

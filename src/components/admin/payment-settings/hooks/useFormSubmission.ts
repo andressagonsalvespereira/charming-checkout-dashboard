@@ -37,7 +37,7 @@ export const useFormSubmission = (
       logger.log('API keys to save - Sandbox:', sandboxKeyPreview, 'Production:', productionKeyPreview);
       logger.log('Integration enabled status:', data.isEnabled);
       
-      // Preserve API keys for transformation
+      // Transform form values to settings
       const settingsToUpdate = formValuesToAsaasSettings({
         ...data,
         apiKey: data.sandboxMode ? data.sandboxApiKey || '' : data.productionApiKey || ''
@@ -47,7 +47,7 @@ export const useFormSubmission = (
       settingsToUpdate.sandboxApiKey = data.sandboxApiKey || '';
       settingsToUpdate.productionApiKey = data.productionApiKey || '';
       
-      // Ensure isEnabled is correctly set
+      // Explicitly ensure isEnabled is correctly set from form data
       settingsToUpdate.isEnabled = data.isEnabled;
       
       logger.log('Transformed settings to save:', {
@@ -76,17 +76,6 @@ export const useFormSubmission = (
         });
         logger.log('Reloaded manual card status:', updatedSettings.manualCardStatus);
         logger.log('Reloaded integration enabled status:', updatedSettings.isEnabled);
-        
-        // Preserve the original API keys if they're not returned properly from the database
-        if (!updatedSettings.sandboxApiKey && data.sandboxApiKey) {
-          logger.log('Restoring sandbox API key from form data');
-          updatedSettings.sandboxApiKey = data.sandboxApiKey;
-        }
-        
-        if (!updatedSettings.productionApiKey && data.productionApiKey) {
-          logger.log('Restoring production API key from form data');
-          updatedSettings.productionApiKey = data.productionApiKey;
-        }
         
         // Update form state with the latest settings
         updateFormState(() => updatedSettings);
