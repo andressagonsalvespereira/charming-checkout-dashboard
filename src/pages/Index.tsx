@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Home, Settings, Package, CreditCard, Tag } from 'lucide-react';
+import { Home, Settings, Package, CreditCard, Tag, CreditCardIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
@@ -111,10 +111,15 @@ const Index = () => {
                 Defina chaves de API, modo sandbox e métodos de pagamento.
               </p>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col space-y-2">
               <Link to="/admin/settings/payment" className="w-full">
                 <Button className="w-full bg-amber-600 hover:bg-amber-700">
                   Configurar Pagamentos
+                </Button>
+              </Link>
+              <Link to="/admin/settings/manual-payment" className="w-full">
+                <Button className="w-full bg-amber-600 hover:bg-amber-700" variant="outline">
+                  Conf. Pagamento Manual
                 </Button>
               </Link>
             </CardFooter>

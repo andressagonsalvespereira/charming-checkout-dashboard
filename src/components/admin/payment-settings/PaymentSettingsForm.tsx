@@ -5,7 +5,6 @@ import { Loader2 } from 'lucide-react';
 import AsaasIntegrationCard from './AsaasIntegrationCard';
 import PaymentMethodsCard from './PaymentMethodsCard';
 import ApiKeysCard from './ApiKeysCard';
-import ManualPaymentSettings from './ManualPaymentSettings';
 import SubmitButton from './SubmitButton';
 import { usePaymentSettingsForm } from './hooks/usePaymentSettingsForm';
 import { AsaasSettings } from '@/types/asaas';
@@ -43,8 +42,6 @@ const PaymentSettingsContent = ({
         formState={formState as AsaasSettings}
         onUpdateFormState={updateFormState as (updater: (prev: AsaasSettings) => AsaasSettings) => void}
       />
-      
-      <ManualPaymentSettings form={form} />
       
       <SubmitButton isSaving={isSaving} />
     </form>

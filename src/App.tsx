@@ -1,86 +1,49 @@
-
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-
-// Contexts
-import { AuthProvider } from './contexts/AuthContext';
-import { ProductProvider } from './contexts/product';
-import { OrderProvider } from './contexts/order';
-import { AsaasProvider } from './contexts/asaas';
-import { PixelProvider } from './contexts/PixelContext';
-import { CheckoutCustomizationProvider } from './contexts/CheckoutCustomizationContext';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 // Pages
 import Index from './pages/Index';
-import Dashboard from './pages/Dashboard';
-import Customers from './pages/Customers';
-import Products from './pages/admin/Products';
 import NotFound from './pages/NotFound';
-import Login from './pages/admin/Login';
-import AdminDashboard from './pages/admin/Dashboard';
-import Orders from './pages/admin/Orders';
-import PaymentSettings from './pages/admin/PaymentSettings';
-import PixelSettings from './pages/admin/PixelSettings';
-import CheckoutCustomization from './pages/admin/CheckoutCustomization';
 import Checkout from './pages/Checkout';
-import PaymentFailed from './pages/PaymentFailed';
 import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFailed from './pages/PaymentFailed';
 import PixPaymentManual from './pages/PixPaymentManual';
 
-// Component imports
-import { Toaster } from './components/ui/toaster';
+// Admin Pages
+import Dashboard from './pages/admin/Dashboard';
+import Products from './pages/admin/Products';
+import Orders from './pages/admin/Orders';
+import PaymentSettings from './pages/admin/PaymentSettings';
+import ManualPaymentSettingsPage from './pages/admin/ManualPaymentSettings';
+import PixelSettings from './pages/admin/PixelSettings';
+import CheckoutCustomization from './pages/admin/CheckoutCustomization';
+import Customers from './pages/admin/Customers';
+import Login from './pages/admin/Login';
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <ProductProvider>
-          <OrderProvider>
-            <AsaasProvider>
-              <PixelProvider>
-                <CheckoutCustomizationProvider>
-                  <Routes>
-                    {/* Redirect root page to admin login (can change to landing later) */}
-                    <Route path="/" element={<Navigate to="/admin/login" replace />} />
-
-                    <Route path="/index" element={<Index />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/customers" element={<Customers />} />
-
-                    {/* Admin Routes */}
-                    <Route path="/admin/login" element={<Login />} />
-                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                    <Route path="/admin/products" element={<Products />} />
-                    <Route path="/admin/orders" element={<Orders />} />
-                    <Route path="/admin/settings/payment" element={<PaymentSettings />} />
-                    <Route path="/admin/pixel-settings" element={<PixelSettings />} />
-                    <Route path="/admin/checkout-customization" element={<CheckoutCustomization />} />
-                    
-                    {/* Old redirects */}
-                    <Route path="/admin/asaas-settings" element={<Navigate to="/admin/settings/payment" replace />} />
-                    <Route path="/admin/payments" element={<Navigate to="/admin/settings/payment" replace />} />
-                    <Route path="/payments" element={<Navigate to="/admin/settings/payment" replace />} />
-
-                    {/* Checkout Routes */}
-                    <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/checkout/:productSlug" element={<Checkout />} />
-                    {/* Redirect old route to new */}
-                    <Route path="/quick-checkout/:productId" 
-                           element={<Navigate to="/checkout" replace />} />
-                    <Route path="/payment-failed" element={<PaymentFailed />} />
-                    <Route path="/payment-success" element={<PaymentSuccess />} />
-                    <Route path="/pix-payment-manual" element={<PixPaymentManual />} />
-
-                    {/* Fallback route */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <Toaster />
-                </CheckoutCustomizationProvider>
-              </PixelProvider>
-            </AsaasProvider>
-          </OrderProvider>
-        </ProductProvider>
-      </AuthProvider>
-    </Router>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/checkout/:productSlug" element={<Checkout />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/payment-failed" element={<PaymentFailed />} />
+        <Route path="/pix-payment-manual" element={<PixPaymentManual />} />
+        
+        {/* Admin Routes */}
+        <Route path="/admin/dashboard" element={<Dashboard />} />
+        <Route path="/admin/products" element={<Products />} />
+        <Route path="/admin/orders" element={<Orders />} />
+        <Route path="/admin/settings/payment" element={<PaymentSettings />} />
+        <Route path="/admin/settings/manual-payment" element={<ManualPaymentSettingsPage />} />
+        <Route path="/admin/pixel-settings" element={<PixelSettings />} />
+        <Route path="/admin/checkout-customization" element={<CheckoutCustomization />} />
+        <Route path="/admin/customers" element={<Customers />} />
+        <Route path="/admin/login" element={<Login />} />
+        
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
