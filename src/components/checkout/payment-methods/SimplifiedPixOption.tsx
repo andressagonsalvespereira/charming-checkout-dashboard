@@ -1,92 +1,46 @@
-
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { CustomerData, PaymentResult } from '@/components/checkout/payment/shared/types';
-import { usePixSubmission } from '@/hooks/payment/usePixSubmission';
-import { useAsaas } from '@/contexts/AsaasContext';
-import PixQrCode from '../pix-payment/PixQrCode';
-import PixCopyCode from '../pix-payment/PixCopyCode';
-import { useToast } from '@/hooks/use-toast';
+import RadioOption from './RadioOption';
+import { QrCode } from 'lucide-react';
+import { usePixPayment } from '@/hooks/payment/usePixPayment';
+import { usePaymentProcessing } from '@/hooks/payment/usePaymentProcessing';
+import { useAsaas } from '@/contexts/asaas';
 
 interface SimplifiedPixOptionProps {
-  onSubmit: (data: PaymentResult) => Promise<any>;
-  isDigitalProduct?: boolean;
-  customerData?: CustomerData;
-  isSandbox: boolean;
-  isProcessing?: boolean;
-  productData?: {
-    productId: string;
-    productName: string;
-    productPrice: number;
-  };
+  onSelect: () => void;
+  isSelected: boolean;
 }
 
-const SimplifiedPixOption: React.FC<SimplifiedPixOptionProps> = ({
-  onSubmit,
-  isDigitalProduct = false,
-  customerData,
-  isSandbox,
-  isProcessing = false,
-  productData
-}) => {
-  const { toast } = useToast();
+const SimplifiedPixOption: React.FC<SimplifiedPixOptionProps> = ({ onSelect, isSelected }) => {
   const { settings } = useAsaas();
-  
-  const {
-    loading,
-    error,
-    pixData,
-    handleSubmit
-  } = usePixSubmission({
-    onSubmit,
-    isSandbox,
-    isDigitalProduct,
-    customerData,
-    settings
-  });
+  const { handlePixPayment } = usePixPayment();
+  const { processing, startProcessing, stopProcessing } = usePaymentProcessing();
 
-  const handleCopyToClipboard = (pixCode: string) => {
-    navigator.clipboard.writeText(pixCode);
-    toast({
-      title: "Código PIX copiado!",
-      description: "Cole o código no seu aplicativo do banco para pagar.",
-    });
+  const handlePayment = async () => {
+    if (settings?.apiKey) {
+      startProcessing();
+      try {
+        await handlePixPayment();
+        onSelect();
+      } catch (error) {
+        console.error("Error during PIX payment:", error);
+      } finally {
+        stopProcessing();
+      }
+    } else {
+      console.error("Asaas API key is not configured.");
+    }
   };
-  
-  // Show PIX payment button if no PIX data exists yet
-  if (!pixData) {
-    return (
-      <div className="w-full">
-        <Button 
-          className="w-full my-4 bg-green-600 hover:bg-green-700" 
-          onClick={handleSubmit}
-          disabled={loading || isProcessing}
-        >
-          {loading ? "Gerando PIX..." : "Gerar QR Code PIX"}
-        </Button>
-        
-        {error && (
-          <div className="text-red-500 text-sm mt-2">
-            Erro: {error}
-          </div>
-        )}
-      </div>
-    );
-  }
 
-  // Show PIX QR code and details
   return (
-    <div className="space-y-6 w-full">
-      <PixQrCode qrCodeUrl={pixData.qrCodeImage || ''} />
-      <PixCopyCode 
-        code={pixData.qrCode || ''} 
-        onCopy={() => handleCopyToClipboard(pixData.qrCode || '')} 
-      />
-      <p className="text-sm text-gray-500 mt-2">
-        Este código PIX expira em 30 minutos. 
-        {isDigitalProduct && ' Você receberá acesso imediato ao produto após o pagamento.'}
-      </p>
-    </div>
+    <RadioOption
+      icon={QrCode}
+      label="Pagar com PIX"
+      description="Pague usando seu aplicativo bancário"
+      onClick={handlePayment}
+      selected={isSelected}
+      disabled={processing}
+      loading={processing}
+    />
   );
 };
 

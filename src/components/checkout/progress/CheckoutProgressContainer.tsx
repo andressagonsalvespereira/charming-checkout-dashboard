@@ -1,153 +1,112 @@
-
-import React from 'react';
-import { useCheckoutForm } from '@/hooks/useCheckoutForm';
-import { useAsaas } from '@/contexts/AsaasContext';
-import { ProductDetailsType } from '@/components/checkout/ProductDetails';
-import PersonalInfoWrapper from './personal/PersonalInfoWrapper';
-import AddressSectionWrapper from './address/AddressSectionWrapper';
-import PaymentMethodWrapper from './payment/PaymentMethodWrapper';
-import OrderSummaryWrapper from './order/OrderSummaryWrapper';
-import { useCheckoutContainerOrder } from './hooks/useCheckoutContainerOrder';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import CheckoutProgressBar from '@/components/checkout/CheckoutProgress';
+import { useAsaas } from '@/contexts/asaas';
+import { CheckoutContainerProvider } from './hooks/useCheckoutContainerOrder';
 
 interface CheckoutProgressContainerProps {
+  children: React.ReactNode;
+  currentStep: number;
+  setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
+  isProcessing: boolean;
+  setIsProcessing: React.Dispatch<React.SetStateAction<boolean>>;
   paymentMethod: 'card' | 'pix';
   setPaymentMethod: React.Dispatch<React.SetStateAction<'card' | 'pix'>>;
-  productDetails: ProductDetailsType;
-  handlePayment: (paymentData: any) => void;
-  isProcessing: boolean;
+  customerData: any;
+  setCustomerData: React.Dispatch<React.SetStateAction<any>>;
+  productDetails: any;
+  setProductDetails: React.Dispatch<React.SetStateAction<any>>;
+  orderId: string | null;
+  setOrderId: React.Dispatch<React.SetStateAction<string | null>>;
+  paymentId: string | null;
+  setPaymentId: React.Dispatch<React.SetStateAction<string | null>>;
+  pixCode: string | null;
+  setPixCode: React.Dispatch<React.SetStateAction<string | null>>;
+  pixImage: string | null;
+  setPixImage: React.Dispatch<React.SetStateAction<string | null>>;
+  paymentStatus: string | null;
+  setPaymentStatus: React.Dispatch<React.SetStateAction<string | null>>;
+  error: string | null;
+  setError: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const CheckoutProgressContainer: React.FC<CheckoutProgressContainerProps> = ({
+  children,
+  currentStep,
+  setCurrentStep,
+  isProcessing,
+  setIsProcessing,
   paymentMethod,
   setPaymentMethod,
+  customerData,
+  setCustomerData,
   productDetails,
-  handlePayment,
-  isProcessing
+  setProductDetails,
+  orderId,
+  setOrderId,
+  paymentId,
+  setPaymentId,
+  pixCode,
+  setPixCode,
+  pixImage,
+  setPixImage,
+  paymentStatus,
+  setPaymentStatus,
+  error,
+  setError,
 }) => {
-  const {
-    formState,
-    isSearchingCep,
-    setFullName,
-    setEmail,
-    setCpf,
-    setPhone,
-    setCep,
-    setStreet,
-    setNumber,
-    setComplement,
-    setNeighborhood,
-    setCity,
-    setState,
-    setSelectedShipping,
-    handleCepChange,
-  } = useCheckoutForm();
-  
   const { settings } = useAsaas();
+  const { productSlug } = useParams<{ productSlug: string }>();
+  const [steps, setSteps] = useState<string[]>(['Produto', 'Dados', 'Pagamento', 'Confirmação']);
 
-  // Quando o pedido for criado com sucesso, vamos chamar handlePayment com os dados apropriados
-  const handleOrderCreated = (paymentData: any) => {
-    console.log("Ordem criada com sucesso, chamando handlePayment com dados:", paymentData);
-    
-    // Construir objeto com dados do cliente e do pagamento
-    const paymentInfo = {
-      customerData: {
-        name: formState.fullName,
-        email: formState.email,
-        cpf: formState.cpf,
-        phone: formState.phone,
-        address: formState.street ? {
-          street: formState.street,
-          number: formState.number,
-          complement: formState.complement,
-          neighborhood: formState.neighborhood,
-          city: formState.city,
-          state: formState.state,
-          postalCode: formState.cep.replace(/\D/g, '')
-        } : undefined
-      },
-      status: paymentData.status || 'pending',
-      ...paymentData
-    };
-    
-    // Chamar a função handlePayment com os dados do pagamento
-    handlePayment(paymentInfo);
-  };
-
-  const { createOrder, customerData, isProcessing: isProcessingOrder } = useCheckoutContainerOrder({
-    formState,
-    productDetails,
-    handlePayment: handleOrderCreated
-  });
-
-  // Validate if the selected payment method is allowed based on settings
-  React.useEffect(() => {
+  // Adjust steps based on payment method and settings
+  useEffect(() => {
     if (settings) {
-      // If the current payment method is not allowed, switch to an allowed method
-      if (paymentMethod === 'card' && !settings.allowCreditCard) {
-        if (settings.allowPix) {
-          setPaymentMethod('pix');
-        }
-      } else if (paymentMethod === 'pix' && !settings.allowPix) {
-        if (settings.allowCreditCard) {
-          setPaymentMethod('card');
-        }
+      // Default steps
+      let newSteps = ['Produto', 'Dados', 'Pagamento', 'Confirmação'];
+      
+      // If manual PIX page is enabled and PIX is selected, add a PIX step
+      if (settings.manualPixPage && paymentMethod === 'pix') {
+        newSteps = ['Produto', 'Dados', 'Pagamento', 'PIX', 'Confirmação'];
       }
+      
+      setSteps(newSteps);
     }
-  }, [settings, paymentMethod, setPaymentMethod]);
-
-  // Verificar se está em processamento em qualquer nível
-  const combinedProcessing = isProcessing || isProcessingOrder;
+  }, [settings, paymentMethod]);
 
   return (
-    <>
-      <PersonalInfoWrapper 
-        fullName={formState.fullName} 
-        setFullName={setFullName}
-        email={formState.email}
-        setEmail={setEmail}
-        cpf={formState.cpf}
-        setCpf={setCpf}
-        phone={formState.phone}
-        setPhone={setPhone}
-        formErrors={formState.formErrors}
-      />
-      
-      <AddressSectionWrapper 
-        cep={formState.cep}
-        handleCepChange={handleCepChange}
-        street={formState.street}
-        setStreet={setStreet}
-        number={formState.number}
-        setNumber={setNumber}
-        complement={formState.complement}
-        setComplement={setComplement}
-        neighborhood={formState.neighborhood}
-        setNeighborhood={setNeighborhood}
-        city={formState.city}
-        setCity={setCity}
-        state={formState.state}
-        setState={setState}
-        formErrors={formState.formErrors}
-        isSearchingCep={isSearchingCep}
-        isDigitalProduct={productDetails.isDigital}
-        selectedShipping={formState.selectedShipping}
-        setSelectedShipping={setSelectedShipping}
-        deliveryEstimate={formState.deliveryEstimate}
-      />
-      
-      <PaymentMethodWrapper 
-        paymentMethod={paymentMethod}
-        setPaymentMethod={setPaymentMethod}
-        createOrder={createOrder}
-        productDetails={productDetails}
-        customerData={customerData}
-        isProcessing={combinedProcessing}
-      />
-      
-      <OrderSummaryWrapper 
-        productDetails={productDetails}
-      />
-    </>
+    <CheckoutContainerProvider
+      value={{
+        currentStep,
+        setCurrentStep,
+        isProcessing,
+        setIsProcessing,
+        paymentMethod,
+        setPaymentMethod,
+        customerData,
+        setCustomerData,
+        productDetails,
+        setProductDetails,
+        orderId,
+        setOrderId,
+        paymentId,
+        setPaymentId,
+        pixCode,
+        setPixCode,
+        pixImage,
+        setPixImage,
+        paymentStatus,
+        setPaymentStatus,
+        error,
+        setError,
+        productSlug,
+      }}
+    >
+      <div className="mb-8">
+        <CheckoutProgressBar steps={steps} currentStep={currentStep} />
+      </div>
+      {children}
+    </CheckoutContainerProvider>
   );
 };
 

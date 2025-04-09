@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { useAsaas } from '@/contexts/AsaasContext';
+import { useAsaas } from '@/contexts/asaas';
 import AdminLayout from '@/components/layout/AdminLayout';
 
 const AsaasSettings: React.FC = () => {
@@ -20,7 +19,6 @@ const AsaasSettings: React.FC = () => {
   const [allowPix, setAllowPix] = useState<boolean>(settings?.allowPix || false);
   const [manualCardProcessing, setManualCardProcessing] = useState<boolean>(settings?.manualCardProcessing || false);
 
-  // Update state when settings change
   useEffect(() => {
     if (settings) {
       setSandboxApiKey(settings.sandboxApiKey || '');
@@ -42,7 +40,7 @@ const AsaasSettings: React.FC = () => {
         sandboxMode,
         allowCreditCard,
         allowPix,
-        manualCreditCard: manualCardProcessing,
+        manualCardProcessing,
         manualCardProcessing,
         manualPixPage: false,
         manualPaymentConfig: false,
@@ -63,7 +61,6 @@ const AsaasSettings: React.FC = () => {
     }
   };
 
-  // Function to handle switch changes
   const handleSwitchChange = useCallback(
     (setter: React.Dispatch<React.SetStateAction<boolean>>) => {
       return (value: boolean) => {
