@@ -1,7 +1,19 @@
 
 import { supabase } from '@/lib/supabase';
-import { AsaasSettings } from '@/types/asaas';
+import { AsaasSettings, ManualCardStatus } from '@/types/asaas';
 import { logger } from '@/utils/logger';
+
+/**
+ * Validate that a status string is a valid ManualCardStatus
+ * @param status String to validate
+ * @returns Valid ManualCardStatus or 'ANALYSIS' as fallback
+ */
+const validateCardStatus = (status: string | null): ManualCardStatus => {
+  const validStatuses: ManualCardStatus[] = ['APPROVED', 'PENDING', 'CONFIRMED', 'DECLINED', 'REJECTED', 'ANALYSIS'];
+  return status && validStatuses.includes(status as ManualCardStatus) 
+    ? (status as ManualCardStatus) 
+    : 'ANALYSIS';
+};
 
 /**
  * Fetch payment settings from the database
@@ -35,10 +47,8 @@ export const getPaymentSettings = async (): Promise<AsaasSettings> => {
       logger.warn('No Asaas config found, using defaults for API keys');
     }
 
-    // Valid status values
-    const validStatuses = ['APPROVED', 'PENDING', 'CONFIRMED', 'DECLINED', 'REJECTED', 'ANALYSIS'];
-    const cardStatus = settingsData.manual_card_status as string;
-    const validatedStatus = validStatuses.includes(cardStatus) ? cardStatus : 'ANALYSIS';
+    // Validate the card status to ensure it's a valid ManualCardStatus
+    const cardStatus = validateCardStatus(settingsData.manual_card_status);
 
     return {
       isEnabled: settingsData.asaas_enabled || false,
@@ -53,7 +63,7 @@ export const getPaymentSettings = async (): Promise<AsaasSettings> => {
       manualCardProcessing: settingsData.manual_card_processing || false,
       manualPixPage: settingsData.manual_pix_page || false,
       manualPaymentConfig: settingsData.manual_payment_config || false,
-      manualCardStatus: validatedStatus
+      manualCardStatus: cardStatus
     };
   } catch (error) {
     logger.error('Error fetching payment settings:', error);
