@@ -1,27 +1,22 @@
 
 import { useState, useEffect } from 'react';
 
-/**
- * Hook para gerenciar a paginação de produtos
- */
 export const useProductPagination = (totalItems: number) => {
-  const [paginaAtual, definirPaginaAtual] = useState(1);
-  const [tamanhoPagina, definirTamanhoPagina] = useState(5);
-
-  // Resetar para a primeira página quando o total de itens mudar
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10; // Number of items per page
+  
+  // Reset to page 1 when totalItems changes
   useEffect(() => {
-    definirPaginaAtual(1);
+    setCurrentPage(1);
   }, [totalItems]);
-
-  const handleMudancaPagina = (pagina: number) => {
-    definirPaginaAtual(pagina);
+  
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
-
+  
   return {
-    paginaAtual,
-    tamanhoPagina,
-    definirPaginaAtual,
-    definirTamanhoPagina,
-    handleMudancaPagina
+    currentPage,
+    pageSize,
+    handlePageChange
   };
 };

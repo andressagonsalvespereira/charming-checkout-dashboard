@@ -1,23 +1,10 @@
 
 import { supabase } from '@/lib/supabase';
-import type { Database } from '@/types/supabase';
+import { Product, CreateProductInput } from '@/types/product';
 import { logger } from '@/utils/logger';
 
-export type Product = Database['public']['Tables']['products']['Row'];
-export type ProductInsert = Database['public']['Tables']['products']['Insert'];
-export type ProductUpdate = Database['public']['Tables']['products']['Update'];
-
-export interface ProductCreateInput {
-  name: string;
-  slug: string;
-  description?: string;
-  price: number;
-  image_url?: string;
-  is_digital?: boolean;
-}
-
 // Get all products
-export const getAllProducts = async (): Promise<Product[]> => {
+export async function getAllProducts(): Promise<Product[]> {
   try {
     const { data, error } = await supabase
       .from('products')
@@ -30,10 +17,10 @@ export const getAllProducts = async (): Promise<Product[]> => {
     logger.error('Error loading products:', error);
     throw error;
   }
-};
+}
 
 // Get a product by ID
-export const getProductById = async (id: number | string): Promise<Product | null> => {
+export async function getProductById(id: number | string): Promise<Product | null> {
   try {
     const { data, error } = await supabase
       .from('products')
@@ -53,10 +40,10 @@ export const getProductById = async (id: number | string): Promise<Product | nul
     logger.error(`Error loading product with ID ${id}:`, error);
     throw error;
   }
-};
+}
 
 // Get a product by slug
-export const getProductBySlug = async (slug: string): Promise<Product | null> => {
+export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
     const { data, error } = await supabase
       .from('products')
@@ -76,13 +63,17 @@ export const getProductBySlug = async (slug: string): Promise<Product | null> =>
     logger.error(`Error loading product with slug ${slug}:`, error);
     throw error;
   }
-};
+}
 
 // Create a new product
-export const createProduct = async (product: ProductCreateInput): Promise<Product> => {
+export async function createProduct(product: CreateProductInput): Promise<Product> {
   try {
-    const newProduct: ProductInsert = {
+    // Generate slug from name
+    const slug = product.name.toLowerCase().replace(/\s+/g, '-');
+    
+    const newProduct = {
       ...product,
+      slug,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -101,12 +92,12 @@ export const createProduct = async (product: ProductCreateInput): Promise<Produc
     logger.error('Error creating product:', error);
     throw error;
   }
-};
+}
 
 // Update a product
-export const updateProduct = async (id: number, updates: Partial<Product>): Promise<Product> => {
+export async function updateProduct(id: number, updates: Partial<Product>): Promise<Product> {
   try {
-    const productUpdate: ProductUpdate = {
+    const productUpdate = {
       ...updates,
       updated_at: new Date().toISOString()
     };
@@ -126,10 +117,10 @@ export const updateProduct = async (id: number, updates: Partial<Product>): Prom
     logger.error(`Error updating product with ID ${id}:`, error);
     throw error;
   }
-};
+}
 
 // Delete a product
-export const deleteProduct = async (id: number): Promise<void> => {
+export async function deleteProduct(id: number): Promise<void> {
   try {
     const { error } = await supabase
       .from('products')
@@ -141,4 +132,4 @@ export const deleteProduct = async (id: number): Promise<void> => {
     logger.error(`Error deleting product with ID ${id}:`, error);
     throw error;
   }
-};
+}

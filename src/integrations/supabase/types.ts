@@ -106,15 +106,7 @@ export type Database = {
           product_name?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "orders_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       products: {
         Row: {
@@ -122,7 +114,6 @@ export type Database = {
           custom_manual_status: string | null
           description: string | null
           id: number
-          image: string | null
           image_url: string | null
           is_digital: boolean | null
           name: string
@@ -136,7 +127,6 @@ export type Database = {
           custom_manual_status?: string | null
           description?: string | null
           id?: number
-          image?: string | null
           image_url?: string | null
           is_digital?: boolean | null
           name: string
@@ -150,7 +140,6 @@ export type Database = {
           custom_manual_status?: string | null
           description?: string | null
           id?: number
-          image?: string | null
           image_url?: string | null
           is_digital?: boolean | null
           name?: string

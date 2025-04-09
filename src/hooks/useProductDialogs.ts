@@ -1,27 +1,24 @@
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { Product } from '@/types/product';
 
-/**
- * Hook para gerenciar os diálogos de produto
- */
 export const useProductDialogs = () => {
-  const [dialogoAdicaoAberto, definirDialogoAdicaoAberto] = useState(false);
-  const [dialogoEdicaoAberto, definirDialogoEdicaoAberto] = useState(false);
-  const [dialogoRemocaoAberto, definirDialogoRemocaoAberto] = useState(false);
-  const [produtoEmEdicao, definirProdutoEmEdicao] = useState<Product | null>(null);
-  const [produtoParaRemover, definirProdutoParaRemover] = useState<Product | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   return {
-    dialogoAdicaoAberto,
-    definirDialogoAdicaoAberto,
-    dialogoEdicaoAberto,
-    definirDialogoEdicaoAberto,
-    dialogoRemocaoAberto,
-    definirDialogoRemocaoAberto,
-    produtoEmEdicao,
-    definirProdutoEmEdicao,
-    produtoParaRemover,
-    definirProdutoParaRemover
+    isAddDialogOpen,
+    setIsAddDialogOpen,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    editingProduct,
+    setEditingProduct,
+    productToDelete,
+    setProductToDelete
   };
 };

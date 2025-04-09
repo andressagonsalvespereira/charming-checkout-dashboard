@@ -1,161 +1,177 @@
 
-import { useEffect, useRef } from 'react';
-import { useProducts } from '@/contexts/ProductContext';
-import { Product } from '@/types/product';
+import { useState, useEffect } from 'react';
+import { useProducts } from '@/contexts/product';
+import { Product, CreateProductInput } from '@/types/product';
 import { useProductForm } from './useProductForm';
 import { useProductDialogs } from './useProductDialogs';
 import { useProductPagination } from './useProductPagination';
-import { useProductOperations } from './useProductOperations';
+import { useToast } from '@/hooks/use-toast';
 
-export const useGerenciamentoProdutos = () => {
-  // Ref to check if component has been mounted
-  const isMountedRef = useRef(false);
-  
-  // Get products and state from context
+export const useProductManagement = () => {
   const { 
-    products: produtos, 
-    loading: carregando, 
-    error: erro,
-    isOffline: estaOffline
+    products, 
+    loading, 
+    error,
+    isOffline,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    refreshProducts
   } = useProducts();
 
-  // Specialized hooks
+  const { toast } = useToast();
+
   const { 
-    formData: dadosFormulario, 
-    setFormData: definirDadosFormulario, 
-    resetForm: redefinirFormulario,
-    handleInputChange: manipularMudancaInput,
-    handleSwitchChange: manipularMudancaSwitch,
-    handleUseCustomProcessingChange: manipularMudancaProcessamentoPersonalizado,
-    handleManualCardStatusChange: manipularMudancaStatusCartaoManual
+    formData, 
+    setFormData, 
+    resetForm,
+    handleInputChange,
+    handleSwitchChange,
+    handleUseCustomProcessingChange,
+    handleManualCardStatusChange
   } = useProductForm();
 
   const {
-    dialogoAdicaoAberto,
-    definirDialogoAdicaoAberto,
-    dialogoEdicaoAberto,
-    definirDialogoEdicaoAberto,
-    dialogoRemocaoAberto,
-    definirDialogoRemocaoAberto,
-    produtoEmEdicao,
-    definirProdutoEmEdicao,
-    produtoParaRemover,
-    definirProdutoParaRemover
+    isAddDialogOpen,
+    setIsAddDialogOpen,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    editingProduct,
+    setEditingProduct,
+    productToDelete,
+    setProductToDelete
   } = useProductDialogs();
 
   const {
-    paginaAtual,
-    tamanhoPagina,
-    handleMudancaPagina
-  } = useProductPagination(produtos.length);
-
-  const {
-    handleAdicionarProduto,
-    handleAtualizarProduto,
-    handleRemoverProduto,
-    atualizarProdutos
-  } = useProductOperations();
-
-  // Debug log to monitor mounting/unmounting
-  useEffect(() => {
-    console.log('Hook useGerenciamentoProdutos mounted, isMounted:', isMountedRef.current);
-    isMountedRef.current = true;
-    
-    return () => {
-      console.log('Hook useGerenciamentoProdutos unmounted');
-      isMountedRef.current = false;
-    };
-  }, []);
+    currentPage,
+    pageSize,
+    handlePageChange
+  } = useProductPagination(products.length);
 
   // Handle edit button click
-  const handleEditarClique = (produto: Product) => {
-    definirProdutoEmEdicao(produto);
-    definirDadosFormulario({
-      nome: produto.nome || produto.name || '',
-      descricao: produto.descricao || produto.description || '',
-      preco: produto.preco || produto.price || 0,
-      urlImagem: produto.urlImagem || produto.image_url || '',
-      digital: produto.digital || Boolean(produto.is_digital) || false,
-      usarProcessamentoPersonalizado: produto.usarProcessamentoPersonalizado || Boolean(produto.override_global_status) || false,
-      statusCartaoManual: produto.statusCartaoManual || produto.custom_manual_status || 'ANALISE'
+  const handleEditClick = (product: Product) => {
+    setEditingProduct(product);
+    setFormData({
+      name: product.name,
+      description: product.description || '',
+      price: product.price,
+      image_url: product.image_url || '',
+      is_digital: product.is_digital || false,
+      override_global_status: product.override_global_status || false,
+      custom_manual_status: product.custom_manual_status || 'ANALYSIS'
     });
-    definirDialogoEdicaoAberto(true);
+    setIsEditDialogOpen(true);
   };
 
   // Handle delete button click
-  const handleRemoverClique = (produto: Product) => {
-    definirProdutoParaRemover(produto);
-    definirDialogoRemocaoAberto(true);
+  const handleDeleteClick = (product: Product) => {
+    setProductToDelete(product);
+    setIsDeleteDialogOpen(true);
   };
 
   // Handlers for CRUD operations
   const handleAddProduct = async () => {
-    const sucesso = await handleAdicionarProduto(dadosFormulario);
-    if (sucesso) {
-      redefinirFormulario();
-      definirDialogoAdicaoAberto(false);
+    try {
+      await addProduct(formData);
+      toast({
+        title: "Success",
+        description: "Product added successfully",
+      });
+      resetForm();
+      setIsAddDialogOpen(false);
+      refreshProducts();
+    } catch (error) {
+      console.error('Error adding product:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add product",
+        variant: "destructive",
+      });
     }
   };
 
   const handleUpdateProduct = async () => {
-    if (!produtoEmEdicao) return;
+    if (!editingProduct) return;
     
-    const sucesso = await handleAtualizarProduto(String(produtoEmEdicao.id), dadosFormulario);
-    if (sucesso) {
-      definirDialogoEdicaoAberto(false);
-      definirProdutoEmEdicao(null);
+    try {
+      await updateProduct(editingProduct.id, formData);
+      toast({
+        title: "Success",
+        description: "Product updated successfully",
+      });
+      setIsEditDialogOpen(false);
+      setEditingProduct(null);
+      refreshProducts();
+    } catch (error) {
+      console.error('Error updating product:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update product",
+        variant: "destructive",
+      });
     }
   };
 
   const handleDeleteProduct = async () => {
-    if (!produtoParaRemover) return;
+    if (!productToDelete) return;
     
-    const sucesso = await handleRemoverProduto(String(produtoParaRemover.id));
-    if (sucesso) {
-      definirDialogoRemocaoAberto(false);
-      definirProdutoParaRemover(null);
+    try {
+      await deleteProduct(productToDelete.id);
+      toast({
+        title: "Success",
+        description: "Product deleted successfully",
+      });
+      setIsDeleteDialogOpen(false);
+      setProductToDelete(null);
+      refreshProducts();
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete product",
+        variant: "destructive",
+      });
     }
   };
 
   return {
     // Product state
-    products: produtos,
-    loading: carregando,
-    error: erro,
-    isOffline: estaOffline,
+    products,
+    loading,
+    error,
+    isOffline,
     
     // Form state
-    formData: dadosFormulario,
-    handleInputChange: manipularMudancaInput,
-    handleSwitchChange: manipularMudancaSwitch,
-    handleUseCustomProcessingChange: manipularMudancaProcessamentoPersonalizado,
-    handleManualCardStatusChange: manipularMudancaStatusCartaoManual,
-    resetForm: redefinirFormulario,
+    formData,
+    handleInputChange,
+    handleSwitchChange,
+    handleUseCustomProcessingChange,
+    handleManualCardStatusChange,
+    resetForm,
     
     // Dialog state
-    isAddDialogOpen: dialogoAdicaoAberto,
-    setIsAddDialogOpen: definirDialogoAdicaoAberto,
-    isEditDialogOpen: dialogoEdicaoAberto,
-    setIsEditDialogOpen: definirDialogoEdicaoAberto,
-    isDeleteDialogOpen: dialogoRemocaoAberto,
-    setIsDeleteDialogOpen: definirDialogoRemocaoAberto,
-    editingProduct: produtoEmEdicao,
-    productToDelete: produtoParaRemover,
+    isAddDialogOpen,
+    setIsAddDialogOpen,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    editingProduct,
+    productToDelete,
     
     // Action handlers
     handleAddProduct,
-    handleEditClick: handleEditarClique,
-    handleDeleteClick: handleRemoverClique,
+    handleEditClick,
+    handleDeleteClick,
     handleUpdateProduct,
     handleDeleteProduct,
-    refreshProducts: atualizarProdutos,
+    refreshProducts,
     
     // Pagination
-    currentPage: paginaAtual,
-    pageSize: tamanhoPagina,
-    handlePageChange: handleMudancaPagina
+    currentPage,
+    pageSize,
+    handlePageChange
   };
 };
-
-// Export with the old name for compatibility
-export const useProductManagement = useGerenciamentoProdutos;

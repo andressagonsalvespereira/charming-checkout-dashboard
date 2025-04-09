@@ -39,7 +39,7 @@ function App() {
               <PixelProvider>
                 <CheckoutCustomizationProvider>
                   <Routes>
-                    {/* Redirecionar página raiz para login admin (pode alterar para landing depois) */}
+                    {/* Redirect root page to admin login (can change to landing later) */}
                     <Route path="/" element={<Navigate to="/admin/login" replace />} />
 
                     <Route path="/index" element={<Index />} />
@@ -55,7 +55,7 @@ function App() {
                     <Route path="/admin/pixel-settings" element={<PixelSettings />} />
                     <Route path="/admin/checkout-customization" element={<CheckoutCustomization />} />
                     
-                    {/* Redirecionamentos antigos */}
+                    {/* Old redirects */}
                     <Route path="/admin/asaas-settings" element={<Navigate to="/admin/settings/payment" replace />} />
                     <Route path="/admin/payments" element={<Navigate to="/admin/settings/payment" replace />} />
                     <Route path="/payments" element={<Navigate to="/admin/settings/payment" replace />} />
@@ -63,14 +63,14 @@ function App() {
                     {/* Checkout Routes */}
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/checkout/:productSlug" element={<Checkout />} />
-                    {/* Redirecionamento da rota antiga para a nova */}
+                    {/* Redirect old route to new */}
                     <Route path="/quick-checkout/:productId" 
                            element={<Navigate to="/checkout" replace />} />
                     <Route path="/payment-failed" element={<PaymentFailed />} />
                     <Route path="/payment-success" element={<PaymentSuccess />} />
                     <Route path="/pix-payment-manual" element={<PixPaymentManual />} />
 
-                    {/* Rota de fallback */}
+                    {/* Fallback route */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   <Toaster />

@@ -1,19 +1,19 @@
 
 import { useState } from 'react';
-import { CriarProdutoInput } from '@/types/product';
+import { CreateProductInput } from '@/types/product';
 
-const initialFormData: CriarProdutoInput = {
-  nome: '',
-  descricao: '',
-  preco: 0,
-  urlImagem: '',
-  digital: false,
-  usarProcessamentoPersonalizado: false,
-  statusCartaoManual: 'ANALYSIS'
+const initialFormData: CreateProductInput = {
+  name: '',
+  description: '',
+  price: 0,
+  image_url: '',
+  is_digital: false,
+  override_global_status: false,
+  custom_manual_status: 'ANALYSIS'
 };
 
 export const useProductForm = () => {
-  const [formData, setFormData] = useState<CriarProdutoInput>({ ...initialFormData });
+  const [formData, setFormData] = useState<CreateProductInput>({ ...initialFormData });
   
   const resetForm = () => {
     setFormData({ ...initialFormData });
@@ -23,7 +23,7 @@ export const useProductForm = () => {
     const { name, value } = e.target;
     
     // Special handling for price to ensure it's a number
-    if (name === 'preco') {
+    if (name === 'price') {
       const numericValue = value === '' ? 0 : Number(value);
       if (!isNaN(numericValue)) {
         setFormData(prev => ({ ...prev, [name]: numericValue }));
@@ -34,15 +34,15 @@ export const useProductForm = () => {
   };
 
   const handleSwitchChange = (checked: boolean) => {
-    setFormData(prev => ({ ...prev, digital: checked }));
+    setFormData(prev => ({ ...prev, is_digital: checked }));
   };
 
   const handleUseCustomProcessingChange = (checked: boolean) => {
-    setFormData(prev => ({ ...prev, usarProcessamentoPersonalizado: checked }));
+    setFormData(prev => ({ ...prev, override_global_status: checked }));
   };
 
   const handleManualCardStatusChange = (value: string) => {
-    setFormData(prev => ({ ...prev, statusCartaoManual: value }));
+    setFormData(prev => ({ ...prev, custom_manual_status: value }));
   };
 
   return {

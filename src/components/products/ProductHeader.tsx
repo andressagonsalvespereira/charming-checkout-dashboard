@@ -11,13 +11,13 @@ interface ProductHeaderProps {
 const ProductHeader = ({ onAddProduct }: ProductHeaderProps) => {
   return (
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 border-b">
-      <CardTitle className="text-2xl font-bold">Gerenciar Produtos</CardTitle>
+      <CardTitle className="text-2xl font-bold">Manage Products</CardTitle>
       <Button 
         onClick={onAddProduct} 
         className="bg-green-600 hover:bg-green-700 text-white"
       >
         <Plus className="mr-2 h-4 w-4" />
-        Adicionar Produto
+        Add Product
       </Button>
     </CardHeader>
   );

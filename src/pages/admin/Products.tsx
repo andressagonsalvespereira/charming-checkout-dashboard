@@ -6,8 +6,8 @@ import ProductTable from '@/components/products/ProductTable';
 import AddProductDialog from '@/components/products/AddProductDialog';
 import EditProductDialog from '@/components/products/EditProductDialog';
 import ProductHeader from '@/components/products/ProductHeader';
-import ProductDeleteConfirmation from '@/components/products/ProductDeleteConfirmation';
-import { useGerenciamentoProdutos } from '@/hooks/useProductManagement';
+import DeleteProductDialog from '@/components/products/DeleteProductDialog';
+import { useProductManagement } from '@/hooks/useProductManagement';
 
 const Products: React.FC = () => {
   const {
@@ -36,24 +36,24 @@ const Products: React.FC = () => {
     currentPage,
     pageSize,
     handlePageChange
-  } = useGerenciamentoProdutos();
+  } = useProductManagement();
   
-  // Logging para depuração
+  // Logging for debugging
   useEffect(() => {
-    console.log('Página de Produtos montada, estado inicial:', { 
+    console.log('Products page mounted, initial state:', { 
       productsCount: products.length,
       loading, 
       error 
     });
     
     return () => {
-      console.log('Página de Produtos desmontada');
+      console.log('Products page unmounted');
     };
   }, []);
   
-  // Log para monitorar mudanças no estado de carregamento
+  // Log to monitor changes in loading state
   useEffect(() => {
-    console.log('Estado de carregamento atualizado:', { loading, error, productsCount: products.length });
+    console.log('Loading state updated:', { loading, error, productsCount: products.length });
   }, [loading, error, products.length]);
   
   return (
@@ -68,9 +68,9 @@ const Products: React.FC = () => {
               error={error}
               onEdit={handleEditClick}
               onDelete={handleDeleteClick}
-              onAddProduct={() => setIsAddDialogOpen(true)}
               currentPage={currentPage}
               pageSize={pageSize}
+              totalProducts={products.length}
               onPageChange={handlePageChange}
             />
           </CardContent>
@@ -79,8 +79,8 @@ const Products: React.FC = () => {
         {isOffline && (
           <div className="mt-4 p-4 bg-amber-50 rounded-md border border-amber-200 text-amber-800">
             <p className="text-sm">
-              Você está trabalhando no modo offline. As alterações serão salvas localmente 
-              e sincronizadas quando sua conexão for restaurada.
+              You are working in offline mode. Changes will be saved locally 
+              and synchronized when your connection is restored.
             </p>
           </div>
         )}
@@ -109,10 +109,10 @@ const Products: React.FC = () => {
       />
 
       {productToDelete && (
-        <ProductDeleteConfirmation
+        <DeleteProductDialog
           isOpen={isDeleteDialogOpen}
           setIsOpen={setIsDeleteDialogOpen}
-          productName={productToDelete.nome}
+          productName={productToDelete.name}
           onConfirm={handleDeleteProduct}
         />
       )}

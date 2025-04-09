@@ -64,7 +64,7 @@ export async function processPayment(
         // Fix the error handling by extracting the message if it's an object
         const errorMessage = typeof pixResult.error === 'object' && pixResult.error !== null
           ? pixResult.error.message
-          : pixResult.error || 'Failed to retrieve PIX QR code';
+          : String(pixResult.error || 'Failed to retrieve PIX QR code');
         
         throw new Error(errorMessage);
       }

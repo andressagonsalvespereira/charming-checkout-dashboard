@@ -7,17 +7,16 @@ import {
   DialogFooter, 
   DialogHeader, 
   DialogTitle, 
-  DialogTrigger, 
   DialogDescription 
 } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
-import { CriarProdutoInput } from '@/types/product';
-import ProductFormFields from './ProductFormFields';
+import { CreateProductInput } from '@/types/product';
+import ProductForm from './ProductForm';
 
 interface AddProductDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  formData: CriarProdutoInput;
+  formData: CreateProductInput;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSwitchChange: (checked: boolean) => void;
   handleUseCustomProcessingChange?: (checked: boolean) => void;
@@ -35,27 +34,16 @@ const AddProductDialog = ({
   handleManualCardStatusChange,
   handleAddProduct
 }: AddProductDialogProps) => {
-  const addDescriptionId = "add-product-description";
-  
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-green-600 hover:bg-green-700 text-white">
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar Produto
-        </Button>
-      </DialogTrigger>
-      <DialogContent 
-        aria-describedby={addDescriptionId} 
-        aria-labelledby="add-product-title"
-      >
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle id="add-product-title">Adicionar Novo Produto</DialogTitle>
-          <DialogDescription id={addDescriptionId}>
-            Preencha os detalhes do novo produto que você deseja adicionar ao seu catálogo.
+          <DialogTitle>Add New Product</DialogTitle>
+          <DialogDescription>
+            Fill out the details for the new product you want to add to your catalog.
           </DialogDescription>
         </DialogHeader>
-        <ProductFormFields 
+        <ProductForm 
           formData={formData}
           handleInputChange={handleInputChange}
           handleSwitchChange={handleSwitchChange}
@@ -63,9 +51,10 @@ const AddProductDialog = ({
           handleManualCardStatusChange={handleManualCardStatusChange}
         />
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
+          <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
           <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleAddProduct}>
-            Adicionar Produto
+            <Plus className="h-4 w-4 mr-2" />
+            Add Product
           </Button>
         </DialogFooter>
       </DialogContent>
