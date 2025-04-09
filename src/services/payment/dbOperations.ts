@@ -2,6 +2,7 @@
 import { supabase } from '@/lib/supabase';
 import { AsaasSettings } from '@/types/asaas';
 import { logger } from '@/utils/logger';
+import { validateBoolean } from './validators';
 
 /**
  * Fetch settings data from the database
@@ -18,6 +19,16 @@ export const fetchSettingsData = async () => {
     if (error && error.code !== 'PGRST116') {
       logger.error('Error fetching settings data:', error);
       throw error;
+    }
+
+    if (data) {
+      logger.log('Fetched settings data:', {
+        asaas_enabled: data.asaas_enabled,
+        sandbox_mode: data.sandbox_mode,
+        manual_card_status: data.manual_card_status
+      });
+    } else {
+      logger.log('No settings data found');
     }
 
     return data;
@@ -42,6 +53,15 @@ export const fetchApiConfig = async () => {
     if (error && error.code !== 'PGRST116') {
       logger.error('Error fetching API config:', error);
       throw error;
+    }
+
+    if (data) {
+      logger.log('Fetched API config:', {
+        sandbox_api_key: data.sandbox_api_key ? '[PRESENT]' : '[EMPTY]',
+        production_api_key: data.production_api_key ? '[PRESENT]' : '[EMPTY]'
+      });
+    } else {
+      logger.log('No API config found');
     }
 
     return data;
@@ -115,14 +135,14 @@ export const saveSettingsData = async (settings: AsaasSettings, id: number = 1) 
       .from('settings')
       .upsert({
         id: id,
-        asaas_enabled: settings.isEnabled,
-        allow_pix: settings.allowPix,
-        allow_credit_card: settings.allowCreditCard,
-        manual_credit_card: settings.manualCreditCard,
-        sandbox_mode: settings.sandboxMode,
-        manual_card_processing: settings.manualCardProcessing,
-        manual_pix_page: settings.manualPixPage,
-        manual_payment_config: settings.manualPaymentConfig,
+        asaas_enabled: validateBoolean(settings.isEnabled),
+        allow_pix: validateBoolean(settings.allowPix),
+        allow_credit_card: validateBoolean(settings.allowCreditCard),
+        manual_credit_card: validateBoolean(settings.manualCreditCard),
+        sandbox_mode: validateBoolean(settings.sandboxMode),
+        manual_card_processing: validateBoolean(settings.manualCardProcessing),
+        manual_pix_page: validateBoolean(settings.manualPixPage),
+        manual_payment_config: validateBoolean(settings.manualPaymentConfig),
         manual_card_status: settings.manualCardStatus,
         updated_at: new Date().toISOString()
       });
@@ -169,85 +189,48 @@ export const saveApiConfig = async (settings: AsaasSettings, id: number = 1) => 
 };
 
 /**
- * Verify that settings were saved correctly
+ * Save settings with retry mechanism
+ * This is the main function that should be used to save settings
  */
-export const verifySettings = async (id: number): Promise<any> => {
-  try {
-    const { data, error } = await supabase
-      .from('settings')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      logger.error('Error verifying settings:', error);
-      throw error;
-    }
-
-    logger.log('Verified settings:', {
-      isEnabled: data.asaas_enabled,
-      manualCardStatus: data.manual_card_status
-    });
-
-    return data;
-  } catch (error) {
-    logger.error('Error in verifySettings:', error);
-    return null;
-  }
-};
-
-/**
- * Verify that API config was saved correctly
- */
-export const verifyApiConfig = async (id: number): Promise<any> => {
-  try {
-    const { data, error } = await supabase
-      .from('asaas_config')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      logger.error('Error verifying API config:', error);
-      throw error;
-    }
-
-    logger.log('Verified API keys:', {
-      sandboxApiKey: data.sandbox_api_key ? '[PRESENT]' : '[EMPTY]',
-      productionApiKey: data.production_api_key ? '[PRESENT]' : '[EMPTY]'
-    });
-
-    return data;
-  } catch (error) {
-    logger.error('Error in verifyApiConfig:', error);
-    return null;
-  }
-};
-
-// Função auxiliar para upsert com melhor log
 export const saveSettingsWithRetry = async (settings: AsaasSettings): Promise<boolean> => {
   try {
-    // Checar se as configurações existem
+    // Check if settings already exist
     const settingsId = await checkSettingsExist();
+    
+    // Settings ID will be 1 if exists, otherwise create with ID 1
+    const finalSettingsId = settingsId || 1;
+    logger.log(`Using settings ID: ${finalSettingsId} for upsert operation`);
+
+    // Save settings data
+    await saveSettingsData(settings, finalSettingsId);
+
+    // Check if API config already exists
     const configId = await checkApiConfigExists();
     
-    // IDs para upsert, use 1 como padrão se não existir
-    const finalSettingsId = settingsId || 1;
+    // Config ID will be 1 if exists, otherwise create with ID 1
     const finalConfigId = configId || 1;
-    
-    // Salvar configurações
-    await saveSettingsData(settings, finalSettingsId);
-    
-    // Salvar chaves de API
+    logger.log(`Using config ID: ${finalConfigId} for upsert operation`);
+
+    // Save API keys
     await saveApiConfig(settings, finalConfigId);
+
+    logger.log('Successfully saved all payment settings to database');
     
-    // Verificar se as configurações foram salvas corretamente
-    await verifySettings(finalSettingsId);
-    await verifyApiConfig(finalConfigId);
+    // Verify settings were saved
+    const { data: settingsData } = await supabase
+      .from('settings')
+      .select('*')
+      .eq('id', finalSettingsId)
+      .single();
+      
+    logger.log('Verified settings saved:', {
+      asaas_enabled: settingsData?.asaas_enabled,
+      sandbox_mode: settingsData?.sandbox_mode
+    });
     
     return true;
   } catch (error) {
-    logger.error('Erro ao salvar configurações com retry:', error);
+    logger.error('Error saving settings with retry:', error);
     return false;
   }
 };

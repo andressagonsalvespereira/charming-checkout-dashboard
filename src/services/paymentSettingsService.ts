@@ -4,15 +4,10 @@ import { logger } from '@/utils/logger';
 import { 
   fetchSettingsData, 
   fetchApiConfig,
-  saveSettingsData,
-  saveApiConfig,
-  checkSettingsExist,
-  checkApiConfigExists,
-  verifySettings,
-  verifyApiConfig,
   saveSettingsWithRetry
 } from './payment/dbOperations';
 import { mapToAsaasSettings, getDefaultSettings } from './payment/mappers';
+import { validateBoolean } from './payment/validators';
 
 /**
  * Fetch payment settings from the database
@@ -33,14 +28,10 @@ export const getPaymentSettings = async (): Promise<AsaasSettings> => {
     // Log sanitized settings
     logger.log('Loaded payment settings:', {
       isEnabled: settings.isEnabled,
+      sandboxMode: settings.sandboxMode,
       sandboxApiKey: settings.sandboxApiKey ? '[PRESENT]' : '[EMPTY]',
       productionApiKey: settings.productionApiKey ? '[PRESENT]' : '[EMPTY]'
     });
-    
-    // Log current card status from the database
-    if (settingsData?.manual_card_status) {
-      logger.log('Card status from database:', settingsData.manual_card_status);
-    }
     
     return settings;
   } catch (error) {
@@ -55,50 +46,36 @@ export const getPaymentSettings = async (): Promise<AsaasSettings> => {
  */
 export const savePaymentSettings = async (settings: AsaasSettings): Promise<boolean> => {
   try {
-    // Log sanitized settings
+    // Ensure boolean values are correctly typed
+    const sanitizedSettings: AsaasSettings = {
+      ...settings,
+      isEnabled: validateBoolean(settings.isEnabled),
+      allowPix: validateBoolean(settings.allowPix),
+      allowCreditCard: validateBoolean(settings.allowCreditCard),
+      manualCreditCard: validateBoolean(settings.manualCreditCard),
+      sandboxMode: validateBoolean(settings.sandboxMode),
+      manualCardProcessing: validateBoolean(settings.manualCardProcessing),
+      manualPixPage: validateBoolean(settings.manualPixPage),
+      manualPaymentConfig: validateBoolean(settings.manualPaymentConfig)
+    };
+    
+    // Log what we're about to save
     logger.log('Saving payment settings:', {
-      isEnabled: settings.isEnabled,
-      sandboxApiKey: settings.sandboxApiKey ? '[PRESENT]' : '[EMPTY]',
-      productionApiKey: settings.productionApiKey ? '[PRESENT]' : '[EMPTY]'
+      isEnabled: sanitizedSettings.isEnabled,
+      sandboxMode: sanitizedSettings.sandboxMode,
+      sandboxApiKey: sanitizedSettings.sandboxApiKey ? '[PRESENT]' : '[EMPTY]',
+      productionApiKey: sanitizedSettings.productionApiKey ? '[PRESENT]' : '[EMPTY]'
     });
     
-    // Tente salvar usando o método otimizado com retry
-    const success = await saveSettingsWithRetry(settings);
+    // Use the optimized function to save settings
+    const success = await saveSettingsWithRetry(sanitizedSettings);
     
     if (success) {
       logger.log('Successfully saved all payment settings to database');
       return true;
     } else {
-      // Se falhar, tente o método anterior
-      // First, check if settings already exist
-      const existingSettingsId = await checkSettingsExist();
-      
-      // Settings ID will be 1 if exists, otherwise create with ID 1
-      const settingsId = existingSettingsId || 1;
-      logger.log(`Using settings ID: ${settingsId} for upsert operation`);
-
-      // Save settings data
-      await saveSettingsData(settings, settingsId);
-
-      // Check if API config already exists
-      const existingConfigId = await checkApiConfigExists();
-      
-      // Config ID will be 1 if exists, otherwise create with ID 1
-      const configId = existingConfigId || 1;
-      logger.log(`Using config ID: ${configId} for upsert operation`);
-
-      // Save API keys
-      await saveApiConfig(settings, configId);
-
-      logger.log('Successfully saved all payment settings to database');
-      
-      // Verify that settings were saved correctly
-      const verifiedSettings = await verifySettings(settingsId);
-      
-      // Verify that API keys were saved correctly
-      const verifiedConfig = await verifyApiConfig(configId);
-      
-      return true;
+      logger.error('Failed to save settings');
+      return false;
     }
   } catch (error) {
     logger.error('Error saving payment settings:', error);

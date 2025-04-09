@@ -14,7 +14,8 @@ export const mapToAsaasSettings = (settingsData: any, configData: any): AsaasSet
   logger.log('Mapping database data to AsaasSettings');
   logger.log('Raw settings data:', {
     asaas_enabled: settingsData.asaas_enabled,
-    manual_card_status: settingsData.manual_card_status
+    manual_card_status: settingsData.manual_card_status,
+    sandbox_mode: settingsData.sandbox_mode
   });
   logger.log('Raw API config data:', {
     sandbox_api_key: configData?.sandbox_api_key ? '[PRESENT]' : '[EMPTY]',
@@ -32,13 +33,15 @@ export const mapToAsaasSettings = (settingsData: any, configData: any): AsaasSet
   const sandboxApiKey = configData?.sandbox_api_key || '';
   const productionApiKey = configData?.production_api_key || '';
   
+  const sandboxMode = validateBoolean(settingsData.sandbox_mode);
+  
   const result: AsaasSettings = {
     isEnabled: isEnabled,
-    apiKey: settingsData.sandbox_mode ? sandboxApiKey : productionApiKey,
+    apiKey: sandboxMode ? sandboxApiKey : productionApiKey,
     allowPix: validateBoolean(settingsData.allow_pix ?? true),
     allowCreditCard: validateBoolean(settingsData.allow_credit_card ?? true),
     manualCreditCard: validateBoolean(settingsData.manual_credit_card ?? false),
-    sandboxMode: validateBoolean(settingsData.sandbox_mode ?? true),
+    sandboxMode: sandboxMode,
     sandboxApiKey: sandboxApiKey,
     productionApiKey: productionApiKey,
     manualCardProcessing: validateBoolean(settingsData.manual_card_processing ?? false),
@@ -49,6 +52,7 @@ export const mapToAsaasSettings = (settingsData: any, configData: any): AsaasSet
   
   logger.log('Mapped settings:', {
     isEnabled: result.isEnabled,
+    sandboxMode: result.sandboxMode,
     sandboxApiKey: result.sandboxApiKey ? '[PRESENT]' : '[EMPTY]',
     productionApiKey: result.productionApiKey ? '[PRESENT]' : '[EMPTY]'
   });

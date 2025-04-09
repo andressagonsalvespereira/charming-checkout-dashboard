@@ -1,8 +1,9 @@
 
 import { z } from 'zod';
 import { AsaasSettings, ManualCardStatus } from '@/types/asaas';
+import { logger } from '@/utils/logger';
 
-// Define form validation schema
+// Define form validation schema with proper types
 export const PaymentSettingsSchema = z.object({
   isEnabled: z.boolean().default(false),
   manualCardProcessing: z.boolean().default(false),
@@ -23,39 +24,52 @@ export const PaymentSettingsSchema = z.object({
 
 export type PaymentSettingsFormValues = z.infer<typeof PaymentSettingsSchema>;
 
-// Function to convert FormValues to AsaasSettings
+// Function to convert FormValues to AsaasSettings with proper logging
 export const formValuesToAsaasSettings = (values: PaymentSettingsFormValues): AsaasSettings => {
-  // Importante: mantenha a lógica em sincronia com o atual estado do formulário
-  return {
+  logger.log('Converting form values to AsaasSettings:', {
     isEnabled: values.isEnabled,
-    apiKey: values.sandboxMode ? values.sandboxApiKey || '' : values.productionApiKey || '',
-    allowPix: values.allowPix,
-    allowCreditCard: values.allowCreditCard,
-    manualCreditCard: values.manualCreditCard,
     sandboxMode: values.sandboxMode,
+    sandboxApiKey: values.sandboxApiKey ? '[PRESENT]' : '[EMPTY]',
+    productionApiKey: values.productionApiKey ? '[PRESENT]' : '[EMPTY]',
+  });
+  
+  return {
+    isEnabled: Boolean(values.isEnabled),
+    apiKey: values.sandboxMode ? (values.sandboxApiKey || '') : (values.productionApiKey || ''),
+    allowPix: Boolean(values.allowPix),
+    allowCreditCard: Boolean(values.allowCreditCard),
+    manualCreditCard: Boolean(values.manualCreditCard),
+    sandboxMode: Boolean(values.sandboxMode),
     sandboxApiKey: values.sandboxApiKey || '',
     productionApiKey: values.productionApiKey || '',
-    manualCardProcessing: values.manualCardProcessing,
+    manualCardProcessing: Boolean(values.manualCardProcessing),
     manualCardStatus: values.manualCardStatus as ManualCardStatus,
-    manualPixPage: values.manualPixPage,
-    manualPaymentConfig: values.manualPaymentConfig,
+    manualPixPage: Boolean(values.manualPixPage),
+    manualPaymentConfig: Boolean(values.manualPaymentConfig),
   };
 };
 
 // Function to convert AsaasSettings to FormValues
 export const asaasSettingsToFormValues = (settings: AsaasSettings): PaymentSettingsFormValues => {
-  return {
-    isEnabled: settings.isEnabled || false,
-    manualCardProcessing: settings.manualCardProcessing || false,
-    manualCardStatus: settings.manualCardStatus as any,
-    manualCreditCard: settings.manualCreditCard || false,
-    allowPix: settings.allowPix,
-    allowCreditCard: settings.allowCreditCard,
+  logger.log('Converting AsaasSettings to form values:', {
+    isEnabled: settings.isEnabled,
     sandboxMode: settings.sandboxMode,
+    sandboxApiKey: settings.sandboxApiKey ? '[PRESENT]' : '[EMPTY]',
+    productionApiKey: settings.productionApiKey ? '[PRESENT]' : '[EMPTY]',
+  });
+  
+  return {
+    isEnabled: Boolean(settings.isEnabled),
+    manualCardProcessing: Boolean(settings.manualCardProcessing),
+    manualCardStatus: settings.manualCardStatus as ManualCardStatus,
+    manualCreditCard: Boolean(settings.manualCreditCard),
+    allowPix: Boolean(settings.allowPix),
+    allowCreditCard: Boolean(settings.allowCreditCard),
+    sandboxMode: Boolean(settings.sandboxMode),
     sandboxApiKey: settings.sandboxApiKey || '',
     productionApiKey: settings.productionApiKey || '',
-    manualPixPage: settings.manualPixPage || false,
-    manualPaymentConfig: settings.manualPaymentConfig || false,
+    manualPixPage: Boolean(settings.manualPixPage),
+    manualPaymentConfig: Boolean(settings.manualPaymentConfig),
     apiKey: settings.apiKey || '',
   };
 };

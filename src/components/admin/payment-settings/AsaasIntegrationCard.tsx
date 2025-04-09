@@ -49,7 +49,7 @@ const AsaasIntegrationCard: React.FC<AsaasIntegrationCardProps> = ({
             </p>
           </div>
           <Switch
-            checked={formState.isEnabled}
+            checked={Boolean(formState.isEnabled)}
             onCheckedChange={handleToggleEnable}
             disabled={loading}
             data-testid="asaas-integration-toggle"
@@ -66,7 +66,7 @@ const AsaasIntegrationCard: React.FC<AsaasIntegrationCardProps> = ({
             </p>
           </div>
           <Switch
-            checked={formState.sandboxMode}
+            checked={Boolean(formState.sandboxMode)}
             onCheckedChange={handleToggleSandboxMode}
             disabled={loading || !formState.isEnabled}
           />

@@ -32,6 +32,7 @@ export const validateCardStatus = (status?: string): ManualCardStatus => {
 
 /**
  * Validate boolean value with strict conversion
+ * This is essential for proper toggling functionality
  */
 export const validateBoolean = (value: any): boolean => {
   logger.log('Validating boolean value:', value, 'type:', typeof value);
@@ -40,11 +41,11 @@ export const validateBoolean = (value: any): boolean => {
     return value;
   }
   
-  if (value === 'true') {
+  if (value === 'true' || value === true) {
     return true;
   }
   
-  if (value === 'false') {
+  if (value === 'false' || value === false) {
     return false;
   }
   
@@ -52,7 +53,7 @@ export const validateBoolean = (value: any): boolean => {
     return true;
   }
   
-  if (value === 0 || value === '0') {
+  if (value === 0 || value === '0' || value === null || value === undefined) {
     return false;
   }
   

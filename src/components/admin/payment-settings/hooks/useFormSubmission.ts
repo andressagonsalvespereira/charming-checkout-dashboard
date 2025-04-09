@@ -26,6 +26,7 @@ export const useFormSubmission = (
     try {
       logger.log('Submitting form with values:', {
         isEnabled: data.isEnabled,
+        sandboxMode: data.sandboxMode,
         sandboxApiKey: data.sandboxApiKey ? '[PRESENT]' : '[EMPTY]',
         productionApiKey: data.productionApiKey ? '[PRESENT]' : '[EMPTY]'
       });
@@ -35,6 +36,7 @@ export const useFormSubmission = (
       
       logger.log('Saving payment settings:', {
         isEnabled: settingsToUpdate.isEnabled,
+        sandboxMode: settingsToUpdate.sandboxMode,
         apiKey: settingsToUpdate.apiKey ? '[PRESENT]' : '[EMPTY]',
         sandboxApiKey: settingsToUpdate.sandboxApiKey ? '[PRESENT]' : '[EMPTY]',
         productionApiKey: settingsToUpdate.productionApiKey ? '[PRESENT]' : '[EMPTY]'
@@ -54,6 +56,7 @@ export const useFormSubmission = (
         
         logger.log('Settings fetched after save:', {
           isEnabled: updatedSettings.isEnabled,
+          sandboxMode: updatedSettings.sandboxMode,
           sandboxApiKey: updatedSettings.sandboxApiKey ? '[PRESENT]' : '[EMPTY]',
           productionApiKey: updatedSettings.productionApiKey ? '[PRESENT]' : '[EMPTY]'
         });
