@@ -10,7 +10,7 @@ import { useCardPayment } from '@/hooks/payment/useCardPayment';
 import { PaymentResult } from '@/types/payment';
 import { logger } from '@/utils/logger';
 import { AsaasSettings, ManualCardStatus } from '@/types/asaas';
-import { isRejectedStatus } from '@/contexts/order/utils/resolveManualStatus';
+import { isRejectedStatus, resolveManualStatus } from '@/contexts/order/utils/resolveManualStatus';
 
 interface CheckoutFormProps {
   onSubmit: (data: PaymentResult) => Promise<any>;
@@ -56,13 +56,13 @@ const CheckoutForm = ({
         isSandbox,
         useCustomProcessing,
         manualCardStatus,
-        isStatusRejected: manualCardStatus ? isRejectedStatus(manualCardStatus) : false
+        isStatusRejected: manualCardStatus ? isRejectedStatus(resolveManualStatus(manualCardStatus)) : false
       });
       
       const result = await handleSubmit(cardData);
       
       // Check if payment was rejected
-      if (result.status === 'REJECTED' || isRejectedStatus(result.status)) {
+      if (result.status === 'REJECTED' || (result.status && isRejectedStatus(resolveManualStatus(result.status)))) {
         logger.log("Payment was rejected:", result);
         toast({
           title: "Payment Declined",

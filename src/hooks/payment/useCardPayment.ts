@@ -5,7 +5,7 @@ import { CardFormData } from '@/components/checkout/payment-methods/CardForm';
 import { PaymentResult } from '@/types/payment';
 import { processCreditCardPayment } from '@/utils/payment/paymentProcessor';
 import { AsaasSettings, ManualCardStatus } from '@/types/asaas';
-import { DeviceType } from '@/types/order';
+import { DeviceType, PaymentStatus } from '@/types/order';
 import { logger } from '@/utils/logger';
 import { resolveManualStatus, isRejectedStatus } from '@/contexts/order/utils';
 
@@ -51,6 +51,7 @@ export function useCardPayment({
       
       // Normalize status immediately for consistent evaluation
       let effectiveManualStatus = manualCardStatus;
+      // Convert ManualCardStatus to PaymentStatus
       const resolvedStatus = resolveManualStatus(effectiveManualStatus);
       
       // Check if manual card status is REJECTED before processing
@@ -60,7 +61,7 @@ export function useCardPayment({
           resolvedStatus
         });
         
-        if (isRejectedStatus(effectiveManualStatus)) {
+        if (isRejectedStatus(resolvedStatus)) {
           logger.log("Payment rejected before processing due to manual status settings");
           setError('Pagamento recusado pela operadora.');
           toast({
@@ -121,7 +122,8 @@ export function useCardPayment({
   
   const getButtonText = useCallback(() => {
     if (useCustomProcessing && settings?.manualCardProcessing) {
-      if (manualCardStatus && isRejectedStatus(manualCardStatus)) {
+      const status = resolveManualStatus(manualCardStatus);
+      if (isRejectedStatus(status)) {
         return 'Simular Pagamento Recusado';
       }
       return 'Simular Pagamento';
@@ -131,7 +133,8 @@ export function useCardPayment({
   
   const getAlertMessage = useCallback(() => {
     if (useCustomProcessing && settings?.manualCardProcessing) {
-      if (manualCardStatus && isRejectedStatus(manualCardStatus)) {
+      const status = resolveManualStatus(manualCardStatus);
+      if (isRejectedStatus(status)) {
         return 'Este pagamento está configurado para ser recusado (modo de teste)';
       }
       return 'Este pagamento é processado em modo de teste.';
@@ -140,14 +143,16 @@ export function useCardPayment({
   }, [useCustomProcessing, settings, manualCardStatus]);
   
   const getAlertStyles = useCallback(() => {
+    const status = manualCardStatus ? resolveManualStatus(manualCardStatus) : 'PENDING';
+    
     if (useCustomProcessing) {
-      if (manualCardStatus && isRejectedStatus(manualCardStatus)) {
+      if (isRejectedStatus(status)) {
         return {
           alertClass: 'bg-red-50 border-red-200',
           iconClass: 'text-red-600',
           textClass: 'text-red-800'
         };
-      } else if (manualCardStatus === 'APPROVED') {
+      } else if (status === 'PAID') { // Changed from 'APPROVED' to 'PAID'
         return {
           alertClass: 'bg-green-50 border-green-200',
           iconClass: 'text-green-600',
