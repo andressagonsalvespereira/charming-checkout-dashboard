@@ -5,7 +5,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormDescription } from '@/
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Check, AlertTriangle, Clock, Settings, CreditCard } from 'lucide-react';
+import { Check, AlertTriangle, Clock, CreditCard } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 import { logger } from '@/utils/logger';
 import { Switch } from '@/components/ui/switch';
@@ -27,11 +27,11 @@ const ManualPaymentSettingsPanel: React.FC<ManualPaymentSettingsPanelProps> = ({
       <Card className="mb-6">
         <CardHeader>
           <div className="flex items-center space-x-2">
-            <Settings className="h-5 w-5 text-primary" />
-            <CardTitle>Configurações de Pagamento Manual</CardTitle>
+            <CreditCard className="h-5 w-5 text-primary" />
+            <CardTitle>Configurações de Pagamento com Cartão</CardTitle>
           </div>
           <CardDescription>
-            Configure as opções de processamento manual de pagamentos
+            Configure as opções de processamento de pagamentos com cartão de crédito
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -61,13 +61,13 @@ const ManualPaymentSettingsPanel: React.FC<ManualPaymentSettingsPanelProps> = ({
           
           <FormField
             control={form.control}
-            name="manualPixPage"
+            name="allowCreditCard"
             render={({ field }) => (
               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
-                  <FormLabel className="text-base">Página de PIX Manual</FormLabel>
+                  <FormLabel className="text-base">Habilitar Pagamentos com Cartão</FormLabel>
                   <FormDescription>
-                    Exibe uma página simplificada para pagamentos PIX
+                    Permitir que clientes paguem usando cartão de crédito
                   </FormDescription>
                 </div>
                 <FormControl>

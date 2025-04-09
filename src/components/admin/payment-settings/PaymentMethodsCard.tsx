@@ -5,7 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CreditCard, QrCode, AlertCircle as AlertCircleIcon } from 'lucide-react';
+import { QrCode, AlertCircle as AlertCircleIcon } from 'lucide-react';
 import { AsaasSettings } from '@/types/asaas';
 
 interface PaymentMethodsCardProps {
@@ -24,9 +24,9 @@ const PaymentMethodsCard: React.FC<PaymentMethodsCardProps> = ({
   return (
     <Card className="shadow-sm">
       <CardHeader>
-        <CardTitle>Métodos de Pagamento</CardTitle>
+        <CardTitle>Configurações de PIX (Asaas)</CardTitle>
         <CardDescription>
-          Configure quais métodos de pagamento estão disponíveis no seu checkout
+          Configure as opções de pagamento PIX através da integração com Asaas
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -34,7 +34,7 @@ const PaymentMethodsCard: React.FC<PaymentMethodsCardProps> = ({
           <Alert variant="warning" className="bg-amber-50 border-amber-200">
             <AlertCircleIcon className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-amber-800">
-              Ative a integração com o Asaas ou as configurações manuais para ativar os métodos de pagamento.
+              Ative a integração com o Asaas para configurar pagamentos com PIX.
             </AlertDescription>
           </Alert>
         )}
@@ -83,66 +83,12 @@ const PaymentMethodsCard: React.FC<PaymentMethodsCardProps> = ({
           </div>
         )}
         
-        <div className="flex items-start space-x-3">
-          <Checkbox
-            id="credit-card"
-            checked={formState.allowCreditCard}
-            onCheckedChange={(checked) => 
-              onUpdateFormState(prev => ({ ...prev, allowCreditCard: !!checked }))
-            }
-            disabled={loading || !isPaymentConfigEnabled}
-          />
-          <div className="grid gap-1.5">
-            <Label
-              htmlFor="credit-card"
-              className="text-base font-medium leading-none flex items-center"
-            >
-              <CreditCard className="mr-2 h-4 w-4 text-blue-600" />
-              Pagamentos via Cartão de Crédito
-            </Label>
-            <p className="text-sm text-muted-foreground">
-              Permitir que os clientes paguem usando cartões de crédito
-            </p>
-          </div>
-        </div>
-        
-        {/* Manual Card Processing Option */}
-        {formState.allowCreditCard && (
-          <div className="mt-4 pl-8 border-l-2 border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label className="text-base">Processamento Manual de Cartão</Label>
-                <p className="text-sm text-muted-foreground">
-                  Ativar revisão manual de pagamentos com cartão de crédito em vez de processamento automático
-                </p>
-              </div>
-              <Switch
-                checked={formState.manualCardProcessing}
-                onCheckedChange={(checked) => 
-                  onUpdateFormState(prev => ({ ...prev, manualCardProcessing: checked }))
-                }
-                disabled={loading || !isPaymentConfigEnabled || !formState.allowCreditCard}
-              />
-            </div>
-            
-            {formState.manualCardProcessing && (
-              <Alert variant="warning" className="mt-2 bg-amber-50 border-amber-200">
-                <AlertCircleIcon className="h-4 w-4 text-amber-600" />
-                <AlertDescription className="text-amber-800">
-                  Com o processamento manual ativado, os pagamentos com cartão não serão processados automaticamente. 
-                  Em vez disso, os clientes serão redirecionados para uma página de revisão manual.
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
-        )}
-        
-        {(!formState.allowPix && !formState.allowCreditCard && isPaymentConfigEnabled) && (
+        {(!formState.allowPix && isPaymentConfigEnabled) && (
           <Alert variant="destructive">
             <AlertCircleIcon className="h-4 w-4" />
             <AlertTitle>Aviso</AlertTitle>
             <AlertDescription>
-              Pelo menos um método de pagamento deve estar habilitado para que o checkout funcione.
+              Se o PIX não estiver habilitado, os clientes só poderão pagar usando cartão de crédito.
             </AlertDescription>
           </Alert>
         )}
