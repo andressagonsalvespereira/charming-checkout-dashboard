@@ -1,6 +1,6 @@
 
 import React from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import AdminLayout from '@/components/layout/AdminLayout';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useOrdersAdminPage } from '@/hooks/useOrdersAdminPage';
 
@@ -38,14 +38,14 @@ const Orders = () => {
   // Early return for loading state
   if (loading) {
     return (
-      <DashboardLayout>
+      <AdminLayout>
         <OrdersLoading />
-      </DashboardLayout>
+      </AdminLayout>
     );
   }
 
   return (
-    <DashboardLayout>
+    <AdminLayout>
       <OrdersHeader 
         onRefresh={handleRefreshOrders} 
         isRefreshing={isRefreshing} 
@@ -81,7 +81,7 @@ const Orders = () => {
         onConfirm={confirmDeleteAllOrders}
         paymentMethod={paymentMethodToDelete}
       />
-    </DashboardLayout>
+    </AdminLayout>
   );
 };
 
