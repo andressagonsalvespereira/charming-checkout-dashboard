@@ -12,7 +12,7 @@ import { logger } from '@/utils/logger';
  */
 export const useSettingsLoader = (
   form: UseFormReturn<PaymentSettingsFormValues>,
-  setFormState: (state: AsaasSettings) => void
+  updateFormState: (updater: (prev: AsaasSettings) => AsaasSettings) => void
 ) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,7 @@ export const useSettingsLoader = (
         
         const formValues = asaasSettingsToFormValues(settings);
         form.reset(formValues);
-        setFormState(settings);
+        updateFormState(() => settings);
       } catch (error) {
         console.error('Error loading settings:', error);
         toast({
@@ -44,7 +44,7 @@ export const useSettingsLoader = (
     };
 
     loadSettings();
-  }, [form, toast, setFormState]);
+  }, [form, toast, updateFormState]);
 
   return { loading };
 };

@@ -10,7 +10,7 @@ import { logger } from '@/utils/logger';
  */
 export const useFormWatcher = (
   form: UseFormReturn<PaymentSettingsFormValues>,
-  setFormState: (state: AsaasSettings) => void
+  updateFormState: (updater: (prev: AsaasSettings) => AsaasSettings) => void
 ) => {
   // Update formState when the form values change
   useEffect(() => {
@@ -24,9 +24,9 @@ export const useFormWatcher = (
         logger.log('Manual card status updated in form:', value.manualCardStatus);
       }
       
-      setFormState(formValuesToAsaasSettings(value as PaymentSettingsFormValues));
+      updateFormState(() => formValuesToAsaasSettings(value as PaymentSettingsFormValues));
     });
     
     return () => subscription.unsubscribe();
-  }, [form, setFormState]);
+  }, [form, updateFormState]);
 };

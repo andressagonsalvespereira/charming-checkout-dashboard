@@ -16,7 +16,7 @@ import { logger } from '@/utils/logger';
  */
 export const useFormSubmission = (
   form: UseFormReturn<PaymentSettingsFormValues>,
-  setFormState: (state: AsaasSettings) => void
+  updateFormState: (updater: (prev: AsaasSettings) => AsaasSettings) => void
 ) => {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
@@ -56,11 +56,15 @@ export const useFormSubmission = (
         // Explicitly preserve the manualCardStatus that was just saved
         if (updatedSettings.manualCardStatus !== data.manualCardStatus) {
           logger.warn(`Manual card status changed from ${data.manualCardStatus} to ${updatedSettings.manualCardStatus} during reload. Restoring original value.`);
-          updatedSettings.manualCardStatus = data.manualCardStatus;
+          updateFormState(prev => ({
+            ...updatedSettings,
+            manualCardStatus: data.manualCardStatus
+          }));
+        } else {
+          updateFormState(() => updatedSettings);
         }
         
         form.reset(asaasSettingsToFormValues(updatedSettings));
-        setFormState(updatedSettings);
       } else {
         throw new Error("Failed to save settings");
       }
