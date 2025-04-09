@@ -10,72 +10,14 @@ interface UseProductOperationsProps {
   isOffline: boolean;
 }
 
-// Mock API functions until we implement the real ones
-const adicionarProdutoAPI = async (productData: CriarProdutoInput): Promise<Product> => {
-  // This would be an actual API call in production
-  console.log('Adding product via API:', productData);
-  return {
-    id: Math.floor(Math.random() * 1000),
-    name: productData.nome,
-    nome: productData.nome,
-    slug: slugify(productData.nome),
-    description: productData.descricao,
-    descricao: productData.descricao,
-    price: productData.preco,
-    preco: productData.preco,
-    image_url: productData.urlImagem,
-    urlImagem: productData.urlImagem,
-    is_digital: productData.digital,
-    digital: productData.digital,
-    override_global_status: productData.usarProcessamentoPersonalizado,
-    usarProcessamentoPersonalizado: productData.usarProcessamentoPersonalizado,
-    custom_manual_status: productData.statusCartaoManual,
-    statusCartaoManual: productData.statusCartaoManual,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
-};
-
-const editarProdutoAPI = async (id: number | string, productData: Partial<Product>): Promise<Product> => {
-  // This would be an actual API call in production
-  console.log('Editing product via API:', id, productData);
-  return {
-    id,
-    name: productData.nome || productData.name || '',
-    nome: productData.nome || productData.name || '',
-    slug: productData.slug || '',
-    description: productData.descricao || productData.description || '',
-    descricao: productData.descricao || productData.description || '',
-    price: productData.preco || productData.price || 0,
-    preco: productData.preco || productData.price || 0,
-    image_url: productData.urlImagem || productData.image_url || '',
-    urlImagem: productData.urlImagem || productData.image_url || '',
-    is_digital: productData.digital || productData.is_digital || false,
-    digital: productData.digital || productData.is_digital || false,
-    override_global_status: productData.usarProcessamentoPersonalizado || productData.override_global_status || false,
-    usarProcessamentoPersonalizado: productData.usarProcessamentoPersonalizado || productData.override_global_status || false,
-    custom_manual_status: productData.statusCartaoManual || productData.custom_manual_status || '',
-    statusCartaoManual: productData.statusCartaoManual || productData.custom_manual_status || '',
-    updated_at: new Date().toISOString()
-  };
-};
-
-const removerProdutoAPI = async (id: number | string): Promise<void> => {
-  // This would be an actual API call in production
-  console.log('Removing product via API:', id);
-};
-
-const obterProdutoPorIdAPI = async (id: number | string): Promise<Product | undefined> => {
-  // This would be an actual API call in production
-  console.log('Getting product by ID via API:', id);
-  return undefined; // In a real implementation, we'd return the product if found
-};
-
-const obterProdutoPorSlugAPI = async (slug: string): Promise<Product | undefined> => {
-  // This would be an actual API call in production
-  console.log('Getting product by slug via API:', slug);
-  return undefined; // In a real implementation, we'd return the product if found
-};
+// Import the APIs
+import { 
+  createProduct, 
+  updateProduct, 
+  deleteProduct, 
+  fetchProductById, 
+  fetchProductBySlug 
+} from '../api';
 
 export const useProductOperations = ({
   products,
@@ -92,7 +34,7 @@ export const useProductOperations = ({
       }
       
       // Add the product using the API
-      const newProduct = await adicionarProdutoAPI(productData);
+      const newProduct = await createProduct(productData);
       
       // Update the local product list
       setProducts(prevProducts => [newProduct, ...prevProducts]);
@@ -113,7 +55,7 @@ export const useProductOperations = ({
       }
       
       // Edit the product using the API
-      const updatedProduct = await editarProdutoAPI(id, productData);
+      const updatedProduct = await updateProduct(Number(id), productData);
       
       // Update the local product list
       setProducts(prevProducts => 
@@ -136,7 +78,7 @@ export const useProductOperations = ({
       }
       
       // Remove the product using the API
-      await removerProdutoAPI(id);
+      await deleteProduct(Number(id));
       
       // Update the local product list
       setProducts(prevProducts => prevProducts.filter(p => String(p.id) !== String(id)));
@@ -147,7 +89,7 @@ export const useProductOperations = ({
   }, [setProducts, isOffline]);
   
   // Get a product by ID
-  const getProductById = useCallback(async (id: number | string): Promise<Product | undefined> => {
+  const getProductById = useCallback(async (id: number | string): Promise<Product | null> => {
     try {
       console.log('getProductById called with ID:', id);
       
@@ -161,23 +103,20 @@ export const useProductOperations = ({
       // If not in cache and offline, we can't fetch from server
       if (isOffline) {
         console.warn('Offline: Could not find product with ID', id);
-        return undefined;
+        return null;
       }
       
       // Fetch from server
       console.log('Fetching product from server by ID:', id);
-      const product = await obterProdutoPorIdAPI(id);
-      console.log('Server response for ID search:', product);
-      
-      return product;
+      return await fetchProductById(id);
     } catch (error) {
       console.error('Error getting product by ID:', error);
-      return undefined;
+      return null;
     }
   }, [products, isOffline]);
   
   // Get a product by slug
-  const getProductBySlug = useCallback(async (slug: string): Promise<Product | undefined> => {
+  const getProductBySlug = useCallback(async (slug: string): Promise<Product | null> => {
     try {
       console.log('getProductBySlug called with slug:', slug);
       
@@ -191,13 +130,12 @@ export const useProductOperations = ({
       // If not in cache and offline, we can't fetch from server
       if (isOffline) {
         console.warn('Offline: Could not find product with slug', slug);
-        return undefined;
+        return null;
       }
       
       // Fetch from server
       console.log('Fetching product from server by slug:', slug);
-      const product = await obterProdutoPorSlugAPI(slug);
-      console.log('Server response for slug search:', product);
+      const product = await fetchProductBySlug(slug);
       
       if (product) {
         // Add to cache for future lookups
@@ -214,7 +152,7 @@ export const useProductOperations = ({
       return product;
     } catch (error) {
       console.error('Error getting product by slug:', error);
-      return undefined;
+      return null;
     }
   }, [products, isOffline, setProducts]);
   
