@@ -21,7 +21,7 @@ export const ProductProvider: React.FC<ProductProviderProps> = ({ children }) =>
     retryFetchProducts
   } = useProductFetching();
 
-  // Memoizar as props para o hook useProductOperations
+  // Memoize the props for the useProductOperations hook
   const productOperationsProps = useMemo(() => ({
     products,
     setProducts,
@@ -36,19 +36,17 @@ export const ProductProvider: React.FC<ProductProviderProps> = ({ children }) =>
     getProductBySlug
   } = useProductOperations(productOperationsProps);
 
-  // Memoizar o valor do contexto para evitar re-renderizações desnecessárias
+  // Memoize the context value to avoid unnecessary re-renders
   const contextValue = useMemo(() => ({
     products, 
     loading, 
     error, 
     addProduct, 
-    editProduct, 
-    removeProduct,
+    updateProduct: editProduct, 
+    deleteProduct: removeProduct,
     getProductById,
     getProductBySlug,
     refreshProducts: retryFetchProducts,
-    updateProduct: editProduct,
-    deleteProduct: removeProduct,
     retryFetchProducts,
     isOffline
   }), [

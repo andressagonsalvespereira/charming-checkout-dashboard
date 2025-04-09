@@ -1,6 +1,6 @@
 
 export interface Product {
-  id: number;
+  id: number | string;
   name: string;
   nome?: string; // Legacy compatibility
   slug: string;

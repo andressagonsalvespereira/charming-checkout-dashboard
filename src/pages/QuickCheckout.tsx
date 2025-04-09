@@ -18,6 +18,15 @@ import { useProducts } from '@/contexts/product/useProducts';
 import { useToast } from '@/hooks/use-toast';
 import CheckoutProgress from '@/components/checkout/CheckoutProgress';
 import { ManualCardStatus } from '@/types/asaas';
+import { CustomerInfo } from '@/hooks/checkout/useCustomerInfo';
+
+// Quick adapter to convert CustomerInfo to CustomerData expected by PixPayment
+interface CustomerData {
+  name: string;
+  email: string;
+  phone: string;
+  document: string;
+}
 
 const QuickCheckout = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -26,14 +35,14 @@ const QuickCheckout = () => {
   const location = useLocation();
   const { toast } = useToast();
   
-  console.log(`QuickCheckout - Rota atual: ${location.pathname}`);
-  console.log(`QuickCheckout - Iniciando com productId: ${productId}`);
-  console.log('QuickCheckout - Produtos disponíveis:', products);
+  console.log(`QuickCheckout - Current route: ${location.pathname}`);
+  console.log(`QuickCheckout - Starting with productId: ${productId}`);
+  console.log('QuickCheckout - Available products:', products);
   
   // Display products slugs for debugging
   useEffect(() => {
     if (products && products.length > 0) {
-      console.log('QuickCheckout - Slugs dos produtos disponíveis:');
+      console.log('QuickCheckout - Available product slugs:');
       products.forEach(p => console.log(`- ${p.slug} (ID: ${p.id})`));
     }
   }, [products]);
@@ -46,14 +55,14 @@ const QuickCheckout = () => {
   } = useProductCheckout(productId);
   
   useEffect(() => {
-    console.log('QuickCheckout - Status do carregamento:', loading);
-    console.log('QuickCheckout - Produto encontrado:', product);
-    console.log('QuickCheckout - Produto não encontrado:', productNotFound);
+    console.log('QuickCheckout - Loading status:', loading);
+    console.log('QuickCheckout - Product found:', product);
+    console.log('QuickCheckout - Product not found:', productNotFound);
     
     if (productNotFound) {
       toast({
-        title: "Produto não encontrado",
-        description: `Não foi possível encontrar o produto com o identificador "${productId}".`,
+        title: "Product not found",
+        description: `Could not find product with identifier "${productId}".`,
         variant: "destructive",
       });
     }
@@ -74,14 +83,14 @@ const QuickCheckout = () => {
       <CheckoutContainer>
         <div className="flex justify-center items-center min-h-[300px]">
           <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-          <span className="ml-2">Carregando dados do produto...</span>
+          <span className="ml-2">Loading product data...</span>
         </div>
       </CheckoutContainer>
     );
   }
   
   if (!product || productNotFound) {
-    console.log(`QuickCheckout - Exibindo tela de produto não encontrado para slug: ${productId}`);
+    console.log(`QuickCheckout - Showing product not found screen for slug: ${productId}`);
     return (
       <CheckoutContainer>
         <ProductNotFound slug={productId} />
@@ -92,11 +101,19 @@ const QuickCheckout = () => {
   // Make sure we're using the correct limited set of payment methods
   const safePaymentMethod = paymentMethod === 'PIX' ? 'PIX' : 'CREDIT_CARD';
   
+  // Convert CustomerInfo to CustomerData for PixPayment component
+  const customerData: CustomerData = {
+    name: customerDetails.name,
+    email: customerDetails.email, 
+    phone: customerDetails.phone || '',
+    document: customerDetails.document
+  };
+  
   return (
     <CheckoutContainer>
       <Card className="mb-6 shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle>Checkout Rápido</CardTitle>
+          <CardTitle>Quick Checkout</CardTitle>
         </CardHeader>
         <CardContent>
           {product && <ProductSummary product={product} />}
@@ -110,7 +127,7 @@ const QuickCheckout = () => {
           ) : !isOrderSubmitted ? (
             <div className="space-y-4">
               <div className="border-t border-gray-200 pt-4">
-                <h3 className="font-semibold mb-3">Forma de Pagamento</h3>
+                <h3 className="font-semibold mb-3">Payment Method</h3>
                 
                 <PaymentMethodSelector 
                   paymentMethod={safePaymentMethod}
@@ -122,9 +139,9 @@ const QuickCheckout = () => {
                   <CheckoutForm 
                     onSubmit={handlePaymentSubmit} 
                     isSandbox={settings.sandboxMode}
-                    isDigitalProduct={product.digital}
-                    useCustomProcessing={product.usarProcessamentoPersonalizado}
-                    manualCardStatus={product.statusCartaoManual as ManualCardStatus}
+                    isDigitalProduct={Boolean(product.digital || product.is_digital)}
+                    useCustomProcessing={Boolean(product.usarProcessamentoPersonalizado || product.override_global_status)}
+                    manualCardStatus={(product.statusCartaoManual || product.custom_manual_status) as ManualCardStatus}
                   />
                 )}
                 
@@ -132,8 +149,8 @@ const QuickCheckout = () => {
                   <PixPayment 
                     onSubmit={handlePaymentSubmit}
                     isSandbox={settings.sandboxMode}
-                    isDigitalProduct={product.digital}
-                    customerData={customerDetails}
+                    isDigitalProduct={Boolean(product.digital || product.is_digital)}
+                    customerData={customerData}
                   />
                 )}
               </div>

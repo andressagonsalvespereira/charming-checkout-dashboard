@@ -8,10 +8,10 @@ import { useProductPagination } from './useProductPagination';
 import { useProductOperations } from './useProductOperations';
 
 export const useGerenciamentoProdutos = () => {
-  // Ref para controlar se o componente já foi montado
+  // Ref to check if component has been mounted
   const isMountedRef = useRef(false);
   
-  // Obtém os produtos e estado do contexto
+  // Get products and state from context
   const { 
     products: produtos, 
     loading: carregando, 
@@ -19,15 +19,15 @@ export const useGerenciamentoProdutos = () => {
     isOffline: estaOffline
   } = useProducts();
 
-  // Hooks especializados
+  // Specialized hooks
   const { 
-    dadosFormulario, 
-    definirDadosFormulario, 
-    redefinirFormulario,
-    manipularMudancaInput,
-    manipularMudancaSwitch,
-    manipularMudancaProcessamentoPersonalizado,
-    manipularMudancaStatusCartaoManual
+    formData: dadosFormulario, 
+    setFormData: definirDadosFormulario, 
+    resetForm: redefinirFormulario,
+    handleInputChange: manipularMudancaInput,
+    handleSwitchChange: manipularMudancaSwitch,
+    handleUseCustomProcessingChange: manipularMudancaProcessamentoPersonalizado,
+    handleManualCardStatusChange: manipularMudancaStatusCartaoManual
   } = useProductForm();
 
   const {
@@ -56,39 +56,39 @@ export const useGerenciamentoProdutos = () => {
     atualizarProdutos
   } = useProductOperations();
 
-  // Log de debug para monitorar montagem/desmontagem
+  // Debug log to monitor mounting/unmounting
   useEffect(() => {
-    console.log('Hook useGerenciamentoProdutos montado, isMounted:', isMountedRef.current);
+    console.log('Hook useGerenciamentoProdutos mounted, isMounted:', isMountedRef.current);
     isMountedRef.current = true;
     
     return () => {
-      console.log('Hook useGerenciamentoProdutos desmontado');
+      console.log('Hook useGerenciamentoProdutos unmounted');
       isMountedRef.current = false;
     };
   }, []);
 
-  // Lidar com o clique no botão editar
+  // Handle edit button click
   const handleEditarClique = (produto: Product) => {
     definirProdutoEmEdicao(produto);
     definirDadosFormulario({
-      nome: produto.nome,
-      descricao: produto.descricao || '',
-      preco: produto.preco,
-      urlImagem: produto.urlImagem || '',
-      digital: produto.digital,
-      usarProcessamentoPersonalizado: produto.usarProcessamentoPersonalizado || false,
-      statusCartaoManual: produto.statusCartaoManual || 'ANALISE'
+      nome: produto.nome || produto.name || '',
+      descricao: produto.descricao || produto.description || '',
+      preco: produto.preco || produto.price || 0,
+      urlImagem: produto.urlImagem || produto.image_url || '',
+      digital: produto.digital || Boolean(produto.is_digital) || false,
+      usarProcessamentoPersonalizado: produto.usarProcessamentoPersonalizado || Boolean(produto.override_global_status) || false,
+      statusCartaoManual: produto.statusCartaoManual || produto.custom_manual_status || 'ANALISE'
     });
     definirDialogoEdicaoAberto(true);
   };
 
-  // Lidar com o clique no botão excluir
+  // Handle delete button click
   const handleRemoverClique = (produto: Product) => {
     definirProdutoParaRemover(produto);
     definirDialogoRemocaoAberto(true);
   };
 
-  // Manipuladores para operações CRUD
+  // Handlers for CRUD operations
   const handleAddProduct = async () => {
     const sucesso = await handleAdicionarProduto(dadosFormulario);
     if (sucesso) {
@@ -100,7 +100,7 @@ export const useGerenciamentoProdutos = () => {
   const handleUpdateProduct = async () => {
     if (!produtoEmEdicao) return;
     
-    const sucesso = await handleAtualizarProduto(produtoEmEdicao.id, dadosFormulario);
+    const sucesso = await handleAtualizarProduto(String(produtoEmEdicao.id), dadosFormulario);
     if (sucesso) {
       definirDialogoEdicaoAberto(false);
       definirProdutoEmEdicao(null);
@@ -110,7 +110,7 @@ export const useGerenciamentoProdutos = () => {
   const handleDeleteProduct = async () => {
     if (!produtoParaRemover) return;
     
-    const sucesso = await handleRemoverProduto(produtoParaRemover.id);
+    const sucesso = await handleRemoverProduto(String(produtoParaRemover.id));
     if (sucesso) {
       definirDialogoRemocaoAberto(false);
       definirProdutoParaRemover(null);
@@ -118,13 +118,13 @@ export const useGerenciamentoProdutos = () => {
   };
 
   return {
-    // Estado dos produtos
+    // Product state
     products: produtos,
     loading: carregando,
     error: erro,
     isOffline: estaOffline,
     
-    // Estado do formulário
+    // Form state
     formData: dadosFormulario,
     handleInputChange: manipularMudancaInput,
     handleSwitchChange: manipularMudancaSwitch,
@@ -132,7 +132,7 @@ export const useGerenciamentoProdutos = () => {
     handleManualCardStatusChange: manipularMudancaStatusCartaoManual,
     resetForm: redefinirFormulario,
     
-    // Estado dos diálogos
+    // Dialog state
     isAddDialogOpen: dialogoAdicaoAberto,
     setIsAddDialogOpen: definirDialogoAdicaoAberto,
     isEditDialogOpen: dialogoEdicaoAberto,
@@ -142,7 +142,7 @@ export const useGerenciamentoProdutos = () => {
     editingProduct: produtoEmEdicao,
     productToDelete: produtoParaRemover,
     
-    // Manipuladores de ações
+    // Action handlers
     handleAddProduct,
     handleEditClick: handleEditarClique,
     handleDeleteClick: handleRemoverClique,
@@ -150,12 +150,12 @@ export const useGerenciamentoProdutos = () => {
     handleDeleteProduct,
     refreshProducts: atualizarProdutos,
     
-    // Paginação
+    // Pagination
     currentPage: paginaAtual,
     pageSize: tamanhoPagina,
     handlePageChange: handleMudancaPagina
   };
 };
 
-// Exportando com o nome antigo para manter compatibilidade
+// Export with the old name for compatibility
 export const useProductManagement = useGerenciamentoProdutos;

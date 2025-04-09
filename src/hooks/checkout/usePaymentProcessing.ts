@@ -1,174 +1,201 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { useOrders } from '@/contexts/OrderContext';
-import { usePixel } from '@/contexts/PixelContext';
-import { CustomerInfo, PaymentMethod, PaymentStatus } from '@/types/order';
 import { Product } from '@/types/product';
-import { logger } from '@/utils/logger';
+import { CustomerInfo } from '@/types/order';
+import { createAsaasPayment } from '@/services/asaas/paymentService';
+import { resolveManualPaymentStatus } from '@/contexts/order/utils/resolveManualStatus';
+import { useOrders } from '@/contexts/order/useOrders';
 
-interface PaymentData {
-  status?: PaymentStatus | string;
-  cardNumber?: string;
-  expiryMonth?: string;
-  expiryYear?: string;
-  cvv?: string;
-  brand?: string;
-  qrCodeBase64?: string;
-  qrCodeImage?: string;
-  expirationDate?: string;
-  [key: string]: any;
-}
+type PaymentMethod = 'CREDIT_CARD' | 'PIX';
 
-export const usePaymentProcessing = (
-  product: Product | null,
-  customerDetails: CustomerInfo
-) => {
+export const usePaymentProcessing = (product: Product | null, customerInfo: CustomerInfo) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addOrder } = useOrders();
-  const { trackPurchase } = usePixel();
   
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CREDIT_CARD');
   const [isOrderSubmitted, setIsOrderSubmitted] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   
-  const handlePaymentSubmit = async (paymentData: PaymentData) => {
+  const handleCreditCardPayment = useCallback(async (cardData: any) => {
+    if (!product) {
+      toast({
+        title: "Error",
+        description: "Product information not available",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
-      logger.log("Starting handlePaymentSubmit with data:", {
-        customerDetails,
-        productDetails: product ? {
-          id: product.id,
-          name: product.nome,
-          price: product.preco,
-          isDigital: product.digital,
-          useCustomProcessing: product.usarProcessamentoPersonalizado,
-          manualCardStatus: product.statusCartaoManual
-        } : 'No product available',
-        paymentMethod,
-        paymentStatus: paymentData.status
+      setIsProcessing(true);
+      
+      console.log('Processing credit card payment for product:', product);
+      
+      // Get product properties using both legacy and new property names
+      const productName = product.nome || product.name || '';
+      const productPrice = product.preco || product.price || 0;
+      const isDigital = product.digital || product.is_digital || false;
+      const useCustomProcessing = product.usarProcessamentoPersonalizado || product.override_global_status || false;
+      const manualCardStatus = product.statusCartaoManual || product.custom_manual_status || null;
+      
+      // Create payment with Asaas
+      const paymentResult = await createAsaasPayment({
+        customer: {
+          name: customerInfo.name,
+          email: customerInfo.email,
+          phone: customerInfo.phone || '',
+          cpfCnpj: customerInfo.document
+        },
+        billingType: 'CREDIT_CARD',
+        value: productPrice,
+        creditCard: cardData.creditCard,
+        creditCardHolderInfo: cardData.creditCardHolderInfo,
+        installmentCount: 1,
+        description: `Payment for ${productName}`,
+        overrideGlobalStatus: useCustomProcessing,
+        manualCardStatus: useCustomProcessing ? manualCardStatus : null,
+        deviceType: 'MOBILE'
       });
       
-      if (!product) {
-        logger.error("Trying to submit payment without product data");
-        throw new Error("Dados do produto não disponíveis");
-      }
+      console.log('Payment processed successfully:', paymentResult);
       
-      const orderData = {
-        product: product,
-        customer: customerDetails,
-        payment: {
-          method: paymentMethod,
-          ...paymentData
-        }
-      };
-      
-      logger.log("Submitting order with payment data:", {
-        customerId: customerDetails.name,
-        customerEmail: customerDetails.email,
-        productId: product.id,
-        productName: product.nome,
-        productPrice: product.preco,
-        paymentMethod,
-        cardDetails: paymentData.cardNumber ? {
-          brand: paymentData.brand || 'Desconhecida',
-          last4: paymentData.cardNumber.slice(-4),
-        } : undefined,
-        isDigitalProduct: product.digital,
-        useCustomProcessing: product.usarProcessamentoPersonalizado,
-        manualCardStatus: product.statusCartaoManual,
-        paymentDataStatus: paymentData.status
+      // Create order record in database
+      const order = await addOrder({
+        customerName: customerInfo.name,
+        customerEmail: customerInfo.email,
+        customerPhone: customerInfo.phone || '',
+        customerDocument: customerInfo.document,
+        paymentMethod: 'CREDIT_CARD',
+        productName: productName,
+        productPrice: productPrice,
+        isDigitalProduct: isDigital,
+        useCustomProcessing: useCustomProcessing,
+        manualCardStatus: useCustomProcessing ? manualCardStatus : null,
+        paymentId: paymentResult.id,
+        status: resolveManualPaymentStatus(useCustomProcessing, manualCardStatus),
+        deviceType: 'MOBILE'
       });
       
-      // Normalize the status based on the input
-      let paymentStatus: PaymentStatus;
-      
-      // If the status is coming from paymentData, make sure it's valid
-      if (paymentData.status) {
-        // Normalize various status formats (considering both English and Portuguese)
-        const normalizedStatus = String(paymentData.status).toUpperCase();
-        
-        if (['CONFIRMED', 'APPROVED', 'PAID', 'APROVADO', 'PAGO', 'CONFIRMADO'].includes(normalizedStatus)) {
-          paymentStatus = 'PAID';
-        } else if (['DENIED', 'DECLINED', 'FAILED', 'NEGADO', 'RECUSADO', 'FALHA'].includes(normalizedStatus)) {
-          paymentStatus = 'DENIED';
-        } else if (['ANALYSIS', 'PENDING', 'ANALISE', 'ANÁLISE', 'PENDENTE', 'AGUARDANDO'].includes(normalizedStatus)) {
-          paymentStatus = 'ANALYSIS';
-        } else if (['CANCELLED', 'CANCELED', 'CANCELADO'].includes(normalizedStatus)) {
-          paymentStatus = 'CANCELLED';
-        } else {
-          paymentStatus = 'PENDING'; // Default fallback
-        }
-      } else {
-        paymentStatus = 'PENDING'; // Default when no status is provided
-      }
-      
-      logger.log("Final normalized payment status:", paymentStatus);
-      
-      const newOrder = await addOrder({
-        customer: customerDetails,
-        productId: product.id,
-        productName: product.nome,
-        productPrice: product.preco,
-        paymentMethod: paymentMethod,
-        paymentStatus: paymentStatus,
-        isDigitalProduct: product.digital,
-        cardDetails: paymentData.cardNumber ? {
-          number: paymentData.cardNumber,
-          expiryMonth: paymentData.expiryMonth,
-          expiryYear: paymentData.expiryYear,
-          cvv: paymentData.cvv,
-          brand: paymentData.brand || 'Desconhecida'
-        } : undefined,
-        pixDetails: paymentMethod === 'PIX' ? {
-          qrCode: paymentData.qrCodeBase64,
-          qrCodeImage: paymentData.qrCodeImage,
-          expirationDate: paymentData.expirationDate
-        } : undefined
-      });
-      
-      logger.log("Order successfully created:", newOrder);
+      console.log('Order created successfully:', order);
       
       setIsOrderSubmitted(true);
-      
-      trackPurchase({
-        value: product.preco,
-        transactionId: `order-${newOrder.id}`,
-        products: [{
-          id: product.id,
-          name: product.nome,
-          price: product.preco,
-          quantity: 1
-        }]
-      });
-      
-      if (paymentMethod === 'PIX' || ['PAID', 'APPROVED'].includes(paymentStatus)) {
-        toast({
-          title: "Pedido realizado com sucesso!",
-          description: paymentMethod === 'PIX' 
-            ? "Utilize o QR code PIX para finalizar o pagamento." 
-            : "Seu pagamento foi aprovado.",
-          duration: 5000,
-        });
-      }
-      
-      return newOrder;
-    } catch (error) {
-      logger.error('Erro ao processar pagamento:', error);
       toast({
-        title: "Erro no processamento",
-        description: "Ocorreu um erro ao processar seu pagamento. Tente novamente.",
-        variant: "destructive",
-        duration: 5000,
+        title: "Success",
+        description: "Payment processed successfully",
       });
-      throw error;
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      toast({
+        title: "Payment Error",
+        description: typeof error === 'string' ? error : "Failed to process payment",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
     }
-  };
-
+  }, [product, customerInfo, addOrder, toast]);
+  
+  const handlePixPayment = useCallback(async () => {
+    if (!product) {
+      toast({
+        title: "Error",
+        description: "Product information not available",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setIsProcessing(true);
+      
+      console.log('Processing PIX payment for product:', product);
+      
+      // Get product properties using both legacy and new property names
+      const productName = product.nome || product.name || '';
+      const productPrice = product.preco || product.price || 0;
+      const isDigital = product.digital || product.is_digital || false;
+      
+      // Create payment with Asaas
+      const paymentResult = await createAsaasPayment({
+        customer: {
+          name: customerInfo.name,
+          email: customerInfo.email,
+          phone: customerInfo.phone || '',
+          cpfCnpj: customerInfo.document
+        },
+        billingType: 'PIX',
+        value: productPrice,
+        description: `Payment for ${productName}`,
+        deviceType: 'MOBILE'
+      });
+      
+      console.log('PIX payment created successfully:', paymentResult);
+      
+      // Calculate expiration date (24 hours from now)
+      const expirationDate = new Date();
+      expirationDate.setHours(expirationDate.getHours() + 24);
+      
+      // Create order record in database
+      await addOrder({
+        customerName: customerInfo.name,
+        customerEmail: customerInfo.email,
+        customerPhone: customerInfo.phone || '',
+        customerDocument: customerInfo.document,
+        paymentMethod: 'PIX',
+        productName: productName,
+        productPrice: productPrice,
+        isDigitalProduct: isDigital,
+        paymentId: paymentResult.id,
+        status: 'PENDING',
+        pixCode: paymentResult.encodedImage,
+        pixExpirationDate: expirationDate.toISOString(),
+        deviceType: 'MOBILE'
+      });
+      
+      // Redirect to PIX payment page
+      navigate(`/payment/pix/${paymentResult.id}`, {
+        state: {
+          pixCode: paymentResult.encodedImage,
+          pixKey: paymentResult.payload,
+          totalAmount: String(productPrice),
+          productName: productName,
+          expirationDate: expirationDate
+        }
+      });
+    } catch (error) {
+      console.error('Error creating PIX payment:', error);
+      toast({
+        title: "PIX Error",
+        description: typeof error === 'string' ? error : "Failed to create PIX payment",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [product, customerInfo, addOrder, navigate, toast]);
+  
+  const handlePaymentSubmit = useCallback((formData?: any) => {
+    if (paymentMethod === 'CREDIT_CARD' && formData) {
+      handleCreditCardPayment(formData);
+    } else if (paymentMethod === 'PIX') {
+      handlePixPayment();
+    } else {
+      toast({
+        title: "Error",
+        description: "Please select a payment method",
+        variant: "destructive",
+      });
+    }
+  }, [paymentMethod, handleCreditCardPayment, handlePixPayment, toast]);
+  
   return {
     paymentMethod,
     setPaymentMethod,
     isOrderSubmitted,
+    isProcessing,
     handlePaymentSubmit
   };
 };
