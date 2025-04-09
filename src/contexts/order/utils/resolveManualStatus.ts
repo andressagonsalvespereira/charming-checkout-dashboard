@@ -2,9 +2,12 @@
 import { PaymentStatus } from '@/types/order';
 
 export const resolveManualStatus = (
-  useCustomProcessing: boolean | undefined,
-  manualStatus: string | null | undefined
+  input: boolean | string | undefined, 
+  manualStatus?: string | null
 ): PaymentStatus => {
+  // Normalize input to handle different scenarios
+  const useCustomProcessing = typeof input === 'boolean' ? input : !!input;
+
   if (!useCustomProcessing) {
     return 'PENDING';
   }
@@ -15,13 +18,13 @@ export const resolveManualStatus = (
   }
   
   // Normalize status names
-  const normalizedStatus = manualStatus.toUpperCase();
+  const normalizedStatus = String(manualStatus).toUpperCase();
   
   switch (normalizedStatus) {
     case 'APROVADO':
     case 'APPROVED':
     case 'PAID':
-      return 'APPROVED';
+      return 'PAID';
     case 'NEGADO':
     case 'DENIED':
     case 'REJECTED':
@@ -39,4 +42,20 @@ export const resolveManualStatus = (
     default:
       return 'PENDING';
   }
+};
+
+export const isRejectedStatus = (status: string | undefined | null): boolean => {
+  if (!status) return false;
+  
+  const normalizedStatus = String(status).toUpperCase();
+  const rejectedStatuses = [
+    'NEGADO', 
+    'DENIED', 
+    'REJECTED', 
+    'CANCEL', 
+    'CANCELADO', 
+    'FAILED'
+  ];
+  
+  return rejectedStatuses.includes(normalizedStatus);
 };
