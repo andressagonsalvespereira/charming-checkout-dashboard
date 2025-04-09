@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -14,7 +13,7 @@ import { useAsaas } from '@/contexts/asaas';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AsaasSettings } from '@/types/asaas';
+import type { AsaasSettings as AsaasSettingsType } from '@/types/asaas';
 
 // Define the form schema using Zod
 const asaasSettingsSchema = z.object({
@@ -95,13 +94,22 @@ const AsaasSettings = () => {
         return;
       }
 
-      // Save settings with required sandboxMode
+      // Save settings with required fields
       await saveSettings({
-        ...data,
-        // When in sandbox mode, use sandboxApiKey as the main apiKey
+        // Required fields in AsaasSettings
+        isEnabled: data.isEnabled,
         apiKey: data.sandboxMode ? data.sandboxApiKey : data.productionApiKey,
-        // Ensure sandboxMode is always defined as required by AsaasSettings type
+        allowCreditCard: data.allowCreditCard,
+        allowPix: data.allowPix,
         sandboxMode: data.sandboxMode,
+        manualCardStatus: data.manualCardStatus,
+        // Optional fields
+        manualCreditCard: data.manualCreditCard,
+        sandboxApiKey: data.sandboxApiKey,
+        productionApiKey: data.productionApiKey,
+        manualCardProcessing: data.manualCardProcessing,
+        manualPixPage: data.manualPixPage,
+        manualPaymentConfig: data.manualPaymentConfig,
       });
 
       toast({

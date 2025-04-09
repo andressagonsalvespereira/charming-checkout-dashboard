@@ -8,7 +8,11 @@ import { logger } from '@/utils/logger';
  * @returns Valid ManualCardStatus or 'ANALYSIS' as fallback
  */
 export const validateCardStatus = (status: string | null): ManualCardStatus => {
-  const validStatuses: ManualCardStatus[] = ['APPROVED', 'PENDING', 'CONFIRMED', 'DECLINED', 'REJECTED', 'ANALYSIS', 'DENIED'];
+  const validStatuses: ManualCardStatus[] = [
+    'APPROVED', 'PENDING', 'CONFIRMED', 'DECLINED', 
+    'REJECTED', 'ANALYSIS', 'DENIED', 'CANCELLED',
+    'FAILED', 'RECEIVED'
+  ];
   
   logger.log('Validating card status:', status);
   

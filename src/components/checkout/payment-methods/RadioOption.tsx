@@ -12,6 +12,10 @@ interface RadioOptionProps {
   selected: boolean;
   disabled?: boolean;
   loading?: boolean;
+  // Add these props to match usage in PaymentOptions.tsx
+  id?: string;
+  value?: string;
+  iconColor?: string;
 }
 
 const RadioOption: React.FC<RadioOptionProps> = ({ 
@@ -21,7 +25,10 @@ const RadioOption: React.FC<RadioOptionProps> = ({
   onClick, 
   selected, 
   disabled = false,
-  loading = false
+  loading = false,
+  id,
+  value,
+  iconColor
 }) => {
   return (
     <div 
@@ -31,7 +38,7 @@ const RadioOption: React.FC<RadioOptionProps> = ({
       onClick={!disabled ? onClick : undefined}
     >
       <div className="flex-shrink-0">
-        <Icon className={`h-6 w-6 ${selected ? 'text-blue-500' : 'text-gray-500'}`} />
+        <Icon className={`h-6 w-6 ${selected ? 'text-blue-500' : iconColor || 'text-gray-500'}`} />
       </div>
       <div className="flex-1">
         <p className="font-medium">{label}</p>

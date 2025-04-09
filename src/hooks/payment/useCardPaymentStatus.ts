@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { PaymentStatus } from '@/types/order';
 import { AsaasSettings, ManualCardStatus } from '@/types/asaas';
@@ -33,17 +32,23 @@ export function useCardPaymentStatus({
       
       switch (customStatus.toUpperCase()) {
         case 'APPROVED':
+        case 'CONFIRMED':
           setStatus('PAID');
           setStatusMessage('Pagamento aprovado!');
           setConfirmed(true);
           break;
         case 'DECLINED':
         case 'DENIED':
+        case 'REJECTED':
+        case 'CANCELLED':
+        case 'FAILED':
           setStatus('CANCELLED');
           setStatusMessage('Pagamento recusado pela operadora.');
           setConfirmed(false);
           break;
         case 'ANALYSIS':
+        case 'PENDING':
+        case 'RECEIVED':
         default:
           setStatus('PENDING');
           setStatusMessage('Pagamento em análise.');
@@ -77,7 +82,8 @@ export function useCardPaymentStatus({
         iconClass: 'text-green-600',
         textClass: 'text-green-800'
       };
-    } else if (useCustomProcessing && manualCardStatus === 'DECLINED') {
+    } else if (useCustomProcessing && 
+                (manualCardStatus === 'DECLINED' || manualCardStatus === 'REJECTED')) {
       return {
         alertClass: 'bg-red-50 border-red-200',
         iconClass: 'text-red-600',

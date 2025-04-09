@@ -51,7 +51,7 @@ export interface AsaasSettings {
   manualCreditCard?: any;
 }
 
-export type ManualCardStatus = 'APPROVED' | 'PENDING' | 'CONFIRMED' | 'DECLINED' | 'REJECTED' | 'ANALYSIS' | 'DENIED';
+export type ManualCardStatus = 'APPROVED' | 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'ANALYSIS' | 'RECEIVED' | 'CANCELLED' | 'FAILED' | 'DECLINED' | 'DENIED';
 
 export interface AsaasApiResponse<T> {
   data: T | null;

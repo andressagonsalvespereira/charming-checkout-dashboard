@@ -33,8 +33,11 @@ const PaymentOptions: React.FC<PaymentOptionsProps> = ({
         <RadioOption
           id="card"
           value="card"
-          label="Cartão de Crédito"
           Icon={CreditCard}
+          label="Cartão de Crédito"
+          description="Pague com seu cartão de crédito"
+          onClick={() => setPaymentMethod('card')}
+          selected={paymentMethod === 'card'}
           iconColor="text-blue-600"
         />
       )}
@@ -43,8 +46,11 @@ const PaymentOptions: React.FC<PaymentOptionsProps> = ({
         <RadioOption
           id="pix"
           value="pix"
-          label="PIX"
           Icon={QrCode}
+          label="PIX"
+          description="Pague usando seu aplicativo bancário"
+          onClick={() => setPaymentMethod('pix')}
+          selected={paymentMethod === 'pix'}
           iconColor="text-green-600"
         />
       )}

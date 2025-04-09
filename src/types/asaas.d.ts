@@ -8,8 +8,8 @@ export interface AsaasSettings {
   allowPix: boolean;
   manualCreditCard: boolean;
   sandboxMode: boolean;
-  sandboxApiKey: string;
-  productionApiKey: string;
+  sandboxApiKey?: string;
+  productionApiKey?: string;
   manualCardProcessing: boolean;
   manualPixPage: boolean;
   manualPaymentConfig: boolean;
