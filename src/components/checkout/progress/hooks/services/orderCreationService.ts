@@ -62,7 +62,6 @@ export const createOrderService = async ({
     paymentId: paymentId,
     cardDetails,
     pixDetails,
-    orderDate: new Date().toISOString(),
     deviceType,
     isDigitalProduct: productDetails.isDigital
   };

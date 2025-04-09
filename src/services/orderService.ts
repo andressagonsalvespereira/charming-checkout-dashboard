@@ -1,43 +1,12 @@
+
 import { supabase } from '@/lib/supabase';
 import type { Database } from '@/types/supabase';
 import { logger } from '@/utils/logger';
+import { RawOrder, Order, PaymentMethod, PaymentStatus, CustomerInfo, CardDetails, PixDetails } from '@/types/order';
 
-export type Order = Database['public']['Tables']['orders']['Row'];
+export type DBOrder = Database['public']['Tables']['orders']['Row'];
 export type OrderInsert = Database['public']['Tables']['orders']['Insert'];
 export type OrderUpdate = Database['public']['Tables']['orders']['Update'];
-
-export type PaymentMethod = 'CREDIT_CARD' | 'PIX';
-export type PaymentStatus = 'PENDING' | 'PAID' | 'DENIED' | 'ANALYSIS' | 'CANCELLED';
-
-export interface CustomerInfo {
-  name: string;
-  email: string;
-  cpf: string;
-  phone?: string;
-  address?: {
-    street?: string;
-    number?: string;
-    complement?: string;
-    neighborhood?: string;
-    city?: string;
-    state?: string;
-    postalCode?: string;
-  };
-}
-
-export interface CardDetails {
-  number?: string;
-  expiryMonth?: string;
-  expiryYear?: string;
-  cvv?: string;
-  brand?: string;
-}
-
-export interface PixDetails {
-  qrCode?: string;
-  qrCodeImage?: string;
-  expirationDate?: string;
-}
 
 export interface CreateOrderInput {
   customer: CustomerInfo;
@@ -54,7 +23,7 @@ export interface CreateOrderInput {
 }
 
 // Get all orders
-export const getAllOrders = async (): Promise<Order[]> => {
+export const getAllOrders = async (): Promise<RawOrder[]> => {
   try {
     const { data, error } = await supabase
       .from('orders')
@@ -62,7 +31,7 @@ export const getAllOrders = async (): Promise<Order[]> => {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return data as RawOrder[] || [];
   } catch (error) {
     logger.error('Error loading orders:', error);
     throw error;
@@ -70,7 +39,7 @@ export const getAllOrders = async (): Promise<Order[]> => {
 };
 
 // Create a new order
-export const createOrder = async (orderData: CreateOrderInput): Promise<Order> => {
+export const createOrder = async (orderData: CreateOrderInput): Promise<RawOrder> => {
   try {
     const { customer, cardDetails, pixDetails, ...rest } = orderData;
     
@@ -117,11 +86,13 @@ export const createOrder = async (orderData: CreateOrderInput): Promise<Order> =
     if (!data) throw new Error('Failed to create order');
     
     // Add the details back to the returned object for the client
-    return {
+    const returnData = {
       ...data,
-      cardDetails: cardDetails,
-      pixDetails: pixDetails,
-    };
+      card_details: cardDetails,
+      pix_details: pixDetails,
+    } as RawOrder;
+    
+    return returnData;
   } catch (error) {
     logger.error('Error creating order:', error);
     throw error;
@@ -129,7 +100,7 @@ export const createOrder = async (orderData: CreateOrderInput): Promise<Order> =
 };
 
 // Update an order's status
-export const updateOrderStatus = async (orderId: string | number, status: PaymentStatus): Promise<Order> => {
+export const updateOrderStatus = async (orderId: string | number, status: PaymentStatus): Promise<RawOrder> => {
   try {
     const { data, error } = await supabase
       .from('orders')
@@ -144,7 +115,7 @@ export const updateOrderStatus = async (orderId: string | number, status: Paymen
     if (error) throw error;
     if (!data) throw new Error('Failed to update order status');
     
-    return data;
+    return data as RawOrder;
   } catch (error) {
     logger.error('Error updating order status:', error);
     throw error;

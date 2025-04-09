@@ -7,6 +7,7 @@ import {
   deleteOrdersByPaymentMethod as apiDeleteOrdersByPaymentMethod
 } from '@/services/orderService';
 import { logger } from '@/utils/logger';
+import { mapOrderFromSupabase } from './orderMappers';
 
 export const createOrder = async (orderData: any): Promise<Order> => {
   try {
@@ -18,41 +19,12 @@ export const createOrder = async (orderData: any): Promise<Order> => {
     
     const dbOrder = await apiCreateOrder(orderData);
     
-    // Transform the database response to match the Order type structure
-    const order: Order = {
-      id: dbOrder.id,
-      customerName: dbOrder.customer_name,
-      customerEmail: dbOrder.customer_email,
-      customerCpf: dbOrder.customer_cpf,
-      customerPhone: dbOrder.customer_phone || undefined,
-      productId: dbOrder.product_id,
-      productName: dbOrder.product_name,
-      price: dbOrder.price,
-      productPrice: dbOrder.price, // For legacy component compatibility
-      paymentMethod: dbOrder.payment_method as any,
-      paymentStatus: dbOrder.payment_status as PaymentStatus,
-      paymentId: dbOrder.payment_id,
-      creditCardBrand: dbOrder.credit_card_brand,
-      deviceType: dbOrder.device_type as any,
-      isDigitalProduct: dbOrder.is_digital_product,
-      asaasPaymentId: dbOrder.asaas_payment_id,
-      createdAt: dbOrder.created_at,
-      updatedAt: dbOrder.updated_at,
-      orderDate: dbOrder.created_at, // For legacy component compatibility
-      
-      // Add the additional fields from orderData
-      cardDetails: orderData.cardDetails || undefined,
-      pixDetails: orderData.pixDetails || undefined,
-      
-      // Add customer object for legacy components
-      customer: {
-        name: dbOrder.customer_name || orderData.customer?.name,
-        email: dbOrder.customer_email || orderData.customer?.email,
-        cpf: dbOrder.customer_cpf || orderData.customer?.cpf,
-        phone: dbOrder.customer_phone || orderData.customer?.phone,
-        address: orderData.customer?.address
-      }
-    };
+    // Transformar a resposta do banco de dados para corresponder à estrutura do tipo Order
+    const order = mapOrderFromSupabase(dbOrder, {
+      cardDetails: orderData.cardDetails,
+      pixDetails: orderData.pixDetails,
+      customerAddress: orderData.customer?.address
+    });
     
     return order;
   } catch (error) {
@@ -69,36 +41,8 @@ export const updateOrderStatusData = async (
   try {
     const dbOrder = await apiUpdateOrderStatus(id, status);
     
-    // Transform the database response to match the Order type structure
-    const updatedOrder: Order = {
-      id: dbOrder.id,
-      customerName: dbOrder.customer_name,
-      customerEmail: dbOrder.customer_email,
-      customerCpf: dbOrder.customer_cpf,
-      customerPhone: dbOrder.customer_phone || undefined,
-      productId: dbOrder.product_id,
-      productName: dbOrder.product_name,
-      price: dbOrder.price,
-      productPrice: dbOrder.price, // For legacy component compatibility
-      paymentMethod: dbOrder.payment_method as any,
-      paymentStatus: dbOrder.payment_status as PaymentStatus,
-      paymentId: dbOrder.payment_id,
-      creditCardBrand: dbOrder.credit_card_brand,
-      deviceType: dbOrder.device_type as any,
-      isDigitalProduct: dbOrder.is_digital_product,
-      asaasPaymentId: dbOrder.asaas_payment_id,
-      createdAt: dbOrder.created_at,
-      updatedAt: dbOrder.updated_at,
-      orderDate: dbOrder.created_at, // For legacy component compatibility
-      
-      // Add customer object for legacy components
-      customer: {
-        name: dbOrder.customer_name,
-        email: dbOrder.customer_email,
-        cpf: dbOrder.customer_cpf,
-        phone: dbOrder.customer_phone
-      }
-    };
+    // Transformar a resposta do banco de dados para corresponder à estrutura do tipo Order
+    const updatedOrder = mapOrderFromSupabase(dbOrder);
     
     const updatedOrders = orders.map(order => {
       if (String(order.id) === String(id)) {

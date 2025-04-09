@@ -36,6 +36,31 @@ export interface CustomerInfo {
   };
 }
 
+// Tipo que representa os dados conforme retornados do Supabase (snake_case)
+export interface RawOrder {
+  id: number | string;
+  customer_name: string;
+  customer_email: string;
+  customer_cpf: string;
+  customer_phone?: string;
+  product_id?: number;
+  product_name: string;
+  price: number;
+  payment_method: string;
+  payment_status: string;
+  payment_id?: string;
+  credit_card_brand?: string;
+  device_type?: string;
+  is_digital_product?: boolean;
+  asaas_payment_id?: string;
+  created_at: string;
+  updated_at: string;
+  // Campos adicionais que não estão no banco de dados
+  card_details?: CardDetails;
+  pix_details?: PixDetails;
+}
+
+// Tipo usado internamente na aplicação (camelCase)
 export interface Order {
   id: number | string;
   customerName: string;
