@@ -34,6 +34,8 @@ export const validateCardStatus = (status?: string): ManualCardStatus => {
  * Validate boolean value with strict conversion
  */
 export const validateBoolean = (value: any): boolean => {
+  logger.log('Validating boolean value:', value, 'type:', typeof value);
+  
   if (typeof value === 'boolean') {
     return value;
   }

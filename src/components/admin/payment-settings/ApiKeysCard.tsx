@@ -24,13 +24,27 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
   const handleSandboxKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     logger.log('Sandbox API key updated');
-    onUpdateFormState(prev => ({ ...prev, sandboxApiKey: value }));
+    onUpdateFormState(prev => {
+      const updated = { ...prev, sandboxApiKey: value };
+      // Se estiver em modo sandbox, também atualize a chave API principal
+      if (prev.sandboxMode) {
+        updated.apiKey = value;
+      }
+      return updated;
+    });
   };
 
   const handleProductionKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     logger.log('Production API key updated');
-    onUpdateFormState(prev => ({ ...prev, productionApiKey: value }));
+    onUpdateFormState(prev => {
+      const updated = { ...prev, productionApiKey: value };
+      // Se não estiver em modo sandbox, também atualize a chave API principal
+      if (!prev.sandboxMode) {
+        updated.apiKey = value;
+      }
+      return updated;
+    });
   };
 
   return (

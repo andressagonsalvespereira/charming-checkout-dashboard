@@ -104,6 +104,12 @@ export const saveSettingsData = async (settings: AsaasSettings, id: number = 1) 
   try {
     logger.log('Saving settings data with ID:', id);
     logger.log('isEnabled value being saved:', settings.isEnabled);
+    logger.log('Settings to save:', {
+      isEnabled: settings.isEnabled,
+      allowPix: settings.allowPix,
+      allowCreditCard: settings.allowCreditCard,
+      manualCardStatus: settings.manualCardStatus
+    });
     
     const { error } = await supabase
       .from('settings')
@@ -178,6 +184,11 @@ export const verifySettings = async (id: number): Promise<any> => {
       throw error;
     }
 
+    logger.log('Verified settings:', {
+      isEnabled: data.asaas_enabled,
+      manualCardStatus: data.manual_card_status
+    });
+
     return data;
   } catch (error) {
     logger.error('Error in verifySettings:', error);
@@ -201,9 +212,42 @@ export const verifyApiConfig = async (id: number): Promise<any> => {
       throw error;
     }
 
+    logger.log('Verified API keys:', {
+      sandboxApiKey: data.sandbox_api_key ? '[PRESENT]' : '[EMPTY]',
+      productionApiKey: data.production_api_key ? '[PRESENT]' : '[EMPTY]'
+    });
+
     return data;
   } catch (error) {
     logger.error('Error in verifyApiConfig:', error);
     return null;
+  }
+};
+
+// Função auxiliar para upsert com melhor log
+export const saveSettingsWithRetry = async (settings: AsaasSettings): Promise<boolean> => {
+  try {
+    // Checar se as configurações existem
+    const settingsId = await checkSettingsExist();
+    const configId = await checkApiConfigExists();
+    
+    // IDs para upsert, use 1 como padrão se não existir
+    const finalSettingsId = settingsId || 1;
+    const finalConfigId = configId || 1;
+    
+    // Salvar configurações
+    await saveSettingsData(settings, finalSettingsId);
+    
+    // Salvar chaves de API
+    await saveApiConfig(settings, finalConfigId);
+    
+    // Verificar se as configurações foram salvas corretamente
+    await verifySettings(finalSettingsId);
+    await verifyApiConfig(finalConfigId);
+    
+    return true;
+  } catch (error) {
+    logger.error('Erro ao salvar configurações com retry:', error);
+    return false;
   }
 };

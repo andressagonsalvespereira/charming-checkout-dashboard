@@ -31,20 +31,14 @@ export const useFormSubmission = (
       });
       
       // Prepare settings object
-      const settingsToUpdate: AsaasSettings = {
-        isEnabled: data.isEnabled,
-        apiKey: data.sandboxMode ? data.sandboxApiKey || '' : data.productionApiKey || '',
-        allowPix: data.allowPix,
-        allowCreditCard: data.allowCreditCard,
-        manualCreditCard: data.manualCreditCard,
-        sandboxMode: data.sandboxMode,
-        sandboxApiKey: data.sandboxApiKey || '',
-        productionApiKey: data.productionApiKey || '',
-        manualCardProcessing: data.manualCardProcessing,
-        manualPixPage: data.manualPixPage,
-        manualPaymentConfig: data.manualPaymentConfig,
-        manualCardStatus: data.manualCardStatus
-      };
+      const settingsToUpdate: AsaasSettings = formValuesToAsaasSettings(data);
+      
+      logger.log('Saving payment settings:', {
+        isEnabled: settingsToUpdate.isEnabled,
+        apiKey: settingsToUpdate.apiKey ? '[PRESENT]' : '[EMPTY]',
+        sandboxApiKey: settingsToUpdate.sandboxApiKey ? '[PRESENT]' : '[EMPTY]',
+        productionApiKey: settingsToUpdate.productionApiKey ? '[PRESENT]' : '[EMPTY]'
+      });
       
       // Save settings
       const success = await savePaymentSettings(settingsToUpdate);
@@ -57,6 +51,12 @@ export const useFormSubmission = (
         
         // Re-fetch settings to ensure we have the latest data
         const updatedSettings = await getPaymentSettings();
+        
+        logger.log('Settings fetched after save:', {
+          isEnabled: updatedSettings.isEnabled,
+          sandboxApiKey: updatedSettings.sandboxApiKey ? '[PRESENT]' : '[EMPTY]',
+          productionApiKey: updatedSettings.productionApiKey ? '[PRESENT]' : '[EMPTY]'
+        });
         
         // Update form state with the latest settings
         updateFormState(() => updatedSettings);

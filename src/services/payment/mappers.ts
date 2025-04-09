@@ -23,6 +23,7 @@ export const mapToAsaasSettings = (settingsData: any, configData: any): AsaasSet
   
   // Ensure isEnabled is a proper boolean
   const isEnabled = validateBoolean(settingsData.asaas_enabled);
+  logger.log('isEnabled after validation:', isEnabled);
   
   // Validate the card status
   const cardStatus = validateCardStatus(settingsData.manual_card_status);

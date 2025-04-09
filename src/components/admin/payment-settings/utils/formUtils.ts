@@ -25,6 +25,7 @@ export type PaymentSettingsFormValues = z.infer<typeof PaymentSettingsSchema>;
 
 // Function to convert FormValues to AsaasSettings
 export const formValuesToAsaasSettings = (values: PaymentSettingsFormValues): AsaasSettings => {
+  // Importante: mantenha a lógica em sincronia com o atual estado do formulário
   return {
     isEnabled: values.isEnabled,
     apiKey: values.sandboxMode ? values.sandboxApiKey || '' : values.productionApiKey || '',
@@ -44,17 +45,17 @@ export const formValuesToAsaasSettings = (values: PaymentSettingsFormValues): As
 // Function to convert AsaasSettings to FormValues
 export const asaasSettingsToFormValues = (settings: AsaasSettings): PaymentSettingsFormValues => {
   return {
-    isEnabled: settings.isEnabled,
-    manualCardProcessing: settings.manualCardProcessing,
+    isEnabled: settings.isEnabled || false,
+    manualCardProcessing: settings.manualCardProcessing || false,
     manualCardStatus: settings.manualCardStatus as any,
-    manualCreditCard: settings.manualCreditCard,
+    manualCreditCard: settings.manualCreditCard || false,
     allowPix: settings.allowPix,
     allowCreditCard: settings.allowCreditCard,
     sandboxMode: settings.sandboxMode,
     sandboxApiKey: settings.sandboxApiKey || '',
     productionApiKey: settings.productionApiKey || '',
-    manualPixPage: settings.manualPixPage,
-    manualPaymentConfig: settings.manualPaymentConfig,
+    manualPixPage: settings.manualPixPage || false,
+    manualPaymentConfig: settings.manualPaymentConfig || false,
     apiKey: settings.apiKey || '',
   };
 };

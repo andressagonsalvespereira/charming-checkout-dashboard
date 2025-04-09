@@ -24,6 +24,11 @@ const AsaasIntegrationCard: React.FC<AsaasIntegrationCardProps> = ({
     onUpdateFormState(prev => ({ ...prev, isEnabled: checked }));
   };
 
+  const handleToggleSandboxMode = (checked: boolean) => {
+    logger.log('AsaasIntegrationCard - Toggling sandboxMode to:', checked);
+    onUpdateFormState(prev => ({ ...prev, sandboxMode: checked }));
+  };
+
   return (
     <Card className="shadow-sm" data-testid="asaas-integration-card">
       <CardHeader>
@@ -62,9 +67,7 @@ const AsaasIntegrationCard: React.FC<AsaasIntegrationCardProps> = ({
           </div>
           <Switch
             checked={formState.sandboxMode}
-            onCheckedChange={(checked) => 
-              onUpdateFormState(prev => ({ ...prev, sandboxMode: checked }))
-            }
+            onCheckedChange={handleToggleSandboxMode}
             disabled={loading || !formState.isEnabled}
           />
         </div>
