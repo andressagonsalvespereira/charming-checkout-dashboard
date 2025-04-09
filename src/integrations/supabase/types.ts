@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      asaas_config: {
+        Row: {
+          created_at: string | null
+          id: number
+          production_api_key: string | null
+          sandbox_api_key: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          production_api_key?: string | null
+          sandbox_api_key?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          production_api_key?: string | null
+          sandbox_api_key?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       checkout_customization: {
         Row: {
           banner_image_url: string | null
@@ -146,6 +170,51 @@ export type Database = {
           override_global_status?: boolean | null
           price?: number
           slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          allow_credit_card: boolean | null
+          allow_pix: boolean | null
+          asaas_enabled: boolean | null
+          created_at: string | null
+          id: number
+          manual_card_processing: boolean | null
+          manual_card_status: string | null
+          manual_credit_card: boolean | null
+          manual_payment_config: boolean | null
+          manual_pix_page: boolean | null
+          sandbox_mode: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          allow_credit_card?: boolean | null
+          allow_pix?: boolean | null
+          asaas_enabled?: boolean | null
+          created_at?: string | null
+          id?: number
+          manual_card_processing?: boolean | null
+          manual_card_status?: string | null
+          manual_credit_card?: boolean | null
+          manual_payment_config?: boolean | null
+          manual_pix_page?: boolean | null
+          sandbox_mode?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          allow_credit_card?: boolean | null
+          allow_pix?: boolean | null
+          asaas_enabled?: boolean | null
+          created_at?: string | null
+          id?: number
+          manual_card_processing?: boolean | null
+          manual_card_status?: string | null
+          manual_credit_card?: boolean | null
+          manual_payment_config?: boolean | null
+          manual_pix_page?: boolean | null
+          sandbox_mode?: boolean | null
           updated_at?: string | null
         }
         Relationships: []
