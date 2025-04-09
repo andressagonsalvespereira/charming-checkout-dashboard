@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,16 +20,42 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
 }) => {
   const [showSandboxKey, setShowSandboxKey] = useState(false);
   const [showProductionKey, setShowProductionKey] = useState(false);
+  const [sandboxApiKey, setSandboxApiKey] = useState(formState.sandboxApiKey || '');
+  const [productionApiKey, setProductionApiKey] = useState(formState.productionApiKey || '');
+
+  // Update local state when form state changes
+  useEffect(() => {
+    // Only update if the values are different to prevent unnecessary renders
+    if (formState.sandboxApiKey !== sandboxApiKey && formState.sandboxApiKey) {
+      setSandboxApiKey(formState.sandboxApiKey);
+    }
+    
+    if (formState.productionApiKey !== productionApiKey && formState.productionApiKey) {
+      setProductionApiKey(formState.productionApiKey);
+    }
+  }, [formState.sandboxApiKey, formState.productionApiKey]);
 
   const handleSandboxKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    logger.log('Sandbox API key changed to:', value.substring(0, 5) + '...');
+    setSandboxApiKey(value);
+    
+    // Log a sanitized version of the key for debugging
+    const previewKey = value ? `${value.substring(0, 5)}...` : 'empty';
+    logger.log('Sandbox API key changed to:', previewKey);
+    
+    // Update form state with the new key
     onUpdateFormState(prev => ({ ...prev, sandboxApiKey: value }));
   };
 
   const handleProductionKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    logger.log('Production API key changed to:', value.substring(0, 5) + '...');
+    setProductionApiKey(value);
+    
+    // Log a sanitized version of the key for debugging
+    const previewKey = value ? `${value.substring(0, 5)}...` : 'empty';
+    logger.log('Production API key changed to:', previewKey);
+    
+    // Update form state with the new key
     onUpdateFormState(prev => ({ ...prev, productionApiKey: value }));
   };
 
@@ -62,7 +88,7 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
                 id="sandbox-key"
                 type={showSandboxKey ? "text" : "password"}
                 placeholder="Digite a chave de API para ambiente sandbox"
-                value={formState.sandboxApiKey || ''}
+                value={sandboxApiKey}
                 onChange={handleSandboxKeyChange}
                 disabled={!formState.isEnabled || !formState.sandboxMode}
                 className="rounded-r-none"
@@ -89,7 +115,7 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
                 id="production-key"
                 type={showProductionKey ? "text" : "password"}
                 placeholder="Digite a chave de API para ambiente de produção"
-                value={formState.productionApiKey || ''}
+                value={productionApiKey}
                 onChange={handleProductionKeyChange}
                 disabled={!formState.isEnabled || formState.sandboxMode}
                 className="rounded-r-none"

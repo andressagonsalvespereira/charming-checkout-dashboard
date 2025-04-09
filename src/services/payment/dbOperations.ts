@@ -103,12 +103,19 @@ export const saveApiConfig = async (settings: AsaasSettings, configId: number) =
   const productionKeyPreview = settings.productionApiKey ? `${settings.productionApiKey.substring(0, 5)}...` : '[empty]';
   logger.log(`Saving API keys - Sandbox: ${sandboxKeyPreview}, Production: ${productionKeyPreview}`);
   
+  // Ensure we're not saving undefined values
+  const sandboxApiKey = settings.sandboxApiKey || '';
+  const productionApiKey = settings.productionApiKey || '';
+  
+  // Double-check before saving
+  logger.log(`API key lengths - Sandbox: ${sandboxApiKey.length}, Production: ${productionApiKey.length}`);
+  
   const { error } = await supabase
     .from('asaas_config')
     .upsert({
       id: configId,
-      sandbox_api_key: settings.sandboxApiKey || '',
-      production_api_key: settings.productionApiKey || '',
+      sandbox_api_key: sandboxApiKey,
+      production_api_key: productionApiKey,
       updated_at: new Date().toISOString()
     });
 

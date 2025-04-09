@@ -24,24 +24,32 @@ export const useFormSubmission = (
   const onSubmit = async (data: PaymentSettingsFormValues) => {
     setIsSaving(true);
     try {
-      logger.log('Saving payment settings with form values:', data);
-      logger.log('Selected card status to save:', data.manualCardStatus);
-      logger.log('API keys to save - Sandbox:', data.sandboxApiKey?.substring(0, 5) + '...', 'Production:', data.productionApiKey?.substring(0, 5) + '...');
+      // Explicitly log the API keys being saved
+      const sandboxKeyPreview = data.sandboxApiKey ? `${data.sandboxApiKey.substring(0, 5)}...` : 'empty';
+      const productionKeyPreview = data.productionApiKey ? `${data.productionApiKey.substring(0, 5)}...` : 'empty';
       
-      // Calculate apiKey based on sandbox mode
-      const apiKey = data.sandboxMode 
-        ? data.sandboxApiKey || ''
-        : data.productionApiKey || '';
-        
+      logger.log('Saving payment settings with form values:', {
+        ...data,
+        sandboxApiKey: sandboxKeyPreview,
+        productionApiKey: productionKeyPreview
+      });
+      logger.log('Selected card status to save:', data.manualCardStatus);
+      logger.log('API keys to save - Sandbox:', sandboxKeyPreview, 'Production:', productionKeyPreview);
+      
+      // Preserve API keys for transformation
       const settingsToUpdate = formValuesToAsaasSettings({
         ...data,
-        apiKey
+        apiKey: data.sandboxMode ? data.sandboxApiKey || '' : data.productionApiKey || ''
       });
+      
+      // Double-check that API keys are included
+      settingsToUpdate.sandboxApiKey = data.sandboxApiKey || '';
+      settingsToUpdate.productionApiKey = data.productionApiKey || '';
       
       logger.log('Transformed settings to save:', {
         ...settingsToUpdate,
-        sandboxApiKey: settingsToUpdate.sandboxApiKey ? `${settingsToUpdate.sandboxApiKey.substring(0, 5)}...` : '',
-        productionApiKey: settingsToUpdate.productionApiKey ? `${settingsToUpdate.productionApiKey.substring(0, 5)}...` : ''
+        sandboxApiKey: settingsToUpdate.sandboxApiKey ? `${settingsToUpdate.sandboxApiKey.substring(0, 5)}...` : '[empty]',
+        productionApiKey: settingsToUpdate.productionApiKey ? `${settingsToUpdate.productionApiKey.substring(0, 5)}...` : '[empty]'
       });
       
       logger.log('Manual card status being saved:', settingsToUpdate.manualCardStatus);
@@ -58,26 +66,26 @@ export const useFormSubmission = (
         const updatedSettings = await getPaymentSettings();
         logger.log('Reloaded settings after save:', {
           ...updatedSettings,
-          sandboxApiKey: updatedSettings.sandboxApiKey ? `${updatedSettings.sandboxApiKey.substring(0, 5)}...` : '',
-          productionApiKey: updatedSettings.productionApiKey ? `${updatedSettings.productionApiKey.substring(0, 5)}...` : ''
+          sandboxApiKey: updatedSettings.sandboxApiKey ? `${updatedSettings.sandboxApiKey.substring(0, 5)}...` : '[empty]',
+          productionApiKey: updatedSettings.productionApiKey ? `${updatedSettings.productionApiKey.substring(0, 5)}...` : '[empty]'
         });
         logger.log('Reloaded manual card status:', updatedSettings.manualCardStatus);
         
-        // Explicitly preserve the manualCardStatus and API keys that were just saved
-        if (updatedSettings.manualCardStatus !== data.manualCardStatus ||
-            updatedSettings.sandboxApiKey !== data.sandboxApiKey ||
-            updatedSettings.productionApiKey !== data.productionApiKey) {
-          logger.warn(`Some values changed during reload. Restoring original values.`);
-          updateFormState(prev => ({
-            ...updatedSettings,
-            manualCardStatus: data.manualCardStatus,
-            sandboxApiKey: data.sandboxApiKey || '',
-            productionApiKey: data.productionApiKey || ''
-          }));
-        } else {
-          updateFormState(() => updatedSettings);
+        // Preserve the original API keys if they're not returned properly from the database
+        if (!updatedSettings.sandboxApiKey && data.sandboxApiKey) {
+          logger.log('Restoring sandbox API key from form data');
+          updatedSettings.sandboxApiKey = data.sandboxApiKey;
         }
         
+        if (!updatedSettings.productionApiKey && data.productionApiKey) {
+          logger.log('Restoring production API key from form data');
+          updatedSettings.productionApiKey = data.productionApiKey;
+        }
+        
+        // Update form state with the latest settings
+        updateFormState(() => updatedSettings);
+        
+        // Reset the form with the updated values
         form.reset(asaasSettingsToFormValues(updatedSettings));
       } else {
         throw new Error("Failed to save settings");

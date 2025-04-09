@@ -33,9 +33,11 @@ export const getPaymentSettings = async (): Promise<AsaasSettings> => {
     // Log sanitized settings
     logger.log('Loaded payment settings:', {
       ...settings,
-      sandboxApiKey: settings.sandboxApiKey ? `${settings.sandboxApiKey.substring(0, 5)}...` : '',
-      productionApiKey: settings.productionApiKey ? `${settings.productionApiKey.substring(0, 5)}...` : ''
+      sandboxApiKey: settings.sandboxApiKey ? `${settings.sandboxApiKey.substring(0, 5)}...` : '[empty]',
+      productionApiKey: settings.productionApiKey ? `${settings.productionApiKey.substring(0, 5)}...` : '[empty]'
     });
+    
+    logger.log('Card status from database:', settings.manualCardStatus);
     
     return settings;
   } catch (error) {
@@ -55,8 +57,8 @@ export const savePaymentSettings = async (settings: AsaasSettings): Promise<bool
     // Log sanitized settings
     logger.log('Saving payment settings to database:', {
       ...settings,
-      sandboxApiKey: settings.sandboxApiKey ? `${settings.sandboxApiKey.substring(0, 5)}...` : '',
-      productionApiKey: settings.productionApiKey ? `${settings.productionApiKey.substring(0, 5)}...` : ''
+      sandboxApiKey: settings.sandboxApiKey ? `${settings.sandboxApiKey.substring(0, 5)}...` : '[empty]',
+      productionApiKey: settings.productionApiKey ? `${settings.productionApiKey.substring(0, 5)}...` : '[empty]'
     });
     
     // First, check if settings already exist
@@ -82,8 +84,24 @@ export const savePaymentSettings = async (settings: AsaasSettings): Promise<bool
     logger.log('Successfully saved all payment settings to database');
     
     // Verify that settings were saved correctly by fetching them again
-    await verifySettings(settingsId);
-    await verifyApiConfig(configId);
+    const verifiedSettings = await verifySettings(settingsId);
+    logger.log('Verified saved manual card status:', verifiedSettings?.manual_card_status);
+    
+    const verifiedConfig = await verifyApiConfig(configId);
+    
+    // Check if API keys were saved correctly
+    if (verifiedConfig) {
+      const sandboxSaved = verifiedConfig.sandbox_api_key && verifiedConfig.sandbox_api_key === settings.sandboxApiKey;
+      const productionSaved = verifiedConfig.production_api_key && verifiedConfig.production_api_key === settings.productionApiKey;
+      
+      if (!sandboxSaved && settings.sandboxApiKey) {
+        logger.warn('Sandbox API key was not saved correctly');
+      }
+      
+      if (!productionSaved && settings.productionApiKey) {
+        logger.warn('Production API key was not saved correctly');
+      }
+    }
     
     return true;
   } catch (error) {
