@@ -61,7 +61,12 @@ export async function processPayment(
       );
       
       if (!pixResult.success) {
-        throw new Error(pixResult.error || 'Failed to retrieve PIX QR code');
+        // Fix the error handling by extracting the message if it's an object
+        const errorMessage = typeof pixResult.error === 'object' && pixResult.error !== null
+          ? pixResult.error.message
+          : pixResult.error || 'Failed to retrieve PIX QR code';
+        
+        throw new Error(errorMessage);
       }
       
       // Access data from the data property of the response
