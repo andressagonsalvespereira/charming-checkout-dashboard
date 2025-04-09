@@ -8,7 +8,8 @@ import {
   saveApiConfig,
   checkSettingsExist,
   checkApiConfigExists,
-  verifySettings
+  verifySettings,
+  verifyApiConfig
 } from './payment/dbOperations';
 import { mapToAsaasSettings, getDefaultSettings } from './payment/mappers';
 
@@ -29,7 +30,13 @@ export const getPaymentSettings = async (): Promise<AsaasSettings> => {
     // Map database data to AsaasSettings object
     const settings = mapToAsaasSettings(settingsData, configData);
     
-    logger.log('Loaded payment settings:', settings);
+    // Log sanitized settings
+    logger.log('Loaded payment settings:', {
+      ...settings,
+      sandboxApiKey: settings.sandboxApiKey ? `${settings.sandboxApiKey.substring(0, 5)}...` : '',
+      productionApiKey: settings.productionApiKey ? `${settings.productionApiKey.substring(0, 5)}...` : ''
+    });
+    
     return settings;
   } catch (error) {
     logger.error('Error fetching payment settings:', error);
@@ -45,7 +52,12 @@ export const getPaymentSettings = async (): Promise<AsaasSettings> => {
  */
 export const savePaymentSettings = async (settings: AsaasSettings): Promise<boolean> => {
   try {
-    logger.log('Saving payment settings to database:', settings);
+    // Log sanitized settings
+    logger.log('Saving payment settings to database:', {
+      ...settings,
+      sandboxApiKey: settings.sandboxApiKey ? `${settings.sandboxApiKey.substring(0, 5)}...` : '',
+      productionApiKey: settings.productionApiKey ? `${settings.productionApiKey.substring(0, 5)}...` : ''
+    });
     
     // First, check if settings already exist
     const existingSettingsId = await checkSettingsExist();
@@ -71,6 +83,7 @@ export const savePaymentSettings = async (settings: AsaasSettings): Promise<bool
     
     // Verify that settings were saved correctly by fetching them again
     await verifySettings(settingsId);
+    await verifyApiConfig(configId);
     
     return true;
   } catch (error) {

@@ -11,14 +11,14 @@ const PaymentSettings = () => {
     <AdminLayout>
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Configurações do Asaas</h1>
-          <p className="text-muted-foreground">Configure a integração e pagamentos PIX com a plataforma Asaas</p>
+          <h1 className="text-2xl md:text-3xl font-bold">Integração com Asaas</h1>
+          <p className="text-muted-foreground">Configure o processamento de pagamentos PIX com o Asaas</p>
         </div>
         
         <Link to="/admin/settings/manual-payment">
           <Button variant="outline" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
-            Configurações de Cartão
+            Configuração de Cartão Manual
           </Button>
         </Link>
       </div>

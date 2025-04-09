@@ -98,6 +98,11 @@ export const saveSettingsData = async (settings: AsaasSettings, settingsId: numb
 export const saveApiConfig = async (settings: AsaasSettings, configId: number) => {
   logger.log(`Saving API config with ID ${configId}...`);
   
+  // Log sanitized keys for security
+  const sandboxKeyPreview = settings.sandboxApiKey ? `${settings.sandboxApiKey.substring(0, 5)}...` : '[empty]';
+  const productionKeyPreview = settings.productionApiKey ? `${settings.productionApiKey.substring(0, 5)}...` : '[empty]';
+  logger.log(`Saving API keys - Sandbox: ${sandboxKeyPreview}, Production: ${productionKeyPreview}`);
+  
   const { error } = await supabase
     .from('asaas_config')
     .upsert({
@@ -170,5 +175,31 @@ export const verifySettings = async (settingsId: number) => {
   }
 
   logger.log('Verified saved manual card status:', data.manual_card_status);
+  return data;
+};
+
+/**
+ * Verify that API config was saved correctly
+ * @param configId ID of the API config record
+ * @returns Promise with verification data
+ */
+export const verifyApiConfig = async (configId: number) => {
+  const { data, error } = await supabase
+    .from('asaas_config')
+    .select('sandbox_api_key, production_api_key')
+    .eq('id', configId)
+    .single();
+    
+  if (error) {
+    logger.warn('Could not verify API config was saved correctly:', error);
+    return null;
+  }
+  
+  // Log sanitized keys for security
+  logger.log('Verified API keys were saved', 
+    data.sandbox_api_key ? 'Sandbox: [present]' : 'Sandbox: [empty]',
+    data.production_api_key ? 'Production: [present]' : 'Production: [empty]'
+  );
+  
   return data;
 };

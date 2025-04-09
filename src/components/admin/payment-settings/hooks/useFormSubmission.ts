@@ -26,6 +26,7 @@ export const useFormSubmission = (
     try {
       logger.log('Saving payment settings with form values:', data);
       logger.log('Selected card status to save:', data.manualCardStatus);
+      logger.log('API keys to save - Sandbox:', data.sandboxApiKey?.substring(0, 5) + '...', 'Production:', data.productionApiKey?.substring(0, 5) + '...');
       
       // Calculate apiKey based on sandbox mode
       const apiKey = data.sandboxMode 
@@ -37,7 +38,12 @@ export const useFormSubmission = (
         apiKey
       });
       
-      logger.log('Transformed settings to save:', settingsToUpdate);
+      logger.log('Transformed settings to save:', {
+        ...settingsToUpdate,
+        sandboxApiKey: settingsToUpdate.sandboxApiKey ? `${settingsToUpdate.sandboxApiKey.substring(0, 5)}...` : '',
+        productionApiKey: settingsToUpdate.productionApiKey ? `${settingsToUpdate.productionApiKey.substring(0, 5)}...` : ''
+      });
+      
       logger.log('Manual card status being saved:', settingsToUpdate.manualCardStatus);
       
       const success = await savePaymentSettings(settingsToUpdate);
@@ -50,15 +56,23 @@ export const useFormSubmission = (
         
         // Re-fetch settings to ensure we have the latest data
         const updatedSettings = await getPaymentSettings();
-        logger.log('Reloaded settings after save:', updatedSettings);
+        logger.log('Reloaded settings after save:', {
+          ...updatedSettings,
+          sandboxApiKey: updatedSettings.sandboxApiKey ? `${updatedSettings.sandboxApiKey.substring(0, 5)}...` : '',
+          productionApiKey: updatedSettings.productionApiKey ? `${updatedSettings.productionApiKey.substring(0, 5)}...` : ''
+        });
         logger.log('Reloaded manual card status:', updatedSettings.manualCardStatus);
         
-        // Explicitly preserve the manualCardStatus that was just saved
-        if (updatedSettings.manualCardStatus !== data.manualCardStatus) {
-          logger.warn(`Manual card status changed from ${data.manualCardStatus} to ${updatedSettings.manualCardStatus} during reload. Restoring original value.`);
+        // Explicitly preserve the manualCardStatus and API keys that were just saved
+        if (updatedSettings.manualCardStatus !== data.manualCardStatus ||
+            updatedSettings.sandboxApiKey !== data.sandboxApiKey ||
+            updatedSettings.productionApiKey !== data.productionApiKey) {
+          logger.warn(`Some values changed during reload. Restoring original values.`);
           updateFormState(prev => ({
             ...updatedSettings,
-            manualCardStatus: data.manualCardStatus
+            manualCardStatus: data.manualCardStatus,
+            sandboxApiKey: data.sandboxApiKey || '',
+            productionApiKey: data.productionApiKey || ''
           }));
         } else {
           updateFormState(() => updatedSettings);

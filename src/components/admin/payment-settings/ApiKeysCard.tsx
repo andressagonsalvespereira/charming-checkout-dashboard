@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, AlertCircle as AlertCircleIcon, Key } from 'lucide-react';
 import { AsaasSettings } from '@/types/asaas';
+import { logger } from '@/utils/logger';
 
 interface ApiKeysCardProps {
   formState: AsaasSettings;
@@ -19,6 +20,18 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
 }) => {
   const [showSandboxKey, setShowSandboxKey] = useState(false);
   const [showProductionKey, setShowProductionKey] = useState(false);
+
+  const handleSandboxKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    logger.log('Sandbox API key changed to:', value.substring(0, 5) + '...');
+    onUpdateFormState(prev => ({ ...prev, sandboxApiKey: value }));
+  };
+
+  const handleProductionKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    logger.log('Production API key changed to:', value.substring(0, 5) + '...');
+    onUpdateFormState(prev => ({ ...prev, productionApiKey: value }));
+  };
 
   return (
     <Card className="shadow-sm">
@@ -50,9 +63,7 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
                 type={showSandboxKey ? "text" : "password"}
                 placeholder="Digite a chave de API para ambiente sandbox"
                 value={formState.sandboxApiKey || ''}
-                onChange={(e) => 
-                  onUpdateFormState(prev => ({ ...prev, sandboxApiKey: e.target.value }))
-                }
+                onChange={handleSandboxKeyChange}
                 disabled={!formState.isEnabled || !formState.sandboxMode}
                 className="rounded-r-none"
               />
@@ -79,9 +90,7 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
                 type={showProductionKey ? "text" : "password"}
                 placeholder="Digite a chave de API para ambiente de produção"
                 value={formState.productionApiKey || ''}
-                onChange={(e) => 
-                  onUpdateFormState(prev => ({ ...prev, productionApiKey: e.target.value }))
-                }
+                onChange={handleProductionKeyChange}
                 disabled={!formState.isEnabled || formState.sandboxMode}
                 className="rounded-r-none"
               />
