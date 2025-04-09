@@ -75,17 +75,19 @@ export const fetchDashboardStats = async (): Promise<DashboardStats> => {
     if (recentOrdersError) throw recentOrdersError;
     
     // Calculate payment methods distribution
+    const totalOrderCount = (cardOrders || 0) + (pixOrders || 0);
+    
+    // Resolve the infinite type recursion by simplifying the calculation
     let paymentMethodsDistribution = [
-      { name: 'Cartão de Crédito', value: cardOrders || 0 },
-      { name: 'PIX', value: pixOrders || 0 }
+      { name: 'Cartão de Crédito', value: 0 },
+      { name: 'PIX', value: 0 }
     ];
     
-    // Format as percentage if there are orders
-    const total = (cardOrders || 0) + (pixOrders || 0);
-    if (total > 0) {
+    // Only calculate percentages if there are any orders
+    if (totalOrderCount > 0) {
       paymentMethodsDistribution = [
-        { name: 'Cartão de Crédito', value: Math.round((cardOrders || 0) / total * 100) },
-        { name: 'PIX', value: Math.round((pixOrders || 0) / total * 100) }
+        { name: 'Cartão de Crédito', value: Math.round((cardOrders || 0) / totalOrderCount * 100) },
+        { name: 'PIX', value: Math.round((pixOrders || 0) / totalOrderCount * 100) }
       ];
     }
     

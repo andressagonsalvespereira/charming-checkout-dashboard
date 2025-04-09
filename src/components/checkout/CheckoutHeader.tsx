@@ -5,11 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface CheckoutCustomization {
   header_message: string;
-  banner_image_url: string;
+  banner_image_url?: string;
   show_banner: boolean;
   button_color: string;
-  button_text_color: string;
-  heading_color: string;
+  button_text_color?: string; // Make optional
+  heading_color?: string; // Make optional
   button_text?: string;
 }
 
@@ -31,7 +31,7 @@ const CheckoutHeader = () => {
   useEffect(() => {
     const fetchCustomization = async () => {
       try {
-        const { data, error } = await (supabase as any)
+        const { data, error } = await supabase
           .from('checkout_customization')
           .select('*')
           .order('id', { ascending: false })
