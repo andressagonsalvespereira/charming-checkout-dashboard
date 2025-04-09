@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
@@ -17,8 +18,8 @@ import PaymentSettings from './pages/admin/PaymentSettings';
 import ManualPaymentSettingsPage from './pages/admin/ManualPaymentSettings';
 import PixelSettings from './pages/admin/PixelSettings';
 import CheckoutCustomization from './pages/admin/CheckoutCustomization';
-import Customers from './pages/admin/Customers';
 import Login from './pages/admin/Login';
+import Customers from './pages/Customers'; // Corrigido o caminho de importação
 
 function App() {
   return (
