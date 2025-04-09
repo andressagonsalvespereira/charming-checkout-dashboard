@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -7,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CreditCard, QrCode, ExternalLink, Settings, ShoppingCart } from 'lucide-react';
-import { useAsaas } from '@/contexts/AsaasContext';
+import { useAsaas } from '@/contexts/asaas';
 
 const Payments = () => {
   const { settings, loading } = useAsaas();

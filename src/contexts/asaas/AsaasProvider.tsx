@@ -1,37 +1,12 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { AsaasSettings, ManualCardStatus } from '@/types/asaas';
-
-// Define the context type
-export interface AsaasContextType {
-  settings: AsaasSettings;
-  loading: boolean;
-  saveSettings: (settings: AsaasSettings) => Promise<void>;
-  updateSettings: (settings: AsaasSettings) => Promise<void>;
-}
-
-// Create the context with a default value
-const AsaasContext = createContext<AsaasContextType | undefined>(undefined);
-
-// Default settings
-const defaultSettings: AsaasSettings = {
-  isEnabled: false,
-  apiKey: '',
-  allowCreditCard: true,
-  allowPix: true,
-  manualCreditCard: false,
-  sandboxMode: true,
-  sandboxApiKey: '',
-  productionApiKey: '',
-  manualCardProcessing: false,
-  manualPixPage: false,
-  manualPaymentConfig: false,
-  manualCardStatus: 'ANALYSIS',
-};
+import { AsaasContext } from './AsaasContext';
+import { defaultAsaasSettings } from './types';
 
 export const AsaasProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [settings, setSettings] = useState<AsaasSettings>(defaultSettings);
+  const [settings, setSettings] = useState<AsaasSettings>(defaultAsaasSettings);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -220,12 +195,4 @@ export const AsaasProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {children}
     </AsaasContext.Provider>
   );
-};
-
-export const useAsaas = (): AsaasContextType => {
-  const context = useContext(AsaasContext);
-  if (context === undefined) {
-    throw new Error('useAsaas must be used within an AsaasProvider');
-  }
-  return context;
 };

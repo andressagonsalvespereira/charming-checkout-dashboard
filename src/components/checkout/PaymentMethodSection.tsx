@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
-import { useAsaas } from '@/contexts/AsaasContext';
+import { useAsaas } from '@/contexts/asaas';
 import PaymentMethodSectionHeader from './PaymentMethodSection/PaymentMethodSectionHeader';
 import PaymentMethodContent from './PaymentMethodSection/PaymentMethodContent';
 import { usePaymentMethodLogic, PaymentMethodType } from './PaymentMethodSection/usePaymentMethodLogic';
@@ -34,10 +33,8 @@ const PaymentMethodSection = ({
   const { settings } = useAsaas();
   const [showPixPayment, setShowPixPayment] = useState(false);
   
-  // Use the extracted logic hook
   const { pixEnabled, cardEnabled, error, isLoading } = usePaymentMethodLogic(settings, setPaymentMethod);
 
-  // Show loading state
   if (isLoading) {
     return (
       <div className="mb-8 border rounded-lg p-4 bg-white shadow-sm">
@@ -47,7 +44,6 @@ const PaymentMethodSection = ({
     );
   }
 
-  // Show error if no payment methods are available
   if (!pixEnabled && !cardEnabled) {
     return (
       <div className="mb-8 border rounded-lg p-4 bg-white shadow-sm">

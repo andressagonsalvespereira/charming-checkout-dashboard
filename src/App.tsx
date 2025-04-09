@@ -5,7 +5,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import { ProductProvider } from './contexts/product';
 import { OrderProvider } from './contexts/order';
-import { AsaasProvider } from './contexts/AsaasContext';
+import { AsaasProvider } from './contexts/asaas';
 import { PixelProvider } from './contexts/PixelContext';
 import { CheckoutCustomizationProvider } from './contexts/CheckoutCustomizationContext';
 
