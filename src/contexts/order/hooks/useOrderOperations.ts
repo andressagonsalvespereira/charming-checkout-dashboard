@@ -8,6 +8,7 @@ import {
 } from '../utils/orderOperations';
 import { useToast } from '@/hooks/use-toast';
 import { Dispatch, SetStateAction } from 'react';
+import { logger } from '@/utils/logger';
 
 export const useOrderOperations = (
   orders: Order[], 
@@ -17,7 +18,22 @@ export const useOrderOperations = (
 
   const addOrder = async (orderData: any) => {
     try {
+      logger.log("Adding order with data:", {
+        paymentMethod: orderData.paymentMethod,
+        hasCardDetails: !!orderData.cardDetails,
+        hasPixDetails: !!orderData.pixDetails
+      });
+      
+      // Ensure all required data is included
       const newOrder = await createOrderUtil(orderData);
+      
+      logger.log("Order created successfully:", {
+        orderId: newOrder.id,
+        paymentStatus: newOrder.paymentStatus,
+        hasCardDetails: !!newOrder.cardDetails,
+        hasPixDetails: !!newOrder.pixDetails
+      });
+      
       setOrders(prev => [newOrder, ...prev]);
       
       toast({
@@ -27,7 +43,7 @@ export const useOrderOperations = (
       
       return newOrder;
     } catch (error) {
-      console.error('Error adding order:', error);
+      logger.error('Error adding order:', error);
       
       toast({
         title: "Erro",

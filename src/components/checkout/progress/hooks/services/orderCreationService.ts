@@ -29,9 +29,24 @@ export const createOrderService = async ({
   toast,
   addOrder
 }: CreateOrderServiceProps): Promise<Order> => {
-  // Garantir que a marca do cartão seja definida para um valor padrão se não fornecida
-  if (cardDetails && !cardDetails.brand) {
-    cardDetails.brand = 'Unknown';
+  // Ensure card details are properly structured and passed to the order creation
+  if (cardDetails) {
+    logger.log("Creating order with card details:", {
+      brand: cardDetails.brand || 'Unknown',
+      last4: cardDetails.number ? cardDetails.number.slice(-4) : 'Unknown'
+    });
+    
+    // Make sure default brand is set if not provided
+    if (!cardDetails.brand) {
+      cardDetails.brand = 'Unknown';
+    }
+  }
+  
+  if (pixDetails) {
+    logger.log("Creating order with PIX details:", {
+      hasQrCode: !!pixDetails.qrCode,
+      hasQrCodeImage: !!pixDetails.qrCodeImage
+    });
   }
   
   // Detect device type in a type-safe way
@@ -53,7 +68,21 @@ export const createOrderService = async ({
   };
   
   try {
+    logger.log("Creating order with data:", {
+      productId: orderData.productId,
+      productName: orderData.productName,
+      paymentMethod: orderData.paymentMethod,
+      paymentStatus: orderData.paymentStatus,
+      hasCardDetails: !!cardDetails,
+      hasPixDetails: !!pixDetails
+    });
+    
     const newOrder = await addOrder(orderData);
+    
+    logger.log("Order created successfully:", {
+      orderId: newOrder.id,
+      paymentStatus: newOrder.paymentStatus
+    });
     
     toast({
       title: "Order created",

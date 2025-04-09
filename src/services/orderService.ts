@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import type { Database } from '@/types/supabase';
 import { logger } from '@/utils/logger';
@@ -51,6 +50,7 @@ export interface CreateOrderInput {
   isDigitalProduct?: boolean;
   cardDetails?: CardDetails;
   pixDetails?: PixDetails;
+  deviceType?: string;
 }
 
 // Get all orders
@@ -72,7 +72,19 @@ export const getAllOrders = async (): Promise<Order[]> => {
 // Create a new order
 export const createOrder = async (orderData: CreateOrderInput): Promise<Order> => {
   try {
-    const { customer, ...rest } = orderData;
+    const { customer, cardDetails, pixDetails, ...rest } = orderData;
+    
+    logger.log("Creating order in database:", {
+      customer_email: customer.email,
+      payment_method: rest.paymentMethod,
+      has_card_details: !!cardDetails,
+      has_pix_details: !!pixDetails
+    });
+    
+    // Store card details as a JSON string in metadata column or dedicated columns
+    // This example assumes your database has these columns or you add them
+    const cardDetailsJSON = cardDetails ? JSON.stringify(cardDetails) : null;
+    const pixDetailsJSON = pixDetails ? JSON.stringify(pixDetails) : null;
     
     const newOrder: OrderInsert = {
       customer_name: customer.name,
@@ -86,10 +98,13 @@ export const createOrder = async (orderData: CreateOrderInput): Promise<Order> =
       payment_status: rest.paymentStatus,
       payment_id: rest.paymentId,
       is_digital_product: rest.isDigitalProduct,
-      credit_card_brand: rest.cardDetails?.brand || 'Desconhecida',
-      device_type: 'desktop',
+      credit_card_brand: cardDetails?.brand || null,
+      device_type: rest.deviceType || 'desktop',
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      // Add metadata fields if your database has them
+      // card_details_json: cardDetailsJSON,
+      // pix_details_json: pixDetailsJSON,
     };
 
     const { data, error } = await supabase
@@ -101,7 +116,12 @@ export const createOrder = async (orderData: CreateOrderInput): Promise<Order> =
     if (error) throw error;
     if (!data) throw new Error('Failed to create order');
     
-    return data;
+    // Add the details back to the returned object for the client
+    return {
+      ...data,
+      cardDetails: cardDetails,
+      pixDetails: pixDetails,
+    };
   } catch (error) {
     logger.error('Error creating order:', error);
     throw error;
