@@ -1,6 +1,6 @@
 
 import { createAsaasCustomer, createAsaasPayment, getPixQrCode } from './asaasApiService';
-import { getAsaasSettings } from '../settingsService';
+import { loadAsaasSettings } from '../settingsService';
 import { AsaasPayment } from '@/types/asaas';
 import { logger } from '@/utils/logger';
 
@@ -46,7 +46,7 @@ interface CreatePaymentOptions {
 
 export const createPayment = async (options: CreatePaymentOptions): Promise<CreatePaymentResult> => {
   try {
-    const settings = await getAsaasSettings();
+    const settings = await loadAsaasSettings();
     if (!settings || !settings.apiKey) {
       throw new Error("Asaas settings not configured");
     }
@@ -136,4 +136,9 @@ export const createPayment = async (options: CreatePaymentOptions): Promise<Crea
       error: error instanceof Error ? error.message : 'Unknown payment error'
     };
   }
+};
+
+// Export the retrievePixQrCode method
+export const retrievePixQrCode = async (paymentId: string, apiKey: string, sandboxMode: boolean) => {
+  return await getPixQrCode(paymentId, apiKey, sandboxMode);
 };

@@ -6,7 +6,7 @@ import { AsaasSettings, ManualCardStatus } from '@/types/asaas';
 export const PaymentSettingsSchema = z.object({
   isEnabled: z.boolean().default(false),
   manualCardProcessing: z.boolean().default(false),
-  manualCardStatus: z.enum(['APPROVED', 'DENIED', 'ANALYSIS']).default('ANALYSIS'),
+  manualCardStatus: z.enum(['APPROVED', 'PENDING', 'ANALYSIS', 'DECLINED', 'REJECTED']).default('ANALYSIS'),
   manualCreditCard: z.boolean().default(false),
   allowPix: z.boolean().default(true),
   allowCreditCard: z.boolean().default(true),
@@ -43,7 +43,7 @@ export const asaasSettingsToFormValues = (settings: AsaasSettings): PaymentSetti
   return {
     isEnabled: settings.isEnabled,
     manualCardProcessing: settings.manualCardProcessing,
-    manualCardStatus: settings.manualCardStatus as ManualCardStatus,
+    manualCardStatus: settings.manualCardStatus as any,
     manualCreditCard: settings.manualCreditCard,
     allowPix: settings.allowPix,
     allowCreditCard: settings.allowCreditCard,

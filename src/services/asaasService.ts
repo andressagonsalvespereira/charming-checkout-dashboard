@@ -29,7 +29,16 @@ export async function processPayment(
   
   try {
     logger.log('Processing payment through Asaas');
-    const paymentResult = await createPayment(paymentData, apiKey, sandboxMode);
+    const paymentResult = await createPayment({
+      customer: {
+        name: paymentData.customer,
+        email: '',
+        cpfCnpj: ''
+      },
+      billingType: paymentData.billingType,
+      value: paymentData.value,
+      description: paymentData.description
+    });
     
     if (!paymentResult.success) {
       throw new Error(paymentResult.error);

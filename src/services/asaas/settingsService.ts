@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { AsaasSettings } from '@/types/asaas';
+import { AsaasSettings, ManualCardStatus } from '@/types/asaas';
 
 /**
  * Retrieves Asaas settings from the database
@@ -51,6 +51,12 @@ export const getAsaasSettings = async (): Promise<AsaasSettings> => {
       console.warn('No Asaas config found, using defaults for API keys');
     }
 
+    // Make sure the status is a valid ManualCardStatus
+    const cardStatus = settings.manual_card_status as string;
+    const validStatus: ManualCardStatus = ['APPROVED', 'PENDING', 'CONFIRMED', 'DECLINED', 'REJECTED', 'ANALYSIS'].includes(cardStatus) 
+      ? cardStatus as ManualCardStatus 
+      : 'ANALYSIS';
+
     return {
       isEnabled: settings.asaas_enabled ?? false,
       apiKey: settings.sandbox_mode ? 
@@ -64,7 +70,7 @@ export const getAsaasSettings = async (): Promise<AsaasSettings> => {
       manualCardProcessing: settings.manual_card_processing ?? false,
       manualPixPage: settings.manual_pix_page ?? false,
       manualPaymentConfig: settings.manual_payment_config ?? false,
-      manualCardStatus: (settings.manual_card_status as 'APPROVED' | 'DENIED' | 'ANALYSIS') || 'ANALYSIS'
+      manualCardStatus: validStatus
     };
   } catch (error) {
     console.error('Error fetching Asaas settings:', error);
