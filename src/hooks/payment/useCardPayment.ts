@@ -40,6 +40,7 @@ export function useCardPayment({
   
   const handleSubmit = useCallback(async (cardData: CardFormData) => {
     setError(null);
+    setIsSubmitting(true);
     
     try {
       logger.log("Processing card payment", { 
@@ -82,6 +83,7 @@ export function useCardPayment({
           
           // Still call onSubmit to record the rejected payment
           await onSubmit(rejectedResult);
+          setIsSubmitting(false);
           
           return rejectedResult;
         }
@@ -111,12 +113,21 @@ export function useCardPayment({
         }
       });
       
+      // Log the result to help diagnose redirection issues
+      logger.log("Payment processing result:", {
+        success: result.success,
+        status: result.status,
+        normalizedStatus: result.status ? resolveManualStatus(result.status) : 'UNKNOWN'
+      });
+      
       return result;
     } catch (error) {
       logger.error("Error processing card payment:", error);
       setError(error instanceof Error ? error.message : 'An error occurred processing your payment');
       setIsSubmitting(false);
       throw error;
+    } finally {
+      setIsSubmitting(false);
     }
   }, [isSandbox, useCustomProcessing, manualCardStatus, isDigitalProduct, onSubmit, toast, deviceType]);
   

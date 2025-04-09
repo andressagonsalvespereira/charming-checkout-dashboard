@@ -11,6 +11,7 @@ import { PaymentResult } from '@/types/payment';
 import { logger } from '@/utils/logger';
 import { AsaasSettings, ManualCardStatus } from '@/types/asaas';
 import { isRejectedStatus, resolveManualStatus } from '@/contexts/order/utils/resolveManualStatus';
+import { useNavigate } from 'react-router-dom';
 
 interface CheckoutFormProps {
   onSubmit: (data: PaymentResult) => Promise<any>;
@@ -28,6 +29,7 @@ const CheckoutForm = ({
   manualCardStatus
 }: CheckoutFormProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const {
     isSubmitting,
@@ -61,6 +63,13 @@ const CheckoutForm = ({
       
       const result = await handleSubmit(cardData);
       
+      // Enhanced logging to track payment flow
+      logger.log("Payment result received:", {
+        status: result.status,
+        success: result.success,
+        hasError: !!result.error
+      });
+      
       // Check if payment was rejected
       if (result.status === 'REJECTED' || (result.status && isRejectedStatus(resolveManualStatus(result.status)))) {
         logger.log("Payment was rejected:", result);
@@ -71,8 +80,43 @@ const CheckoutForm = ({
           duration: 5000,
         });
         
+        // Redirect to payment failed page for rejected payments
+        navigate('/payment-failed', {
+          state: { 
+            orderData: {
+              error: result.error,
+              status: 'DENIED'
+            }
+          }
+        });
+        
         // Still return the result for further processing
         return result;
+      }
+      
+      // For successful payments, ensure redirection happens
+      if (result.success) {
+        const normalizedStatus = result.status ? resolveManualStatus(result.status) : 'PENDING';
+        logger.log("Successful payment, normalized status:", normalizedStatus);
+        
+        // Redirect based on the normalized status
+        if (normalizedStatus === 'PAID') {
+          navigate('/payment-success', {
+            state: { 
+              orderData: {
+                status: normalizedStatus
+              }
+            }
+          });
+        } else if (normalizedStatus === 'PENDING' || normalizedStatus === 'ANALYSIS') {
+          navigate('/payment-success', {
+            state: { 
+              orderData: {
+                status: normalizedStatus
+              }
+            }
+          });
+        }
       }
       
       return result;
@@ -84,6 +128,15 @@ const CheckoutForm = ({
         description: "There was an error processing your payment. Please try again.",
         variant: "destructive",
         duration: 5000,
+      });
+      
+      // Redirect to payment failed page on error
+      navigate('/payment-failed', {
+        state: { 
+          orderData: {
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
+        }
       });
       
       throw error;

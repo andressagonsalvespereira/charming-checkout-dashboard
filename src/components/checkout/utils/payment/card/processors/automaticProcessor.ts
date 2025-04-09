@@ -81,22 +81,24 @@ export const processAutomaticPayment = async ({
       resolvedStatus = resolveManualStatus(globalManualStatus);
       logger.log("Using global manual status:", resolvedStatus);
     }
+    
+    // Generate a payment ID for tracking
+    const paymentId = `card_${Date.now()}`;
+
+    // Log the final resolved status to help debug
+    logger.log("Final payment status decision:", {
+      resolvedStatus,
+      isRejected: isRejectedStatus(resolvedStatus)
+    });
 
     // Processing decisions based on the resolved status
-    if (resolvedStatus === 'PENDING') {
-      logger.log("Payment set to pending based on manual settings");
-    } else if (resolvedStatus === 'CONFIRMED') {
-      logger.log("Payment automatically confirmed based on automatic settings");
-    } else if (resolvedStatus === 'REJECTED') {
+    if (isRejectedStatus(resolvedStatus)) {
       logger.log("Payment automatically declined based on manual settings");
-      
-      // Generate payment ID for tracking
-      const paymentId = `card_${Date.now()}`;
       
       // If payment is rejected, create a rejected result and call onSubmit
       if (onSubmit) {
         // Create the rejected payment data
-        const rejectedPaymentData = {
+        const rejectedPaymentData: PaymentResult = {
           success: false,
           paymentId,
           method: 'card',
@@ -127,7 +129,7 @@ export const processAutomaticPayment = async ({
         });
       }
       
-      // Navigate to the failure page
+      // Navigate to the failure page with explicit state data
       navigate('/payment-failed', {
         state: { 
           orderData: {
@@ -135,8 +137,8 @@ export const processAutomaticPayment = async ({
             productName: formState.productName,
             productPrice: formState.productPrice,
             productSlug: formState.productSlug,
-            paymentStatus: 'REJECTED',
-            status: 'REJECTED'
+            paymentStatus: 'DENIED',
+            status: 'DENIED'
           }
         }
       });
@@ -152,45 +154,13 @@ export const processAutomaticPayment = async ({
       };
     }
 
-    // Simulate payment - Fix: passing a timeout number instead of boolean
-    const paymentId = `card_${Date.now()}`;
-    // Changing to pass a numeric timeout value based on sandbox mode
+    // Simulate payment with a timeout
     await simulatePayment(isSandbox ? 1500 : 1000);
 
-    // Check again for rejected status after simulation
-    if (resolvedStatus === 'REJECTED') {
-      logger.log("Double-checking rejected status after simulation");
-      
-      // Definitely redirect to failure page for rejected payments
-      navigate('/payment-failed', {
-        state: { 
-          orderData: {
-            productId: formState.productId,
-            productName: formState.productName,
-            productPrice: formState.productPrice,
-            productSlug: formState.productSlug,
-            paymentStatus: 'REJECTED',
-            status: 'REJECTED'
-          }
-        }
-      });
-      
-      // Update status state
-      setPaymentStatus('REJECTED');
-      
-      return {
-        success: false,
-        paymentId,
-        method: 'card',
-        status: 'REJECTED',
-        timestamp: new Date().toISOString(),
-        error: 'Pagamento recusado pela operadora'
-      };
-    }
-
+    // Update payment status in UI
     setPaymentStatus(resolvedStatus);
 
-    // Detect card brand
+    // Detect card brand for the payment data
     const brand = detectCardBrand(cardData.cardNumber);
 
     // Format the data for creating the order
@@ -199,10 +169,10 @@ export const processAutomaticPayment = async ({
       productId: formState.productId,
       productName: formState.productName,
       productPrice: formState.productPrice,
-      productSlug: formState.productSlug, // Include productSlug for redirection
+      productSlug: formState.productSlug,
       paymentMethod: 'card',
       paymentStatus: resolvedStatus,
-      status: resolvedStatus, // Add status field for compatibility
+      status: resolvedStatus,
       cardDetails: {
         brand,
         last4: cardData.cardNumber.slice(-4)
@@ -215,27 +185,21 @@ export const processAutomaticPayment = async ({
       logger.log("Order created successfully");
     }
 
-    // Determine where to navigate based on payment status
-    const getRedirectPath = () => {
-      if (resolvedStatus === 'REJECTED') {
-        logger.log(`Redirecting to failure page due to status: ${resolvedStatus}`);
-        return '/payment-failed';
-      } else if (resolvedStatus === 'CONFIRMED') {
-        logger.log(`Redirecting to success page due to status: ${resolvedStatus}`);
-        return '/payment-success';
-      } else {
-        // If status is PENDING or any other, use success page but indicate it's in analysis
-        logger.log(`Redirecting to success page with pending status: ${resolvedStatus}`);
-        return '/payment-success';
-      }
-    };
+    // Determine redirect path based on payment status
+    const redirectPath = resolvedStatus === 'PAID' || resolvedStatus === 'CONFIRMED' 
+      ? '/payment-success' 
+      : isRejectedStatus(resolvedStatus) ? '/payment-failed' : '/payment-success';
+    
+    logger.log(`Redirecting to: ${redirectPath} with status: ${resolvedStatus}`);
 
     // Toast notification based on status
     if (toast) {
-      if (resolvedStatus !== 'REJECTED') {
+      if (!isRejectedStatus(resolvedStatus)) {
         toast({
-          title: resolvedStatus === "CONFIRMED" ? "Payment Approved" : "Payment in Analysis",
-          description: resolvedStatus === "CONFIRMED"
+          title: resolvedStatus === "PAID" || resolvedStatus === "CONFIRMED" 
+            ? "Payment Approved" 
+            : "Payment in Analysis",
+          description: resolvedStatus === "PAID" || resolvedStatus === "CONFIRMED"
             ? "Your payment was successfully approved!"
             : "Your payment has been received and is being analyzed.",
           duration: 5000,
@@ -251,14 +215,18 @@ export const processAutomaticPayment = async ({
       }
     }
 
-    // Navigate to appropriate page
-    const redirectPath = getRedirectPath();
-    logger.log(`Redirecting to: ${redirectPath} with state:`, orderData);
-
+    // Navigate to appropriate page with complete state data
     navigate(redirectPath, {
-      state: { orderData }
+      state: { 
+        orderData: {
+          ...orderData,
+          paymentStatus: resolvedStatus,
+          status: resolvedStatus
+        }
+      }
     });
 
+    // Return payment result
     return {
       success: true,
       paymentId,
@@ -299,5 +267,4 @@ export const processAutomaticPayment = async ({
   }
 };
 
-// Exports para compatibilidade
 export default processAutomaticPayment;
