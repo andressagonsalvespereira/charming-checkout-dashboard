@@ -24,14 +24,15 @@ export const resolveManualStatus = (status: string | undefined): PaymentStatus =
     case 'PAID':
     case 'RECEIVED':
     case 'COMPLETED':
-      return 'PAID'; // Changed from 'CONFIRMED' to 'PAID' to match PaymentStatus
+      return 'PAID';
     
     case 'REJECTED':
     case 'DECLINED':
     case 'FAILED':
     case 'CANCELED':
     case 'CANCELLED':
-      return 'DENIED'; // Changed from 'REJECTED' to 'DENIED' to match PaymentStatus
+    case 'DENIED':
+      return 'DENIED';
     
     case 'ANALYSIS':
     case 'REVIEW':
@@ -59,5 +60,5 @@ export const resolveManualStatus = (status: string | undefined): PaymentStatus =
  * @returns boolean indicating if the status is rejected
  */
 export const isRejectedStatus = (status: PaymentStatus): boolean => {
-  return status === 'DENIED'; // Changed from 'REJECTED' to 'DENIED' to match PaymentStatus
+  return status === 'DENIED';
 };

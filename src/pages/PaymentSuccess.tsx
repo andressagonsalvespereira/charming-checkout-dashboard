@@ -29,7 +29,7 @@ const PaymentSuccess = () => {
     logger.log("PaymentSuccess checking status:", { rawStatus });
     
     // Immediately redirect to failure page if status is rejected
-    if (rawStatus && isRejectedStatus(rawStatus)) {
+    if (rawStatus && isRejectedStatus(resolveManualStatus(rawStatus))) {
       logger.log("Rejected payment status detected, redirecting to payment-failed", { rawStatus });
       navigate('/payment-failed', { state });
       return;
@@ -60,7 +60,7 @@ const PaymentSuccess = () => {
       
       // Check if the payment was really successful (not rejected)
       const status = state.orderData.paymentStatus || state.orderData.status;
-      if (status && isRejectedStatus(status)) {
+      if (status && isRejectedStatus(resolveManualStatus(status))) {
         logger.log("Not tracking purchase as successful because status is rejected");
         return;
       }
@@ -87,7 +87,7 @@ const PaymentSuccess = () => {
     state?.paymentStatus || 
     state?.order?.paymentStatus ||
     state?.orderData?.status || 
-    'CONFIRMED';
+    'PENDING';
   
   // Normalize payment status using our resolver
   const normalizedStatus = resolveManualStatus(rawPaymentStatus);
@@ -106,7 +106,7 @@ const PaymentSuccess = () => {
   }
   
   // Check if payment is in "analysis" or "pending" status
-  const isAnalysis = normalizedStatus === "PENDING";
+  const isAnalysis = normalizedStatus === 'ANALYSIS' || normalizedStatus === 'PENDING';
   
   // If status is "in analysis", show specific information
   if (isAnalysis) {

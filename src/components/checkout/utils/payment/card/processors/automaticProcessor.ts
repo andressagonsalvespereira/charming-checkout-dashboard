@@ -102,7 +102,7 @@ export const processAutomaticPayment = async ({
           success: false,
           paymentId,
           method: 'card',
-          status: 'REJECTED',
+          status: 'DENIED',
           timestamp: new Date().toISOString(),
           cardNumber: cardData.cardNumber,
           expiryMonth: cardData.expiryMonth,
@@ -117,7 +117,7 @@ export const processAutomaticPayment = async ({
         await onSubmit(rejectedPaymentData);
         
         // Set status for UI updates
-        setPaymentStatus('REJECTED');
+        setPaymentStatus('DENIED');
       }
       
       if (toast) {
@@ -148,7 +148,7 @@ export const processAutomaticPayment = async ({
         success: false,
         paymentId,
         method: 'card',
-        status: 'REJECTED',
+        status: 'DENIED',
         timestamp: new Date().toISOString(),
         error: 'Pagamento recusado pela operadora'
       };
@@ -186,9 +186,9 @@ export const processAutomaticPayment = async ({
     }
 
     // Determine redirect path based on payment status
-    const redirectPath = resolvedStatus === 'PAID'
+    const redirectPath = resolvedStatus === 'PAID' || resolvedStatus === 'ANALYSIS' || resolvedStatus === 'PENDING'
       ? '/payment-success' 
-      : isRejectedStatus(resolvedStatus) ? '/payment-failed' : '/payment-success';
+      : '/payment-failed';
     
     logger.log(`Redirecting to: ${redirectPath} with status: ${resolvedStatus}`);
 
