@@ -1,56 +1,25 @@
-
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import { ProductProvider } from './contexts/product';
-
-// Pages
-import Index from './pages/Index';
-import NotFound from './pages/NotFound';
-import Checkout from './pages/Checkout';
-import PaymentSuccess from './pages/PaymentSuccess';
-import PaymentFailed from './pages/PaymentFailed';
-import PixPaymentManual from './pages/PixPaymentManual';
-
-// Admin Pages
-import Dashboard from './pages/admin/Dashboard';
-import Products from './pages/admin/Products';
-import Orders from './pages/admin/Orders';
-import PaymentSettings from './pages/admin/PaymentSettings';
-import ManualPaymentSettingsPage from './pages/admin/ManualPaymentSettings';
-import PixelSettings from './pages/admin/PixelSettings';
-import CheckoutCustomization from './pages/admin/CheckoutCustomization';
-import Login from './pages/admin/Login';
-import Customers from './pages/Customers'; // Corrigido o caminho de importação
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import './App.css';
+import { Toaster } from '@/components/ui/toaster';
+import PaymentSettings from '@/pages/admin/PaymentSettings';
+import Payments from '@/pages/admin/Payments';
+import Checkout from '@/pages/Checkout';
+import { AsaasProvider } from '@/contexts/asaas';
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <ProductProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/checkout/:productSlug" element={<Checkout />} />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
-            <Route path="/payment-failed" element={<PaymentFailed />} />
-            <Route path="/pix-payment-manual" element={<PixPaymentManual />} />
-            
-            {/* Admin Routes */}
-            <Route path="/admin/dashboard" element={<Dashboard />} />
-            <Route path="/admin/products" element={<Products />} />
-            <Route path="/admin/orders" element={<Orders />} />
-            <Route path="/admin/settings/payment" element={<PaymentSettings />} />
-            <Route path="/admin/settings/manual-payment" element={<ManualPaymentSettingsPage />} />
-            <Route path="/admin/pixel-settings" element={<PixelSettings />} />
-            <Route path="/admin/checkout-customization" element={<CheckoutCustomization />} />
-            <Route path="/admin/customers" element={<Customers />} />
-            <Route path="/admin/login" element={<Login />} />
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </ProductProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <AsaasProvider>
+      <Router>
+        <Routes>
+          <Route path="/admin/settings/payment" element={<PaymentSettings />} />
+          <Route path="/admin/payments" element={<Payments />} />
+          <Route path="/checkout/:productSlug" element={<Checkout />} />
+          {/* Other routes here */}
+        </Routes>
+        <Toaster />
+      </Router>
+    </AsaasProvider>
   );
 }
 

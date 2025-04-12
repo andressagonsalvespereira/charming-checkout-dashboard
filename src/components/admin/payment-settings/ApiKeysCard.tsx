@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useFormContext } from 'react-hook-form';
 import { Key } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { InfoCircledIcon } from '@radix-ui/react-icons';
+import { InfoIcon } from 'lucide-react';
 import { AsaasSettings } from '@/types/asaas';
 import { PaymentSettingsFormValues } from '../utils/formUtils';
 import { logger } from '@/utils/logger';
@@ -54,7 +54,7 @@ const ApiKeysCard: React.FC<ApiKeysCardProps> = ({
       <CardContent className="space-y-6">
         {!formState.isEnabled && (
           <Alert variant="warning" className="bg-amber-50 border-amber-200">
-            <InfoCircledIcon className="h-4 w-4 text-amber-600" />
+            <InfoIcon className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-amber-800">
               Ative a integração com o Asaas para configurar as chaves de API.
             </AlertDescription>
